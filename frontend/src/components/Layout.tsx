@@ -14,7 +14,7 @@ interface LayoutProps {
   userName: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, navItems, userRoleLabel, userName }) => {
+const Layout: React.FC<LayoutProps> = ({ children, navItems, userRoleLabel, userName: _userName }) => {
   const location = useLocation();
 
   return (
