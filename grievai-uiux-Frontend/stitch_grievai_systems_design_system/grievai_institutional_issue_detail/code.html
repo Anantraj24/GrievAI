@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GrievAI - Institutional Issue Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#10131a",
+                        "on-primary-container": "#00285d",
+                        "background": "#10131a",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-low": "#191b23",
+                        "on-tertiary-fixed-variant": "#6b3a13",
+                        "tertiary-fixed": "#ffdcc6",
+                        "surface-container-highest": "#32353c",
+                        "inverse-primary": "#005ac2",
+                        "error-container": "#93000a",
+                        "status-warning": "#F59E0B",
+                        "surface-bright": "#363941",
+                        "on-secondary-fixed": "#210f48",
+                        "outline": "#8c909f",
+                        "on-secondary-fixed-variant": "#4d3d76",
+                        "on-surface-variant": "#c2c6d6",
+                        "border-subtle": "#363941",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#502500",
+                        "on-secondary": "#37265e",
+                        "surface": "#10131a",
+                        "primary-container": "#4d8eff",
+                        "surface-container-lowest": "#0b0e15",
+                        "primary": "#adc6ff",
+                        "surface-tint": "#adc6ff",
+                        "on-tertiary-container": "#451f00",
+                        "inverse-surface": "#e0e2ec",
+                        "on-background": "#e0e2ec",
+                        "error": "#ffb4ab",
+                        "surface-variant": "#32353c",
+                        "on-surface": "#e0e2ec",
+                        "surface-container-high": "#272a31",
+                        "on-primary-fixed-variant": "#004395",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-tertiary-fixed": "#301400",
+                        "secondary-fixed": "#e9ddff",
+                        "glass-fill": "rgba(23, 23, 23, 0.6)",
+                        "border-muted": "#262626",
+                        "tertiary": "#ffb785",
+                        "tertiary-fixed-dim": "#ffb785",
+                        "surface-container": "#1d2027",
+                        "tertiary-container": "#c28255",
+                        "secondary": "#d0bcff",
+                        "inverse-on-surface": "#2d3038",
+                        "on-primary-fixed": "#001a42",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "on-secondary-container": "#c2aef0",
+                        "status-critical": "#FFB4AB",
+                        "on-surface-muted": "#8C909F",
+                        "outline-variant": "#424754",
+                        "on-primary": "#002e6a",
+                        "secondary-container": "#503f79",
+                        "surface-card": "#171717",
+                        "on-error": "#690005"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "24px",
+                        "gutter": "16px",
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "card-padding": "20px",
+                        "component-gap": "12px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-lg": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "display-lg-mobile": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "label-caps": ["Geist"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400" }],
+                        "data-mono": ["12px", { "lineHeight": "16px", "letterSpacing": "0", "fontWeight": "500" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .lifted-state {
+            box-shadow: inset 0 0 20px 0 rgba(173, 198, 255, 0.1);
+            border-left: 2px solid theme('colors.primary');
+        }
+        .bento-card {
+            @apply bg-surface-card border border-border-muted rounded-xl p-card-padding flex flex-col gap-component-gap relative overflow-hidden;
+        }
+    </style>
+</head>
+<body class="bg-surface-dim text-on-surface font-body-md min-h-screen flex selection:bg-primary-container/30 selection:text-primary">
+<!-- SideNavBar (Shared Component) -->
+<nav class="fixed left-0 top-0 h-screen w-20 hover:w-64 transition-all duration-300 z-50 border-r border-border-muted bg-surface-dim flex flex-col h-full py-6 items-center group/sidebar hidden md:flex">
+<!-- Logo Area -->
+<div class="mb-8 w-full px-6 flex items-center gap-4 overflow-hidden">
+<div class="w-8 h-8 shrink-0 bg-primary/20 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="hub">hub</span>
+</div>
+<div class="flex flex-col whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
+<span class="text-headline-md font-headline-md font-bold text-primary tracking-tight">GrievAI</span>
+<span class="text-[10px] text-on-surface-muted uppercase tracking-wider font-semibold">Admin Command</span>
+</div>
+</div>
+<!-- Nav Links -->
+<div class="flex flex-col gap-2 w-full px-4">
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="dashboard">dashboard</span>
+<span class="text-label-caps font-label-caps whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-primary border-l-2 border-primary bg-primary-container/10 scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="account_tree">account_tree</span>
+<span class="text-label-caps font-label-caps whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Institutional Issues</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="analytics">analytics</span>
+<span class="text-label-caps font-label-caps whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Analytics</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="insights">insights</span>
+<span class="text-label-caps font-label-caps whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">System Insights</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="history_edu">history_edu</span>
+<span class="text-label-caps font-label-caps whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Audit Logs</span>
+</a>
+</div>
+<div class="mt-auto w-full px-4">
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="settings">settings</span>
+<span class="text-label-caps font-label-caps whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-20 flex flex-col w-full overflow-x-hidden">
+<!-- TopAppBar (Shared Component) -->
+<header class="docked full-width top-0 sticky backdrop-blur-3xl border-b border-border-muted bg-glass-fill dark:bg-glass-fill z-40">
+<div class="flex justify-between items-center w-full px-margin-desktop h-16">
+<!-- Mobile Menu / Title -->
+<div class="flex items-center gap-4 md:hidden">
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<span class="text-headline-md font-headline-md font-bold text-primary tracking-tight">GrievAI</span>
+</div>
+<!-- Search -->
+<div class="hidden md:flex flex-1 max-w-md ml-4">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-muted group-focus-within:text-primary transition-colors" data-icon="search">search</span>
+<input class="w-full bg-surface-card border border-border-muted rounded-full py-2 pl-10 pr-4 text-body-md text-on-surface placeholder:text-on-surface-muted focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all" placeholder="Search issues, IDs, or entities..." type="text"/>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-4 ml-auto">
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer relative focus:ring-1 focus:ring-primary/50 transition-all rounded-full p-1">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-status-critical rounded-full animate-pulse"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer focus:ring-1 focus:ring-primary/50 transition-all rounded-full p-1 hidden sm:block">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-bright border border-border-muted overflow-hidden flex-shrink-0 cursor-pointer ring-2 ring-transparent hover:ring-primary/50 transition-all">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A futuristic, low-poly portrait avatar of an AI administrator in dark mode, primarily composed of deep blues and charcoal gray polygons with subtle electric cyan highlights reflecting off the edges, signifying machine precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuByCn7pkDY8d9vcb4UL2fPb1JE8D1uCM9Zv1z6WwQBwwdj2Ztqyw395YJmGS4DZ749jefPwvj_ZpQmeaRQSNs-WklKPqBc2cmWfxxAQ6n-3qm_lRbe2rXVv2ds08opRUmbyuBYXAcHe_KLeY51YCWk6aZ03SDo2amOCXCjoW9E4t-P0RQ-lzXay3FO4qAY4bwXvMvKn8adSnweqr8UeJLFw1UiisSm8oBITgPbm2P4GwRH67pwz5_0x"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<div class="p-margin-mobile md:p-margin-desktop flex-1 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
+<!-- Context Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-border-subtle">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3 mb-1">
+<span class="text-label-caps font-label-caps text-on-surface-muted tracking-widest">INSTITUTIONAL ISSUE // <span class="font-data-mono text-primary">INST-2409-A4X</span></span>
+<div class="px-2 py-0.5 rounded-full bg-error-container/20 border border-error-container/50 text-status-critical text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="warning">warning</span> High Priority
+                        </div>
+<div class="px-2 py-0.5 rounded-full bg-status-warning/20 border border-status-warning/50 text-status-warning text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="rotate_right">rotate_right</span> Under Investigation
+                        </div>
+</div>
+<h1 class="text-display-lg-mobile md:text-display-lg font-display-lg-mobile md:font-display-lg text-on-surface">Hostel Water Supply Disturbance</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-3xl mt-1">Repeated infrastructure failure in Block A &amp; B affecting 150+ students. Root cause suspected to be main line pressure drop correlated with municipal throttling.</p>
+</div>
+<div class="flex gap-3 mt-4 md:mt-0">
+<button class="px-4 py-2 rounded-lg bg-surface-card border border-border-subtle text-on-surface hover:text-primary hover:border-primary/50 transition-colors flex items-center gap-2 text-body-md font-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span> Export Dossier
+                    </button>
+<button class="px-4 py-2 rounded-lg bg-[#3B82F6] text-white shadow-[0_0_15px_rgba(59,130,246,0.15)] hover:bg-[#2563eb] transition-colors flex items-center gap-2 text-body-md font-body-md font-medium">
+<span class="material-symbols-outlined text-[18px]" data-icon="gavel">gavel</span> Escalate Action
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- LEFT COLUMN (Spans 8 on large, 12 on small) -->
+<div class="col-span-1 md:col-span-12 lg:col-span-8 flex flex-col gap-gutter">
+<!-- Intelligence Visualization (Bento Card) -->
+<div class="bento-card lifted-state min-h-[400px]">
+<div class="flex justify-between items-center z-10">
+<h2 class="text-label-caps font-label-caps text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="grain">grain</span>
+                                INTELLIGENCE VISUALIZATION // NODE CLUSTER
+                            </h2>
+<div class="flex gap-2">
+<span class="px-2 py-1 rounded bg-surface-bright text-data-mono font-data-mono text-[10px] text-on-surface-muted">17 NODES</span>
+<span class="px-2 py-1 rounded bg-surface-bright text-data-mono font-data-mono text-[10px] text-primary">98% CONFIDENCE</span>
+</div>
+</div>
+<!-- Shader Background for Visual interest representing AI/Graph -->
+<div class="absolute inset-0 w-full h-full opacity-40 mix-blend-screen pointer-events-none" style="background-image: radial-gradient(circle at 50% 50%, rgba(77, 142, 255, 0.05) 0%, transparent 70%);">
+<div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23adc6ff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+</div>
+<!-- Simulated Node Graph (Placeholder for actual interactive viz) -->
+<div class="flex-1 relative w-full h-full flex items-center justify-center min-h-[300px]">
+<!-- Central Node -->
+<div class="absolute w-16 h-16 rounded-full bg-error-container/20 border-2 border-status-critical flex items-center justify-center z-20 shadow-[0_0_30px_rgba(255,180,171,0.2)]" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+<span class="material-symbols-outlined text-status-critical" data-icon="water_drop">water_drop</span>
+</div>
+<!-- Sub Nodes -->
+<div class="absolute w-8 h-8 rounded-full bg-surface-bright border border-border-muted flex items-center justify-center z-10" style="top: 25%; left: 30%;">
+<span class="text-[10px] text-on-surface-variant font-data-mono">T-01</span>
+</div>
+<div class="absolute w-10 h-10 rounded-full bg-primary-container/20 border border-primary flex items-center justify-center z-10 shadow-[0_0_15px_rgba(173,198,255,0.15)]" style="top: 70%; left: 65%;">
+<span class="text-[10px] text-primary font-data-mono">P-02</span>
+</div>
+<div class="absolute w-6 h-6 rounded-full bg-surface-bright border border-border-muted flex items-center justify-center z-10" style="top: 40%; left: 75%;">
+<span class="text-[10px] text-on-surface-variant font-data-mono">Q-01</span>
+</div>
+<!-- SVG Lines to simulate connections -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 5;">
+<line stroke="#363941" stroke-dasharray="4" stroke-width="1.5" x1="50%" x2="30%" y1="50%" y2="25%"></line>
+<line opacity="0.5" stroke="#adc6ff" stroke-width="2" x1="50%" x2="65%" y1="50%" y2="70%"></line>
+<line stroke="#363941" stroke-width="1" x1="50%" x2="75%" y1="50%" y2="40%"></line>
+</svg>
+<!-- Legend -->
+<div class="absolute bottom-0 right-0 bg-glass-fill backdrop-blur-md border border-border-subtle p-2 rounded-lg flex flex-col gap-1 text-[10px] font-data-mono text-on-surface-muted">
+<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-status-critical"></div> Core Issue (Pressure)</div>
+<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-primary"></div> High Correlation (Temp)</div>
+<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-surface-bright border border-border-muted"></div> Weak Signal (Quality)</div>
+</div>
+</div>
+</div>
+<!-- Related Complaints Table (Bento Card) -->
+<div class="bento-card overflow-x-auto">
+<div class="flex justify-between items-center mb-2 min-w-[600px]">
+<h2 class="text-label-caps font-label-caps text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="list_alt">list_alt</span>
+                                COMPONENT GRIEVANCES
+                            </h2>
+<button class="text-[12px] text-primary hover:underline font-body-sm">View All 17</button>
+</div>
+<table class="w-full text-left border-collapse min-w-[600px]">
+<thead>
+<tr class="border-b border-border-muted text-label-caps font-label-caps text-on-surface-muted">
+<th class="pb-2 font-normal pl-2">GRV ID</th>
+<th class="pb-2 font-normal">DATE</th>
+<th class="pb-2 font-normal">LOCATION</th>
+<th class="pb-2 font-normal">AI SNIPPET</th>
+<th class="pb-2 font-normal text-right pr-2">SENTIMENT</th>
+</tr>
+</thead>
+<tbody class="text-body-sm font-body-sm">
+<tr class="border-b border-border-subtle/50 hover:bg-surface-bright/30 transition-colors group">
+<td class="py-3 pl-2"><span class="font-data-mono text-primary text-data-mono">GRV-8821</span></td>
+<td class="py-3 text-on-surface-variant font-data-mono text-[11px]">2023-10-24 08:12</td>
+<td class="py-3 text-on-surface">Block A, Fl 3</td>
+<td class="py-3 text-on-surface-variant truncate max-w-[200px] italic">"...no water pressure since morning, impossible to shower..."</td>
+<td class="py-3 text-right pr-2">
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container/10 border border-error-container/30 text-[10px] text-status-critical">
+<span class="material-symbols-outlined text-[12px]" data-icon="mood_bad">mood_bad</span> -0.8
+                                        </div>
+</td>
+</tr>
+<tr class="border-b border-border-subtle/50 hover:bg-surface-bright/30 transition-colors group">
+<td class="py-3 pl-2"><span class="font-data-mono text-primary text-data-mono">GRV-8845</span></td>
+<td class="py-3 text-on-surface-variant font-data-mono text-[11px]">2023-10-24 09:30</td>
+<td class="py-3 text-on-surface">Block B, Fl 1</td>
+<td class="py-3 text-on-surface-variant truncate max-w-[200px] italic">"...water completely stopped mid-wash. Unacceptable..."</td>
+<td class="py-3 text-right pr-2">
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-error-container/10 border border-error-container/30 text-[10px] text-status-critical">
+<span class="material-symbols-outlined text-[12px]" data-icon="mood_bad">mood_bad</span> -0.9
+                                        </div>
+</td>
+</tr>
+<tr class="border-b border-border-subtle/50 hover:bg-surface-bright/30 transition-colors group">
+<td class="py-3 pl-2"><span class="font-data-mono text-on-surface-muted text-data-mono">GRV-8850</span></td>
+<td class="py-3 text-on-surface-variant font-data-mono text-[11px]">2023-10-24 10:15</td>
+<td class="py-3 text-on-surface">Block A, Ground</td>
+<td class="py-3 text-on-surface-variant truncate max-w-[200px] italic">"...water is slightly brown when first turned on..."</td>
+<td class="py-3 text-right pr-2">
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-status-warning/10 border border-status-warning/30 text-[10px] text-status-warning">
+<span class="material-symbols-outlined text-[12px]" data-icon="sentiment_dissatisfied">sentiment_dissatisfied</span> -0.4
+                                        </div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- RIGHT COLUMN (Spans 4 on large, 12 on small) -->
+<div class="col-span-1 md:col-span-12 lg:col-span-4 flex flex-col gap-gutter">
+<!-- Trend Analysis (Bento Card) -->
+<div class="bento-card">
+<h2 class="text-label-caps font-label-caps text-on-surface-variant flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="trending_up">trending_up</span>
+                            VOLUME SPURT ANALYSIS
+                        </h2>
+<div class="flex items-end gap-2 mb-4">
+<span class="text-display-lg-mobile font-display-lg-mobile text-on-surface leading-none">17</span>
+<span class="text-body-sm font-body-sm text-status-critical flex items-center mb-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="arrow_upward">arrow_upward</span> 340% / 24h
+                            </span>
+</div>
+<!-- Sparkline (SVG) -->
+<div class="w-full h-24 relative mt-auto border-b border-border-subtle/50 pb-2">
+<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 100 40">
+<defs>
+<lineargradient id="trendGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#adc6ff" stop-opacity="0.3"></stop>
+<stop offset="100%" stop-color="#adc6ff" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0 35 Q 10 30, 20 32 T 40 25 T 60 28 T 80 15 T 90 5 T 100 2 L 100 40 L 0 40 Z" fill="url(#trendGradient)"></path>
+<path d="M0 35 Q 10 30, 20 32 T 40 25 T 60 28 T 80 15 T 90 5 T 100 2" fill="none" stroke="#adc6ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<!-- Alert point -->
+<circle cx="90" cy="5" fill="#10131a" r="3" stroke="#FFB4AB" stroke-width="1.5"></circle>
+</svg>
+<div class="flex justify-between w-full text-[9px] font-data-mono text-on-surface-muted mt-1 absolute bottom-[-16px]">
+<span>T-7d</span>
+<span>T-3d</span>
+<span class="text-primary">NOW</span>
+</div>
+</div>
+</div>
+<!-- Affected Departments -->
+<div class="bento-card">
+<h2 class="text-label-caps font-label-caps text-on-surface-variant flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="domain">domain</span>
+                            ROUTING &amp; DEPARTMENTS
+                        </h2>
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between p-2 rounded bg-surface-bright/30 border border-border-subtle">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="plumbing">plumbing</span>
+</div>
+<div class="flex flex-col">
+<span class="text-body-sm font-body-sm text-on-surface">Facilities &amp; Maintenance</span>
+<span class="text-[10px] font-data-mono text-on-surface-muted">Primary Action</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] bg-primary/10 text-primary border border-primary/20">NOTIFIED</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-bright/30 border border-border-subtle">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="meeting_room">meeting_room</span>
+</div>
+<div class="flex flex-col">
+<span class="text-body-sm font-body-sm text-on-surface">Hostel Administration</span>
+<span class="text-[10px] font-data-mono text-on-surface-muted">CC / Comms</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] bg-surface-bright text-on-surface-muted border border-border-subtle">PENDING READ</span>
+</div>
+</div>
+</div>
+<!-- Current Resolution Path -->
+<div class="bento-card flex-1">
+<h2 class="text-label-caps font-label-caps text-on-surface-variant flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-[18px]" data-icon="timeline">timeline</span>
+                            RESOLUTION PATH
+                        </h2>
+<div class="relative pl-4 border-l-2 border-border-subtle flex flex-col gap-4 pb-2">
+<!-- Node 1 -->
+<div class="relative">
+<div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-primary border-2 border-surface-card ring-2 ring-primary/20"></div>
+<div class="flex flex-col">
+<span class="text-[10px] font-data-mono text-primary mb-0.5">08:12 AM - SYSTEM</span>
+<span class="text-body-sm font-body-sm text-on-surface">Anomaly Detected</span>
+<span class="text-[11px] text-on-surface-muted leading-tight mt-1">AI flagged cluster formation across Block A.</span>
+</div>
+</div>
+<!-- Node 2 -->
+<div class="relative">
+<div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-surface-bright border-2 border-surface-card"></div>
+<div class="flex flex-col">
+<span class="text-[10px] font-data-mono text-on-surface-muted mb-0.5">09:45 AM - AUTOMATION</span>
+<span class="text-body-sm font-body-sm text-on-surface">Auto-Ticket Generated</span>
+<span class="text-[11px] text-on-surface-muted leading-tight mt-1">Ticket #TK-992 routed to Facilities.</span>
+</div>
+</div>
+<!-- Node 3 -->
+<div class="relative">
+<div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-surface-bright border-2 border-surface-card border-dashed"></div>
+<div class="flex flex-col opacity-50">
+<span class="text-[10px] font-data-mono text-on-surface-muted mb-0.5">PENDING - MAINT</span>
+<span class="text-body-sm font-body-sm text-on-surface">Initial Assessment</span>
+<span class="text-[11px] text-on-surface-muted leading-tight mt-1">Awaiting physical inspection report.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

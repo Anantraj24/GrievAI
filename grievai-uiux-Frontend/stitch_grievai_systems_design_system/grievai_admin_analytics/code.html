@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GrievAI - Admin Analytics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#10131a",
+                        "on-primary-container": "#00285d",
+                        "background": "#10131a",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-low": "#191b23",
+                        "on-tertiary-fixed-variant": "#6b3a13",
+                        "tertiary-fixed": "#ffdcc6",
+                        "surface-container-highest": "#32353c",
+                        "inverse-primary": "#005ac2",
+                        "error-container": "#93000a",
+                        "status-warning": "#F59E0B",
+                        "surface-bright": "#363941",
+                        "on-secondary-fixed": "#210f48",
+                        "outline": "#8c909f",
+                        "on-secondary-fixed-variant": "#4d3d76",
+                        "on-surface-variant": "#c2c6d6",
+                        "border-subtle": "#363941",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#502500",
+                        "on-secondary": "#37265e",
+                        "surface": "#10131a",
+                        "primary-container": "#4d8eff",
+                        "surface-container-lowest": "#0b0e15",
+                        "primary": "#adc6ff",
+                        "surface-tint": "#adc6ff",
+                        "on-tertiary-container": "#451f00",
+                        "inverse-surface": "#e0e2ec",
+                        "on-background": "#e0e2ec",
+                        "error": "#ffb4ab",
+                        "surface-variant": "#32353c",
+                        "on-surface": "#e0e2ec",
+                        "surface-container-high": "#272a31",
+                        "on-primary-fixed-variant": "#004395",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-tertiary-fixed": "#301400",
+                        "secondary-fixed": "#e9ddff",
+                        "glass-fill": "rgba(23, 23, 23, 0.6)",
+                        "border-muted": "#262626",
+                        "tertiary": "#ffb785",
+                        "tertiary-fixed-dim": "#ffb785",
+                        "surface-container": "#1d2027",
+                        "tertiary-container": "#c28255",
+                        "secondary": "#d0bcff",
+                        "inverse-on-surface": "#2d3038",
+                        "on-primary-fixed": "#001a42",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "on-secondary-container": "#c2aef0",
+                        "status-critical": "#FFB4AB",
+                        "on-surface-muted": "#8C909F",
+                        "outline-variant": "#424754",
+                        "on-primary": "#002e6a",
+                        "secondary-container": "#503f79",
+                        "surface-card": "#171717",
+                        "on-error": "#690005"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "24px",
+                        "gutter": "16px",
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "card-padding": "20px",
+                        "component-gap": "12px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-lg": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "display-lg-mobile": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "label-caps": ["Geist"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400" }],
+                        "data-mono": ["12px", { "lineHeight": "16px", "letterSpacing": "0", "fontWeight": "500" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .lifted-state {
+            box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.1);
+            border-left: 2px solid #3B82F6;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased overflow-x-hidden min-h-screen flex">
+<!-- SideNavBar -->
+<nav aria-label="Main Navigation" class="fixed left-0 top-0 h-screen w-20 hover:w-64 transition-all duration-300 z-50 border-r border-border-muted bg-surface-dim flex flex-col h-full py-6 items-center hidden md:flex group">
+<div class="mb-8 flex flex-col items-center group-hover:items-start group-hover:px-6 w-full">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center shrink-0">
+<span class="text-on-primary-container font-headline-md font-bold">G</span>
+</div>
+<div class="hidden group-hover:block mt-2">
+<h1 class="text-headline-md font-headline-md font-bold text-primary tracking-tight">GrievAI</h1>
+<p class="text-label-caps font-label-caps text-on-surface-muted">Admin Command</p>
+</div>
+</div>
+<div class="flex-1 w-full px-2 space-y-2">
+<a class="flex items-center w-full p-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="dashboard">dashboard</span>
+<span class="ml-4 text-label-caps font-label-caps whitespace-nowrap hidden group-hover:block">Dashboard</span>
+</a>
+<a class="flex items-center w-full p-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="account_tree">account_tree</span>
+<span class="ml-4 text-label-caps font-label-caps whitespace-nowrap hidden group-hover:block">Institutional Issues</span>
+</a>
+<a class="flex items-center w-full p-3 rounded-lg text-primary border-l-2 border-primary bg-primary-container/10 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="analytics" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="ml-4 text-label-caps font-label-caps whitespace-nowrap hidden group-hover:block">Analytics</span>
+</a>
+<a class="flex items-center w-full p-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="insights">insights</span>
+<span class="ml-4 text-label-caps font-label-caps whitespace-nowrap hidden group-hover:block">System Insights</span>
+</a>
+<a class="flex items-center w-full p-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="history_edu">history_edu</span>
+<span class="ml-4 text-label-caps font-label-caps whitespace-nowrap hidden group-hover:block">Audit Logs</span>
+</a>
+<a class="flex items-center w-full p-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors" href="#">
+<span class="material-symbols-outlined shrink-0" data-icon="settings">settings</span>
+<span class="ml-4 text-label-caps font-label-caps whitespace-nowrap hidden group-hover:block">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-20 min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 sticky backdrop-blur-3xl border-b border-border-muted bg-glass-fill flex justify-between items-center w-full px-margin-desktop h-16 z-40">
+<div class="flex items-center gap-4">
+<h2 class="text-headline-md font-headline-md text-on-surface md:hidden">GrievAI</h2>
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-muted text-sm">search</span>
+<input class="bg-surface-card border border-muted text-body-sm text-on-surface rounded-full pl-9 pr-4 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all w-64 shadow-none" placeholder="Search analytics..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-component-gap">
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer p-2 rounded-full hover:bg-surface-container-highest/50">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer p-2 rounded-full hover:bg-surface-container-highest/50">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-bright overflow-hidden border border-border-muted cursor-pointer hover:ring-1 hover:ring-primary/50 transition-all">
+<img alt="Administrator Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiyisegdkrXSgt90M2393ZHuNZQ26kFiyf_SFVgjvRxc961XPaoLrWumrs0VSK4PcUuhq2YMDmNGl1bKLwB4oa0Xoy4V-JAPoTgDmBWOne6q71Z80iqPbPO1T6XQ-522FNSKiqxaLKoWJX1H5SRTINBOjwYqa8U2nySFlCNuVyq1MSnsc5hTXts5hs1VW4RemcvvqbM_JWv_rcreO-V7S-rbpgrGTF6vaUzI_QZa3KMwp5agkNHmPT"/>
+</div>
+</div>
+</header>
+<div class="p-margin-mobile md:p-margin-desktop space-y-gutter flex-1 w-full max-w-7xl mx-auto">
+<!-- Context & Filters Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+<div>
+<h2 class="text-display-lg-mobile md:text-display-lg font-display-lg text-on-surface tracking-tight mb-1">Analytics Dashboard</h2>
+<p class="text-body-md font-body-md text-on-surface-muted">Comprehensive data-driven oversight view of institutional metrics.</p>
+</div>
+<div class="flex flex-wrap gap-3">
+<div class="flex items-center bg-surface-card border border-border-muted rounded-md px-3 py-1.5 text-body-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+<span class="material-symbols-outlined text-on-surface-muted text-sm mr-2" data-icon="calendar_today">calendar_today</span>
+<select class="bg-transparent text-on-surface border-none p-0 focus:ring-0 cursor-pointer outline-none">
+<option>Last 30 Days</option>
+<option>Last Quarter</option>
+<option>Year to Date</option>
+</select>
+</div>
+<div class="flex items-center bg-surface-card border border-border-muted rounded-md px-3 py-1.5 text-body-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+<span class="material-symbols-outlined text-on-surface-muted text-sm mr-2" data-icon="domain">domain</span>
+<select class="bg-transparent text-on-surface border-none p-0 focus:ring-0 cursor-pointer outline-none">
+<option>All Departments</option>
+<option>Academic Affairs</option>
+<option>Student Services</option>
+</select>
+</div>
+<div class="flex items-center bg-surface-card border border-border-muted rounded-md px-3 py-1.5 text-body-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+<span class="material-symbols-outlined text-on-surface-muted text-sm mr-2" data-icon="category">category</span>
+<select class="bg-transparent text-on-surface border-none p-0 focus:ring-0 cursor-pointer outline-none">
+<option>All Categories</option>
+<option>Harassment</option>
+<option>Grade Dispute</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Bento Grid Main Content -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Grievance Volume & Velocity (Spans 8 cols on desktop) -->
+<section class="md:col-span-8 bg-surface-card border border-border-muted rounded-xl p-card-padding flex flex-col lifted-state relative overflow-hidden group">
+<!-- Subtle ambient glow in background -->
+<div class="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors duration-500"></div>
+<div class="flex justify-between items-start mb-6 z-10">
+<div>
+<h3 class="text-label-caps font-label-caps text-on-surface-muted mb-1 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-primary" data-icon="monitoring">monitoring</span>
+                                GRIEVANCE VOLUME &amp; VELOCITY
+                            </h3>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-lg font-headline-lg text-on-surface">1,248</span>
+<span class="text-body-sm font-data-mono text-status-warning flex items-center">
+<span class="material-symbols-outlined text-xs mr-0.5" data-icon="trending_up">trending_up</span> +12%
+                                </span>
+</div>
+</div>
+<button class="text-on-surface-muted hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<div class="flex-1 min-h-[240px] w-full relative z-10">
+<!-- Abstract Chart Representation -->
+<div class="absolute inset-0 flex items-end justify-between px-2 pb-6 pt-4 gap-1 opacity-70">
+<!-- Bars -->
+<div class="w-full bg-surface-bright rounded-t-sm h-[30%] hover:bg-primary/40 transition-colors cursor-crosshair"></div>
+<div class="w-full bg-surface-bright rounded-t-sm h-[45%] hover:bg-primary/40 transition-colors cursor-crosshair"></div>
+<div class="w-full bg-surface-bright rounded-t-sm h-[20%] hover:bg-primary/40 transition-colors cursor-crosshair"></div>
+<div class="w-full bg-surface-bright rounded-t-sm h-[60%] hover:bg-primary/40 transition-colors cursor-crosshair"></div>
+<div class="w-full bg-surface-bright rounded-t-sm h-[80%] bg-primary/20 hover:bg-primary/50 transition-colors cursor-crosshair"></div>
+<div class="w-full bg-surface-bright rounded-t-sm h-[50%] hover:bg-primary/40 transition-colors cursor-crosshair"></div>
+<div class="w-full bg-surface-bright rounded-t-sm h-[35%] hover:bg-primary/40 transition-colors cursor-crosshair"></div>
+<div class="w-full bg-surface-bright rounded-t-sm h-[70%] hover:bg-primary/40 transition-colors cursor-crosshair"></div>
+<div class="w-full bg-surface-bright rounded-t-sm h-[90%] bg-status-warning/30 hover:bg-status-warning/60 transition-colors cursor-crosshair"></div>
+<div class="w-full bg-surface-bright rounded-t-sm h-[65%] hover:bg-primary/40 transition-colors cursor-crosshair"></div>
+<div class="w-full bg-surface-bright rounded-t-sm h-[40%] hover:bg-primary/40 transition-colors cursor-crosshair"></div>
+<div class="w-full bg-surface-bright rounded-t-sm h-[25%] hover:bg-primary/40 transition-colors cursor-crosshair"></div>
+</div>
+<!-- Overlay Line -->
+<svg class="absolute inset-0 h-full w-full pointer-events-none drop-shadow-md opacity-90" preserveaspectratio="none" viewbox="0 0 100 100">
+<path d="M 0 80 Q 10 70 20 60 T 40 50 T 60 70 T 80 40 T 100 20" fill="none" stroke="#3B82F6" stroke-linecap="round" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+</svg>
+<!-- Grid Lines -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+<div class="border-b border-border-muted w-full h-0"></div>
+<div class="border-b border-border-muted w-full h-0"></div>
+<div class="border-b border-border-muted w-full h-0"></div>
+<div class="border-b border-border-muted w-full h-0"></div>
+<div class="border-b border-border-muted w-full h-0"></div>
+</div>
+</div>
+</section>
+<!-- Category Intensity (Spans 4 cols on desktop) -->
+<section class="md:col-span-4 bg-surface-card border border-border-muted rounded-xl p-card-padding flex flex-col">
+<h3 class="text-label-caps font-label-caps text-on-surface-muted mb-4">CATEGORY INTENSITY</h3>
+<div class="flex-1 w-full flex flex-col gap-2 min-h-[240px]">
+<!-- Treemap representation -->
+<div class="flex w-full gap-2 h-1/2">
+<div class="bg-primary/20 hover:bg-primary/30 transition-colors border border-primary/30 rounded-md w-[60%] p-3 flex flex-col justify-between cursor-pointer group relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<span class="text-body-sm font-body-sm text-on-surface">Academic<br/>Disputes</span>
+<span class="font-data-mono text-primary text-xs">42%</span>
+</div>
+<div class="bg-status-critical/10 hover:bg-status-critical/20 transition-colors border border-status-critical/30 rounded-md w-[40%] p-3 flex flex-col justify-between cursor-pointer relative overflow-hidden">
+<span class="text-body-sm font-body-sm text-on-surface">Conduct<br/>Violations</span>
+<span class="font-data-mono text-status-critical text-xs">28%</span>
+</div>
+</div>
+<div class="flex w-full gap-2 h-1/2">
+<div class="bg-surface-bright hover:bg-surface-container-highest transition-colors border border-border-muted rounded-md w-[35%] p-3 flex flex-col justify-between cursor-pointer">
+<span class="text-body-sm font-body-sm text-on-surface truncate">Facilities</span>
+<span class="font-data-mono text-on-surface-muted text-xs">15%</span>
+</div>
+<div class="flex flex-col gap-2 w-[65%]">
+<div class="bg-surface-bright hover:bg-surface-container-highest transition-colors border border-border-muted rounded-md w-full h-1/2 p-2 flex items-center justify-between cursor-pointer">
+<span class="text-xs text-on-surface truncate">HR</span>
+<span class="font-data-mono text-on-surface-muted text-[10px]">10%</span>
+</div>
+<div class="bg-surface-bright hover:bg-surface-container-highest transition-colors border border-border-muted rounded-md w-full h-1/2 p-2 flex items-center justify-between cursor-pointer">
+<span class="text-xs text-on-surface truncate">Other</span>
+<span class="font-data-mono text-on-surface-muted text-[10px]">5%</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SLA Performance (Spans 6 cols) -->
+<section class="md:col-span-6 bg-surface-card border border-border-muted rounded-xl p-card-padding flex flex-col">
+<h3 class="text-label-caps font-label-caps text-on-surface-muted mb-6">SLA PERFORMANCE BY DEPT</h3>
+<div class="flex-1 space-y-4">
+<!-- Bar Item 1 -->
+<div>
+<div class="flex justify-between text-body-sm text-on-surface mb-1">
+<span>Academic Affairs</span>
+<span class="font-data-mono">94%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
+<div class="bg-primary h-2 rounded-full" style="width: 94%"></div>
+</div>
+</div>
+<!-- Bar Item 2 -->
+<div>
+<div class="flex justify-between text-body-sm text-on-surface mb-1">
+<span>Student Services</span>
+<span class="font-data-mono">88%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
+<div class="bg-primary/70 h-2 rounded-full" style="width: 88%"></div>
+</div>
+</div>
+<!-- Bar Item 3 -->
+<div>
+<div class="flex justify-between text-body-sm text-on-surface mb-1">
+<span class="flex items-center gap-2">Facilities <span class="w-2 h-2 rounded-full bg-status-critical shadow-[0_0_8px_rgba(255,180,171,0.6)]"></span></span>
+<span class="font-data-mono text-status-critical">62%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
+<div class="bg-status-critical h-2 rounded-full" style="width: 62%"></div>
+</div>
+</div>
+<!-- Bar Item 4 -->
+<div>
+<div class="flex justify-between text-body-sm text-on-surface mb-1">
+<span>Human Resources</span>
+<span class="font-data-mono">75%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
+<div class="bg-status-warning h-2 rounded-full" style="width: 75%"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Satisfaction & Feedback (Spans 6 cols) -->
+<section class="md:col-span-6 bg-surface-card border border-border-muted rounded-xl p-card-padding flex flex-col relative overflow-hidden">
+<div class="flex justify-between items-start mb-4 relative z-10">
+<h3 class="text-label-caps font-label-caps text-on-surface-muted">SENTIMENT ANALYSIS</h3>
+<div class="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-data-mono text-primary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> LIVE
+                        </div>
+</div>
+<div class="flex-1 grid grid-cols-7 gap-1 mt-2">
+<!-- Heatmap cells (Simulated) -->
+<script>
+                            // Inline script just to generate the cells to avoid bloat in HTML
+                            const cols = 7; const rows = 5;
+                            for(let i=0; i<rows; i++) {
+                                for(let j=0; j<cols; j++) {
+                                    const intensity = Math.random();
+                                    let colorClass = 'bg-surface-bright';
+                                    if(intensity > 0.8) colorClass = 'bg-primary/80';
+                                    else if(intensity > 0.6) colorClass = 'bg-primary/50';
+                                    else if(intensity > 0.4) colorClass = 'bg-primary/30';
+                                    else if(intensity > 0.2) colorClass = 'bg-surface-container-highest';
+                                    
+                                    // Inject a red spot
+                                    if(i === 2 && j === 4) colorClass = 'bg-status-critical/70';
+
+                                    document.write(`<div class="w-full aspect-square rounded-sm ${colorClass} hover:ring-1 hover:ring-white/50 cursor-crosshair transition-all" title="Data point"></div>`);
+                                }
+                            }
+                        </script>
+</div>
+<div class="mt-4 flex justify-between items-center text-xs text-on-surface-muted font-data-mono border-t border-border-muted pt-3">
+<div class="flex items-center gap-2">
+<span>Negative</span>
+<div class="w-16 h-2 rounded-full bg-gradient-to-r from-surface-bright to-primary/80"></div>
+<span>Positive</span>
+</div>
+<span class="text-status-critical flex items-center gap-1"><span class="material-symbols-outlined text-[14px]" data-icon="warning">warning</span> Anomaly detected</span>
+</div>
+</section>
+</div>
+</div>
+</main>
+</body></html>

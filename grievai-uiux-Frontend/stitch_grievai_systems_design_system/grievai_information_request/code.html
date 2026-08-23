@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Provide Additional Information - GrievAI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#10131a",
+                        "secondary-fixed": "#e1e2ea",
+                        "on-surface": "#e1e2eb",
+                        "tertiary-fixed": "#dfe2ed",
+                        "tertiary-fixed-dim": "#c3c6d1",
+                        "surface-container-low": "#191c22",
+                        "tertiary": "#c3c6d1",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#b6b8c0",
+                        "surface-bright": "#363940",
+                        "on-surface-variant": "#c2c6d6",
+                        "on-primary-fixed-variant": "#004395",
+                        "surface-tint": "#adc6ff",
+                        "outline": "#8c909f",
+                        "inverse-on-surface": "#2e3037",
+                        "inverse-primary": "#005ac2",
+                        "surface-container-high": "#272a31",
+                        "surface-variant": "#32353c",
+                        "surface-dim": "#10131a",
+                        "on-tertiary": "#2c3038",
+                        "inverse-surface": "#e1e2eb",
+                        "surface-container-lowest": "#0b0e14",
+                        "primary": "#adc6ff",
+                        "surface-container-highest": "#32353c",
+                        "on-tertiary-fixed-variant": "#43474f",
+                        "on-tertiary-fixed": "#181c23",
+                        "surface-container": "#1d2026",
+                        "secondary-fixed-dim": "#c4c6ce",
+                        "on-tertiary-container": "#262a32",
+                        "outline-variant": "#424754",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-primary-fixed": "#001a42",
+                        "background": "#10131a",
+                        "on-primary-container": "#00285d",
+                        "on-secondary": "#2d3037",
+                        "primary-container": "#4d8eff",
+                        "secondary-container": "#464950",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#44474d",
+                        "error": "#ffb4ab",
+                        "on-background": "#e1e2eb",
+                        "on-secondary-fixed": "#191c22",
+                        "on-error": "#690005",
+                        "tertiary-container": "#8d919a",
+                        "on-primary": "#002e6a",
+                        "secondary": "#c4c6ce"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "unit": "4px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "stack-lg": "32px",
+                        "container-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Geist"],
+                        "body-md": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "label-md": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Geist"],
+                        "body-lg": ["Geist"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glow-focus:focus-within {
+            box-shadow: 0 0 0 2px rgba(77, 142, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface min-h-screen flex flex-col font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Simplified Header for Focused Task -->
+<header class="flex items-center justify-between h-16 px-gutter border-b border-surface-variant bg-surface/80 backdrop-blur-md sticky top-0 z-50">
+<button class="flex items-center gap-stack-sm text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md group">
+<span class="material-symbols-outlined text-[18px] group-active:-translate-x-1 transition-transform">arrow_back</span>
+            Return to Case
+        </button>
+<div class="font-headline-md text-headline-md font-bold text-on-surface flex items-center gap-stack-sm">
+<span class="material-symbols-outlined text-primary">gavel</span>
+            GrievAI
+        </div>
+<div class="w-24"></div> <!-- Spacer for centering -->
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex items-center justify-center p-gutter md:p-container-padding py-12">
+<div class="w-full max-w-3xl">
+<!-- Page Header -->
+<div class="mb-stack-lg text-center md:text-left">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-stack-sm">
+                    Information Requested for GRV-00142
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                    Please provide the requested details to proceed with your case review.
+                </p>
+</div>
+<!-- Task Card -->
+<div class="bg-surface border border-surface-variant rounded-lg p-gutter md:p-container-padding shadow-sm">
+<!-- Authority Request Block -->
+<div class="bg-surface-container-high border-l-4 border-primary rounded-r-DEFAULT p-stack-md mb-stack-lg">
+<div class="flex items-start gap-stack-sm">
+<span class="material-symbols-outlined text-primary mt-1">announcement</span>
+<div>
+<h2 class="font-label-md text-label-md text-primary mb-unit uppercase tracking-wider">Authority Request</h2>
+<p class="font-body-lg text-body-lg text-on-surface">
+                                "Please provide a clear photo of the maintenance notice that was posted on your floor regarding the water shutoff on Oct 12th. If you have any additional context regarding the timeline, please include it below."
+                            </p>
+</div>
+</div>
+</div>
+<form class="space-y-stack-lg">
+<!-- Response Field -->
+<div class="space-y-stack-sm glow-focus">
+<label class="block font-label-md text-label-md text-on-surface" for="response-text">Your Response</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-body-md text-body-md rounded-DEFAULT p-stack-md focus:border-primary focus:ring-0 transition-colors resize-y" id="response-text" placeholder="Type your explanation or additional context here..." rows="5"></textarea>
+</div>
+<!-- File Upload Area -->
+<div class="space-y-stack-sm">
+<label class="block font-label-md text-label-md text-on-surface">Supporting Documents</label>
+<div class="border-2 border-dashed border-outline-variant hover:border-primary bg-surface-container-lowest hover:bg-surface-container-low transition-colors rounded-lg p-container-padding text-center cursor-pointer group flex flex-col items-center justify-center min-h-[160px]">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center mb-stack-sm group-hover:scale-110 transition-transform duration-200">
+<span class="material-symbols-outlined text-primary text-2xl">upload_file</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface mb-unit">
+                                Click to upload or drag and drop
+                            </p>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                                SVG, PNG, JPG or PDF (max. 10MB)
+                            </p>
+<!-- Hidden File Input -->
+<input class="hidden" id="file-upload" multiple="" type="file"/>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-col sm:flex-row items-center justify-end gap-stack-md pt-stack-md border-t border-surface-variant mt-stack-lg">
+<button class="w-full sm:w-auto font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container px-stack-lg py-3 rounded-DEFAULT transition-colors" type="button">
+                            Save Draft
+                        </button>
+<button class="w-full sm:w-auto font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-fixed px-stack-lg py-3 rounded-DEFAULT transition-colors flex items-center justify-center gap-stack-sm" type="submit">
+<span class="material-symbols-outlined text-[18px]">send</span>
+                            Submit Information
+                        </button>
+</div>
+</form>
+</div>
+</div>
+</main>
+<script>
+        // Simple script to handle file input click area
+        const uploadZone = document.querySelector('.border-dashed');
+        const fileInput = document.getElementById('file-upload');
+
+        uploadZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Basic drag and drop visual feedback
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('border-primary', 'bg-surface-container-low');
+            uploadZone.classList.remove('border-outline-variant');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('border-primary', 'bg-surface-container-low');
+            uploadZone.classList.add('border-outline-variant');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('border-primary', 'bg-surface-container-low');
+            uploadZone.classList.add('border-outline-variant');
+            // Handle files here in real app
+            if(e.dataTransfer.files.length > 0) {
+                 const fileName = e.dataTransfer.files[0].name;
+                 // Quick hack to show file name for proto
+                 uploadZone.querySelector('p.text-on-surface').textContent = `Selected: ${fileName}`;
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if(e.target.files.length > 0) {
+                 const fileName = e.target.files[0].name;
+                 uploadZone.querySelector('p.text-on-surface').textContent = `Selected: ${fileName}`;
+            }
+        })
+    </script>
+</body></html>

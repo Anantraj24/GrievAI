@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GrievAI - Student Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#272a31",
+                        "inverse-primary": "#005ac2",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-background": "#e1e2eb",
+                        "tertiary-fixed-dim": "#c3c6d1",
+                        "outline": "#8c909f",
+                        "on-secondary": "#2d3037",
+                        "on-tertiary-fixed": "#181c23",
+                        "surface-tint": "#adc6ff",
+                        "secondary-fixed-dim": "#c4c6ce",
+                        "on-secondary-container": "#b6b8c0",
+                        "secondary": "#c4c6ce",
+                        "secondary-fixed": "#e1e2ea",
+                        "on-secondary-fixed": "#191c22",
+                        "primary-fixed": "#d8e2ff",
+                        "outline-variant": "#424754",
+                        "on-primary-fixed": "#001a42",
+                        "tertiary": "#c3c6d1",
+                        "inverse-surface": "#e1e2eb",
+                        "surface-bright": "#363940",
+                        "background": "#10131a",
+                        "primary": "#adc6ff",
+                        "tertiary-container": "#8d919a",
+                        "on-primary-container": "#00285d",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed-variant": "#43474f",
+                        "on-secondary-fixed-variant": "#44474d",
+                        "secondary-container": "#464950",
+                        "surface": "#10131a",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-lowest": "#0b0e14",
+                        "error-container": "#93000a",
+                        "primary-container": "#4d8eff",
+                        "inverse-on-surface": "#2e3037",
+                        "tertiary-fixed": "#dfe2ed",
+                        "on-surface": "#e1e2eb",
+                        "on-primary": "#002e6a",
+                        "primary-fixed-dim": "#adc6ff",
+                        "error": "#ffb4ab",
+                        "surface-container-low": "#191c22",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-dim": "#10131a",
+                        "surface-variant": "#32353c",
+                        "surface-container-highest": "#32353c",
+                        "on-tertiary": "#2c3038",
+                        "on-tertiary-container": "#262a32",
+                        "surface-container": "#1d2026"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "stack-md": "16px",
+                        "container-padding": "24px",
+                        "unit": "4px",
+                        "stack-sm": "8px",
+                        "stack-lg": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Geist", "sans-serif"],
+                        "display-lg": ["Geist", "sans-serif"],
+                        "body-md": ["Geist", "sans-serif"],
+                        "body-lg": ["Geist", "sans-serif"],
+                        "headline-lg-mobile": ["Geist", "sans-serif"],
+                        "headline-lg": ["Geist", "sans-serif"],
+                        "label-md": ["JetBrains Mono", "monospace"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }]
+                    }
+                },
+            },
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap');
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md antialiased overflow-x-hidden min-h-screen">
+<!-- SideNavBar -->
+<aside class="bg-surface dark:bg-surface text-primary dark:text-primary font-body-md text-body-md font-headline-md text-headline-md font-bold text-primary h-screen w-64 fixed left-0 top-0 border-r border-outline-variant flex flex-col h-full p-gutter z-50 hidden md:flex">
+<!-- Header -->
+<div class="mb-stack-lg flex items-center gap-stack-sm">
+<div class="w-10 h-10 rounded bg-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-primary-container" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">GrievAI</h1>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Institutional Admin</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex-1 space-y-unit">
+<a class="flex items-center gap-stack-sm p-stack-sm bg-secondary-container text-on-secondary-container rounded-lg font-medium cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-stack-sm p-stack-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors rounded-lg cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="folder_managed">folder_managed</span>
+<span>Grievances</span>
+</a>
+<a class="flex items-center gap-stack-sm p-stack-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors rounded-lg cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="queue">queue</span>
+<span>Queue</span>
+</a>
+<a class="flex items-center gap-stack-sm p-stack-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors rounded-lg cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-stack-sm p-stack-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors rounded-lg cursor-pointer active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span>Notifications</span>
+</a>
+</nav>
+<!-- CTA -->
+<div class="mt-auto pt-stack-md border-t border-outline-variant">
+<button class="w-full bg-[#3B82F6] text-white font-body-md text-body-md font-medium py-2 px-4 rounded hover:bg-opacity-90 transition-colors cursor-pointer active:scale-95 duration-200 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                New Case
+            </button>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="bg-background dark:bg-background text-primary dark:text-primary font-label-md text-label-md font-headline-md text-headline-md font-semibold text-on-surface fixed top-0 right-0 w-full md:w-[calc(100%-16rem)] h-16 border-b border-outline-variant flex items-center justify-between px-container-padding z-40 bg-opacity-90 backdrop-blur-md">
+<div class="md:hidden flex items-center">
+<span class="font-headline-md text-headline-md font-bold tracking-tight">GrievAI</span>
+</div>
+<div class="hidden md:flex"></div>
+<div class="flex items-center gap-stack-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center p-2 rounded-full hover:bg-surface-container-high focus-within:ring-2 focus-within:ring-primary">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center p-2 rounded-full hover:bg-surface-container-high focus-within:ring-2 focus-within:ring-primary">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center p-2 rounded-full hover:bg-surface-container-high focus-within:ring-2 focus-within:ring-primary">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="pt-24 pb-container-padding px-container-padding md:ml-64 w-full max-w-[1600px] mx-auto min-h-screen flex flex-col gap-container-padding">
+<!-- Header Section -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-stack-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Welcome back, Anant</h2>
+<p class="text-on-surface-variant mt-unit">Here is an overview of your academic and administrative requests.</p>
+</div>
+<div class="flex gap-stack-sm">
+<button class="border border-[#2D3139] bg-transparent text-primary font-body-md text-body-md font-medium py-2 px-4 rounded hover:bg-surface-container-high transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+                    Export Report
+                </button>
+</div>
+</section>
+<!-- Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-gutter auto-rows-[minmax(180px,_auto)]">
+<!-- Metric Cards (Cols 1-8) -->
+<div class="md:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-gutter h-full">
+<!-- Total -->
+<div class="bg-surface-container-low border border-[#2D3139] rounded-lg p-container-padding flex flex-col justify-between hover:bg-[#2D3139] transition-colors duration-300">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-md text-label-md uppercase">Total</span>
+<span class="material-symbols-outlined text-primary" data-icon="folder">folder</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mt-stack-md">12</div>
+</div>
+<!-- Active -->
+<div class="bg-surface-container-low border border-[#2D3139] rounded-lg p-container-padding flex flex-col justify-between hover:bg-[#2D3139] transition-colors duration-300">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-md text-label-md uppercase">Active</span>
+<span class="material-symbols-outlined text-error" data-icon="bolt">bolt</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mt-stack-md">3</div>
+</div>
+<!-- Under Review -->
+<div class="bg-surface-container-low border border-[#2D3139] rounded-lg p-container-padding flex flex-col justify-between hover:bg-[#2D3139] transition-colors duration-300">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-md text-label-md uppercase">Under Review</span>
+<span class="material-symbols-outlined text-tertiary-container" data-icon="pending_actions">pending_actions</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mt-stack-md">5</div>
+</div>
+<!-- Resolved -->
+<div class="bg-surface-container-low border border-[#2D3139] rounded-lg p-container-padding flex flex-col justify-between hover:bg-[#2D3139] transition-colors duration-300">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-md text-label-md uppercase">Resolved</span>
+<span class="material-symbols-outlined text-[#3B82F6]" data-icon="task_alt">task_alt</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mt-stack-md">4</div>
+</div>
+</div>
+<!-- Submit Grievance CTA Card (Cols 9-12) -->
+<div class="md:col-span-4 bg-surface-container-low border border-[#2D3139] rounded-lg p-container-padding flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-[#3B82F6]/10 to-transparent pointer-events-none"></div>
+<div class="relative z-10 flex flex-col h-full justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-unit">File a New Case</h3>
+<p class="text-on-surface-variant text-sm">Submit an academic, administrative, or facility-related grievance directly to the review board.</p>
+</div>
+<button class="mt-stack-md w-full bg-[#3B82F6] text-white font-body-md text-body-md font-medium py-3 px-4 rounded hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 group-hover:scale-[1.02] duration-200">
+<span class="material-symbols-outlined" data-icon="edit_document">edit_document</span>
+                        Submit Grievance
+                    </button>
+</div>
+</div>
+<!-- Recent Grievances List (Cols 1-8) -->
+<div class="md:col-span-8 bg-surface-container-low border border-[#2D3139] rounded-lg flex flex-col h-[400px]">
+<div class="p-container-padding border-b border-[#2D3139] flex justify-between items-center shrink-0">
+<h3 class="font-headline-md text-headline-md text-on-surface">Recent Submissions</h3>
+<button class="text-primary hover:text-primary-fixed-dim transition-colors text-sm font-medium">View All</button>
+</div>
+<div class="overflow-y-auto flex-1">
+<div class="min-w-full">
+<!-- Table Header -->
+<div class="grid grid-cols-12 gap-4 px-container-padding py-stack-sm border-b border-[#2D3139] bg-surface-container-highest/30 sticky top-0 backdrop-blur-sm z-10">
+<div class="col-span-4 font-label-md text-label-md text-on-surface-variant uppercase">Case ID / Subject</div>
+<div class="col-span-3 font-label-md text-label-md text-on-surface-variant uppercase">Department</div>
+<div class="col-span-3 font-label-md text-label-md text-on-surface-variant uppercase">Status</div>
+<div class="col-span-2 font-label-md text-label-md text-on-surface-variant uppercase text-right">Date</div>
+</div>
+<!-- Rows -->
+<div class="flex flex-col">
+<a class="grid grid-cols-12 gap-4 px-container-padding py-stack-md border-b border-[#2D3139] hover:bg-[#2D3139]/50 transition-colors group" href="#">
+<div class="col-span-4 flex flex-col justify-center">
+<span class="text-on-surface font-medium group-hover:text-primary transition-colors truncate">GRV-2023-089</span>
+<span class="text-on-surface-variant text-sm truncate">Grade Discrepancy in CS301</span>
+</div>
+<div class="col-span-3 flex items-center text-on-surface-variant text-sm">Computer Science</div>
+<div class="col-span-3 flex items-center">
+<span class="inline-flex items-center px-2 py-1 rounded bg-[#3B82F6]/10 text-[#3B82F6] font-label-md text-label-md border border-[#3B82F6]/20">In Progress</span>
+</div>
+<div class="col-span-2 flex items-center justify-end text-on-surface-variant text-sm font-label-md">Oct 24</div>
+</a>
+<a class="grid grid-cols-12 gap-4 px-container-padding py-stack-md border-b border-[#2D3139] hover:bg-[#2D3139]/50 transition-colors group" href="#">
+<div class="col-span-4 flex flex-col justify-center">
+<span class="text-on-surface font-medium group-hover:text-primary transition-colors truncate">GRV-2023-085</span>
+<span class="text-on-surface-variant text-sm truncate">Hostel Wi-Fi Downtime</span>
+</div>
+<div class="col-span-3 flex items-center text-on-surface-variant text-sm">IT Services</div>
+<div class="col-span-3 flex items-center">
+<span class="inline-flex items-center px-2 py-1 rounded bg-error/10 text-error font-label-md text-label-md border border-error/20">Pending Action</span>
+</div>
+<div class="col-span-2 flex items-center justify-end text-on-surface-variant text-sm font-label-md">Oct 20</div>
+</a>
+<a class="grid grid-cols-12 gap-4 px-container-padding py-stack-md border-b border-[#2D3139] hover:bg-[#2D3139]/50 transition-colors group" href="#">
+<div class="col-span-4 flex flex-col justify-center">
+<span class="text-on-surface font-medium group-hover:text-primary transition-colors truncate">GRV-2023-072</span>
+<span class="text-on-surface-variant text-sm truncate">Library Book Unavailability</span>
+</div>
+<div class="col-span-3 flex items-center text-on-surface-variant text-sm">Library</div>
+<div class="col-span-3 flex items-center">
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-variant text-on-surface-variant font-label-md text-label-md border border-outline-variant">Resolved</span>
+</div>
+<div class="col-span-2 flex items-center justify-end text-on-surface-variant text-sm font-label-md">Oct 12</div>
+</a>
+<a class="grid grid-cols-12 gap-4 px-container-padding py-stack-md border-b border-[#2D3139] hover:bg-[#2D3139]/50 transition-colors group" href="#">
+<div class="col-span-4 flex flex-col justify-center">
+<span class="text-on-surface font-medium group-hover:text-primary transition-colors truncate">GRV-2023-065</span>
+<span class="text-on-surface-variant text-sm truncate">Cafeteria Hygiene Concern</span>
+</div>
+<div class="col-span-3 flex items-center text-on-surface-variant text-sm">Administration</div>
+<div class="col-span-3 flex items-center">
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-variant text-on-surface-variant font-label-md text-label-md border border-outline-variant">Resolved</span>
+</div>
+<div class="col-span-2 flex items-center justify-end text-on-surface-variant text-sm font-label-md">Oct 05</div>
+</a>
+</div>
+</div>
+</div>
+</div>
+<!-- Notifications Feed (Cols 9-12) -->
+<div class="md:col-span-4 bg-surface-container-low border border-[#2D3139] rounded-lg flex flex-col h-[400px]">
+<div class="p-container-padding border-b border-[#2D3139] flex justify-between items-center shrink-0">
+<h3 class="font-headline-md text-headline-md text-on-surface">Recent Updates</h3>
+<span class="bg-primary/20 text-primary text-xs font-bold px-2 py-1 rounded-full">3 New</span>
+</div>
+<div class="overflow-y-auto flex-1 p-stack-md space-y-stack-md">
+<!-- Notification Item -->
+<div class="flex gap-stack-sm relative">
+<div class="w-8 h-8 rounded-full bg-[#3B82F6]/20 flex items-center justify-center shrink-0 border border-[#3B82F6]/30">
+<span class="material-symbols-outlined text-sm text-[#3B82F6]" data-icon="update">update</span>
+</div>
+<div class="flex-1 pb-stack-sm border-b border-[#2D3139]">
+<p class="text-sm text-on-surface leading-tight">Status changed to <span class="text-[#3B82F6] font-medium">In Progress</span> for GRV-2023-089</p>
+<p class="text-xs text-on-surface-variant mt-1 font-label-md">2 hours ago</p>
+</div>
+</div>
+<!-- Notification Item -->
+<div class="flex gap-stack-sm relative">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0 border border-outline-variant">
+<span class="material-symbols-outlined text-sm text-on-surface-variant" data-icon="comment">comment</span>
+</div>
+<div class="flex-1 pb-stack-sm border-b border-[#2D3139]">
+<p class="text-sm text-on-surface leading-tight">Prof. Smith added a comment to GRV-2023-089</p>
+<p class="text-xs text-on-surface-variant mt-1 font-label-md">5 hours ago</p>
+</div>
+</div>
+<!-- Notification Item -->
+<div class="flex gap-stack-sm relative">
+<div class="w-8 h-8 rounded-full bg-error/20 flex items-center justify-center shrink-0 border border-error/30">
+<span class="material-symbols-outlined text-sm text-error" data-icon="warning">warning</span>
+</div>
+<div class="flex-1 pb-stack-sm border-b border-[#2D3139]">
+<p class="text-sm text-on-surface leading-tight">Additional documentation requested for GRV-2023-085</p>
+<p class="text-xs text-on-surface-variant mt-1 font-label-md">1 day ago</p>
+</div>
+</div>
+<!-- Notification Item -->
+<div class="flex gap-stack-sm relative opacity-70">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0 border border-outline-variant">
+<span class="material-symbols-outlined text-sm text-on-surface-variant" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex-1 pb-stack-sm">
+<p class="text-sm text-on-surface leading-tight">GRV-2023-072 was marked as Resolved</p>
+<p class="text-xs text-on-surface-variant mt-1 font-label-md">12 days ago</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

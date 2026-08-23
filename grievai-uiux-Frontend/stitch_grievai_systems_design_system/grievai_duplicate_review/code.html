@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Duplicate Review - GrievAI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#3c0091",
+                        "inverse-on-surface": "#2e3038",
+                        "on-surface": "#e1e2ec",
+                        "error": "#ffb4ab",
+                        "surface-tint": "#adc6ff",
+                        "on-tertiary-container": "#461f00",
+                        "surface-container-lowest": "#0b0e15",
+                        "background": "#10131a",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-container-high": "#272a31",
+                        "surface-dim": "#10131a",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "surface-container": "#1d2027",
+                        "surface-variant": "#32353c",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-primary": "#002e6a",
+                        "outline": "#8c909f",
+                        "on-primary-container": "#00285d",
+                        "primary-fixed": "#d8e2ff",
+                        "on-secondary-fixed": "#23005c",
+                        "surface-container-highest": "#32353c",
+                        "primary-container": "#4d8eff",
+                        "tertiary": "#ffb786",
+                        "secondary-container": "#571bc1",
+                        "secondary": "#d0bcff",
+                        "on-error-container": "#ffdad6",
+                        "on-error": "#690005",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "on-primary-fixed": "#001a42",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "on-tertiary": "#502400",
+                        "secondary-fixed": "#e9ddff",
+                        "tertiary-container": "#df7412",
+                        "on-tertiary-fixed": "#311400",
+                        "on-secondary-container": "#c4abff",
+                        "surface-container-low": "#191b23",
+                        "primary": "#adc6ff",
+                        "on-surface-variant": "#c2c6d6",
+                        "inverse-surface": "#e1e2ec",
+                        "error-container": "#93000a",
+                        "surface-bright": "#363941",
+                        "on-secondary-fixed-variant": "#5516be",
+                        "on-background": "#e1e2ec",
+                        "outline-variant": "#424754",
+                        "inverse-primary": "#005ac2",
+                        "surface": "#10131a",
+                        "tertiary-fixed": "#ffdcc6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "element-gap": "12px",
+                        "container-padding": "24px",
+                        "unit": "4px",
+                        "card-gap": "16px",
+                        "inner-padding": "20px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "body-md": ["Inter"],
+                        "mono-sm": ["JetBrains Mono"],
+                        "label-md": ["Geist"],
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "mono-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #10131a;
+            color: #e1e2ec;
+        }
+        .ai-glow {
+            box-shadow: 0 0 24px rgba(173, 198, 255, 0.15);
+        }
+        .ai-gradient-bg {
+            background: linear-gradient(135deg, rgba(77, 142, 255, 0.1) 0%, rgba(87, 27, 193, 0.1) 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md text-body-md bg-background text-on-background antialiased selection:bg-primary-container selection:text-on-primary-container relative pb-[88px]">
+<!-- Focused Workspace Header (Navigation Suppressed as per Task-Focused Rule) -->
+<header class="h-16 flex items-center justify-between px-container-padding border-b border-surface-variant bg-surface/80 backdrop-blur-md sticky top-0 z-40">
+<div class="flex items-center gap-card-gap">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container-highest transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<div class="h-6 w-px bg-surface-variant"></div>
+<div>
+<h1 class="font-headline-md text-headline-md text-on-surface">Duplicate Review Workspace</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Resolve potential redundancy</p>
+</div>
+</div>
+<div class="flex items-center gap-element-gap">
+<div class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-full border border-surface-variant">
+<span class="material-symbols-outlined text-primary" data-icon="sparkles" style="font-variation-settings: 'FILL' 1;">arrow_back_ios_new</span>
+<span class="font-label-md text-label-md text-primary">AI Confidence: 92%</span>
+</div>
+</div>
+</header>
+<!-- Main Workspace Content -->
+<main class="flex-1 p-container-padding flex flex-col xl:flex-row gap-card-gap max-w-[1600px] mx-auto w-full">
+<!-- Left Panel: Original Complaint -->
+<section class="flex-1 flex flex-col gap-card-gap min-w-[320px]">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+<h2 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Original Record</h2>
+</div>
+<div class="bg-surface-container-low border border-surface-variant rounded-xl p-inner-padding flex-1 flex flex-col gap-container-padding relative overflow-hidden">
+<!-- Header -->
+<div class="flex justify-between items-start">
+<div>
+<div class="font-mono-sm text-mono-sm text-on-surface-variant mb-1">GRV-2023-8942</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Unsafe Working Conditions on Site B</h3>
+</div>
+<span class="px-2 py-1 rounded-md bg-surface-variant text-on-surface text-label-md font-label-md">Oct 12, 2023</span>
+</div>
+<!-- Metadata Grid -->
+<div class="grid grid-cols-2 gap-element-gap p-inner-padding bg-surface-container rounded-lg border border-surface-variant">
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Location</div>
+<div class="font-body-md text-body-md text-on-surface">North Wing, Level 3</div>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Category</div>
+<div class="font-body-md text-body-md text-on-surface">Safety Hazard</div>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Reporter</div>
+<div class="font-body-md text-body-md text-on-surface">Anonymous</div>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Status</div>
+<div class="font-body-md text-body-md text-primary">In Investigation</div>
+</div>
+</div>
+<!-- Description -->
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-2">Description</div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed whitespace-pre-wrap">Exposed wiring near the main water dispenser in the North Wing break room. It has been like this for three days and poses a significant electrocution risk, especially with the frequent spills in the area.</p>
+</div>
+<!-- Entities/Tags -->
+<div class="mt-auto pt-card-gap">
+<div class="font-label-md text-label-md text-on-surface-variant mb-2">Extracted Entities</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-2.5 py-1 rounded-full bg-surface-variant text-on-surface font-mono-sm text-mono-sm">wiring</span>
+<span class="px-2.5 py-1 rounded-full bg-surface-variant text-on-surface font-mono-sm text-mono-sm">water_dispenser</span>
+<span class="px-2.5 py-1 rounded-full bg-surface-variant text-on-surface font-mono-sm text-mono-sm">north_wing</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Center Divider / AI Analysis -->
+<section class="xl:w-[320px] shrink-0 flex flex-col gap-card-gap">
+<div class="flex items-center gap-3 xl:justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="compare_arrows">compare_arrows</span>
+<h2 class="font-label-md text-label-md text-primary uppercase tracking-widest">Similarity Analysis</h2>
+</div>
+<div class="bg-surface-container border border-surface-variant rounded-xl p-inner-padding ai-glow ai-gradient-bg flex-1 flex flex-col gap-container-padding relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-xl"></div>
+<div class="text-center pb-card-gap border-b border-surface-variant">
+<div class="font-display-lg text-display-lg text-primary mb-1">92%</div>
+<div class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wide">Match Probability</div>
+</div>
+<div class="flex flex-col gap-card-gap">
+<!-- Common Signals -->
+<div>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-green-400 text-[18px]" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<h4 class="font-label-md text-label-md text-on-surface">Common Signals</h4>
+</div>
+<ul class="space-y-2">
+<li class="flex justify-between items-center bg-surface-container-low p-2 rounded-md border border-surface-variant">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Location</span>
+<span class="font-mono-sm text-mono-sm text-on-surface">North Wing</span>
+</li>
+<li class="flex justify-between items-center bg-surface-container-low p-2 rounded-md border border-surface-variant">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Subject</span>
+<span class="font-mono-sm text-mono-sm text-on-surface">Exposed Wiring</span>
+</li>
+<li class="flex justify-between items-center bg-surface-container-low p-2 rounded-md border border-surface-variant">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Timeframe</span>
+<span class="font-mono-sm text-mono-sm text-on-surface">&lt; 24h apart</span>
+</li>
+</ul>
+</div>
+<!-- Different Signals -->
+<div>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-orange-400 text-[18px]" data-icon="error" style="font-variation-settings: 'FILL' 1;">error</span>
+<h4 class="font-label-md text-label-md text-on-surface">Different Signals</h4>
+</div>
+<ul class="space-y-2">
+<li class="flex justify-between items-center bg-surface-container-low p-2 rounded-md border border-surface-variant">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Reporter</span>
+<span class="font-mono-sm text-mono-sm text-on-surface">Unknown vs. J. Doe</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Panel: Potential Duplicate -->
+<section class="flex-1 flex flex-col gap-card-gap min-w-[320px]">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<h2 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Potential Duplicate</h2>
+</div>
+<div class="bg-surface-container-low border border-surface-variant rounded-xl p-inner-padding flex-1 flex flex-col gap-container-padding relative overflow-hidden">
+<!-- AI Highlight Inner Border -->
+<div class="absolute inset-0 border-[0.5px] border-primary/20 rounded-xl pointer-events-none"></div>
+<!-- Header -->
+<div class="flex justify-between items-start">
+<div>
+<div class="font-mono-sm text-mono-sm text-primary mb-1">GRV-2023-8810</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Electrical hazard in break room</h3>
+</div>
+<span class="px-2 py-1 rounded-md bg-surface-variant text-on-surface text-label-md font-label-md">Oct 13, 2023</span>
+</div>
+<!-- Metadata Grid -->
+<div class="grid grid-cols-2 gap-element-gap p-inner-padding bg-surface-container rounded-lg border border-surface-variant">
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Location</div>
+<div class="font-body-md text-body-md text-on-surface bg-primary/10 px-1 -mx-1 rounded">North Wing, Break Room</div>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Category</div>
+<div class="font-body-md text-body-md text-on-surface">Facilities</div>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Reporter</div>
+<div class="font-body-md text-body-md text-on-surface">John Doe</div>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-1">Status</div>
+<div class="font-body-md text-body-md text-on-surface">New</div>
+</div>
+</div>
+<!-- Description -->
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant mb-2">Description</div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed whitespace-pre-wrap">There are some wires hanging out of the wall near the water cooler on the 3rd floor north side. Someone could get shocked when getting a drink.</p>
+</div>
+<!-- Entities/Tags -->
+<div class="mt-auto pt-card-gap">
+<div class="font-label-md text-label-md text-on-surface-variant mb-2">Extracted Entities</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-mono-sm text-mono-sm">wires</span>
+<span class="px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-mono-sm text-mono-sm">water_cooler</span>
+<span class="px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-mono-sm text-mono-sm">3rd_floor_north</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Sticky Actions -->
+<footer class="fixed bottom-0 left-0 right-0 h-[88px] bg-surface-container-high border-t border-surface-variant flex items-center justify-center px-container-padding z-40 shadow-[0_-8px_32px_rgba(0,0,0,0.4)] backdrop-blur-md bg-opacity-90">
+<div class="max-w-[800px] w-full flex items-center justify-between gap-card-gap">
+<button class="px-6 py-3 rounded-lg border border-surface-variant bg-surface hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="close">close</span>
+                Not Related
+            </button>
+<div class="flex items-center gap-element-gap">
+<button class="px-6 py-3 rounded-lg border border-surface-variant bg-surface hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="link">link</span>
+                    Mark Related
+                </button>
+<button class="px-8 py-3 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md transition-all ai-glow flex items-center gap-2 relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary-container opacity-0 group-hover:opacity-10 transition-opacity"></div>
+<span class="material-symbols-outlined text-[18px]" data-icon="merge_type">merge_type</span>
+                    Confirm Duplicate
+                </button>
+</div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GrievAI - AI Response Draft</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#3c0091",
+                        "inverse-on-surface": "#2e3038",
+                        "on-surface": "#e1e2ec",
+                        "error": "#ffb4ab",
+                        "surface-tint": "#adc6ff",
+                        "on-tertiary-container": "#461f00",
+                        "surface-container-lowest": "#0b0e15",
+                        "background": "#10131a",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-container-high": "#272a31",
+                        "surface-dim": "#10131a",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "surface-container": "#1d2027",
+                        "surface-variant": "#32353c",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-primary": "#002e6a",
+                        "outline": "#8c909f",
+                        "on-primary-container": "#00285d",
+                        "primary-fixed": "#d8e2ff",
+                        "on-secondary-fixed": "#23005c",
+                        "surface-container-highest": "#32353c",
+                        "primary-container": "#4d8eff",
+                        "tertiary": "#ffb786",
+                        "secondary-container": "#571bc1",
+                        "secondary": "#d0bcff",
+                        "on-error-container": "#ffdad6",
+                        "on-error": "#690005",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "on-primary-fixed": "#001a42",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "on-tertiary": "#502400",
+                        "secondary-fixed": "#e9ddff",
+                        "tertiary-container": "#df7412",
+                        "on-tertiary-fixed": "#311400",
+                        "on-secondary-container": "#c4abff",
+                        "surface-container-low": "#191b23",
+                        "primary": "#adc6ff",
+                        "on-surface-variant": "#c2c6d6",
+                        "inverse-surface": "#e1e2ec",
+                        "error-container": "#93000a",
+                        "surface-bright": "#363941",
+                        "on-secondary-fixed-variant": "#5516be",
+                        "on-background": "#e1e2ec",
+                        "outline-variant": "#424754",
+                        "inverse-primary": "#005ac2",
+                        "surface": "#10131a",
+                        "tertiary-fixed": "#ffdcc6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "element-gap": "12px",
+                        "container-padding": "24px",
+                        "unit": "4px",
+                        "card-gap": "16px",
+                        "inner-padding": "20px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "body-md": ["Inter"],
+                        "mono-sm": ["JetBrains Mono"],
+                        "label-md": ["Geist"],
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "mono-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0a0a0a;
+            color: #e1e2ec;
+        }
+        .ai-glow {
+            box-shadow: 0 0 15px rgba(173, 198, 255, 0.1);
+        }
+        .ai-gradient-text {
+            background: linear-gradient(90deg, #adc6ff 0%, #d0bcff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-background dark:bg-background text-on-background font-body-md antialiased h-screen overflow-hidden flex">
+<!-- SideNavBar (Suppressed as per rules for transactional/focused task) -->
+<!-- TopNavBar (Suppressed as per rules for transactional/focused task) -->
+<!-- Main Canvas -->
+<main class="flex-1 flex flex-col h-full bg-[#0a0a0a]">
+<!-- Header -->
+<header class="h-16 flex justify-between items-center px-container-padding bg-[#0a0a0a] border-b border-[#262626] z-10 shrink-0">
+<div class="flex items-center gap-element-gap">
+<button class="p-2 rounded hover:bg-surface-container-highest transition-colors flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<h1 class="font-headline-md text-headline-md text-on-background">Grievance #GRV-2023-0892</h1>
+</div>
+<!-- Stepper / Status -->
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 rounded bg-[rgba(59,130,246,0.1)] text-primary font-label-md text-label-md flex items-center gap-1 border border-[rgba(59,130,246,0.2)]">
+<span class="material-symbols-outlined text-[14px]" data-icon="auto_awesome" data-weight="fill" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                    AI GENERATED DRAFT
+                </span>
+</div>
+</header>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-y-auto p-container-padding flex flex-col items-center">
+<div class="w-full max-w-4xl flex flex-col gap-card-gap pb-32">
+<!-- Context Banner -->
+<div class="bg-[rgba(38,38,38,0.4)] border border-[#262626] rounded-lg p-inner-padding flex items-start gap-element-gap backdrop-blur-md">
+<div class="text-primary mt-0.5">
+<span class="material-symbols-outlined" data-icon="info">info</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-primary mb-1">HUMAN-IN-THE-LOOP VALIDATION REQUIRED</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">AI-generated draft — review before sending. The following response has been synthesized based on the institution's policy corpus and the specifics of grievance #GRV-2023-0892. Please verify tone and factual accuracy.</p>
+</div>
+</div>
+<!-- Main Editor Card -->
+<div class="bg-[#171717] border border-[#262626] rounded-xl flex flex-col relative overflow-hidden ai-glow">
+<!-- AI Accent Bar -->
+<div class="absolute left-0 top-0 bottom-0 w-[2px] bg-primary"></div>
+<!-- Editor Header -->
+<div class="p-inner-padding border-b border-[#262626] flex justify-between items-center bg-[rgba(10,10,10,0.5)]">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-1">To</span>
+<span class="font-body-md text-body-md text-on-background">j.doe@institution.edu</span>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded border border-[#262626] hover:bg-[#262626] transition-colors flex items-center justify-center text-on-surface-variant tooltip" title="Copy to Clipboard">
+<span class="material-symbols-outlined text-[18px]" data-icon="content_copy">content_copy</span>
+</button>
+<button class="px-3 py-1.5 rounded border border-[#262626] hover:bg-[#262626] transition-colors flex items-center gap-2 text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]" data-icon="edit">edit</span>
+                                Edit
+                            </button>
+</div>
+</div>
+<!-- Editor Body (Editable Content) -->
+<div class="p-inner-padding flex-1">
+<div class="font-body-lg text-body-lg text-on-background leading-relaxed whitespace-pre-wrap outline-none" contenteditable="true" id="ai-draft-editor">Dear Mx. Doe,
+
+Following a comprehensive review of grievance report #GRV-2023-0892 regarding the incident dated October 12th, the preliminary investigation has concluded.
+
+Based on the evidence provided and our institutional policy section 4.2.1 (Conduct and Resolution), we have determined that mediation is the appropriate next step. The AI analysis of related precedent suggests this path yields the highest resolution satisfaction for similar cases.
+
+Please confirm your availability for a preliminary mediation scheduling call next Tuesday or Wednesday.
+
+Sincerely,
+
+Institutional Grievance Office
+Powered by GrievAI</div>
+</div>
+<!-- AI Insight Footnote inside editor -->
+<div class="p-3 bg-[rgba(59,130,246,0.05)] border-t border-[rgba(59,130,246,0.1)] flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-[16px] mt-0.5" data-icon="lightbulb" data-weight="fill" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant"><strong>AI Insight:</strong> Tone analyzed as "Formal &amp; Empathetic". References to policy 4.2.1 have been verified against the current institutional handbook (v2023.4).</p>
+</div>
+</div>
+<!-- Source Citations Bento (Optional/Supporting) -->
+<div class="bg-[#171717] border border-[#262626] rounded-xl p-inner-padding">
+<h4 class="font-label-md text-label-md text-on-surface-variant mb-4 uppercase">Referenced Policies</h4>
+<div class="flex gap-4">
+<div class="flex-1 bg-[#0a0a0a] border border-[#262626] rounded p-3 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline" data-icon="description">description</span>
+<div>
+<div class="font-body-sm text-body-sm text-on-background font-medium">Policy 4.2.1</div>
+<div class="font-mono-sm text-mono-sm text-on-surface-variant">Conduct &amp; Resolution</div>
+</div>
+</div>
+<span class="text-emerald-400 font-label-md text-label-md text-[10px] bg-[rgba(16,185,129,0.1)] px-2 py-0.5 rounded">VERIFIED</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sticky Footer Actions -->
+<div class="bg-[rgba(23,23,23,0.95)] border-t border-[#262626] p-container-padding flex justify-between items-center backdrop-blur-xl absolute bottom-0 left-0 right-0 z-20">
+<div class="flex gap-3">
+<button class="px-4 py-2 rounded-lg border border-[#262626] hover:bg-[#262626] transition-colors font-label-md text-label-md text-error flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="delete">delete</span>
+                    Discard
+                </button>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 rounded-lg border border-[#262626] hover:bg-[#262626] transition-colors font-label-md text-label-md text-on-background flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="refresh">refresh</span>
+                    Regenerate
+                </button>
+<button class="px-6 py-2 rounded-lg bg-primary hover:bg-primary-container transition-colors font-label-md text-label-md text-on-primary flex items-center gap-2 shadow-[0_0_15px_rgba(173,198,255,0.15)] relative overflow-hidden group">
+<div class="absolute inset-x-0 top-0 h-px bg-white/30"></div>
+<span class="material-symbols-outlined text-[18px]" data-icon="send">send</span>
+                    Approve &amp; Send
+                </button>
+</div>
+</div>
+</main>
+<script>
+        // Simple script to handle contenteditable focus state styling
+        const editor = document.getElementById('ai-draft-editor');
+        const editorCard = editor.closest('.bg-\\[\\#171717\\]');
+
+        editor.addEventListener('focus', () => {
+            editorCard.classList.add('ring-1', 'ring-primary', 'shadow-[0_0_20px_rgba(173,198,255,0.15)]');
+            editorCard.classList.remove('ai-glow'); // Swap glow for more intense focus ring
+        });
+
+        editor.addEventListener('blur', () => {
+            editorCard.classList.remove('ring-1', 'ring-primary', 'shadow-[0_0_20px_rgba(173,198,255,0.15)]');
+            editorCard.classList.add('ai-glow');
+        });
+    </script>
+</body></html>

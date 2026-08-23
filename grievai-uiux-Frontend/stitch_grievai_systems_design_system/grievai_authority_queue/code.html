@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Grievance AI - Case Queue</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#002e6a",
+                      "on-error": "#690005",
+                      "surface-container-low": "#191b23",
+                      "inverse-surface": "#e1e2ec",
+                      "secondary-container": "#571bc1",
+                      "on-tertiary-fixed": "#311400",
+                      "surface-tint": "#adc6ff",
+                      "surface-container-high": "#272a31",
+                      "primary-fixed-dim": "#adc6ff",
+                      "primary-fixed": "#d8e2ff",
+                      "outline-variant": "#424754",
+                      "tertiary-container": "#df7412",
+                      "background": "#10131a",
+                      "inverse-on-surface": "#2e3038",
+                      "secondary": "#d0bcff",
+                      "surface-dim": "#10131a",
+                      "error-container": "#93000a",
+                      "outline": "#8c909f",
+                      "on-tertiary-fixed-variant": "#723600",
+                      "on-background": "#e1e2ec",
+                      "surface-container-lowest": "#0b0e15",
+                      "on-primary-fixed": "#001a42",
+                      "surface-bright": "#363941",
+                      "surface-container": "#1d2027",
+                      "primary-container": "#4d8eff",
+                      "secondary-fixed-dim": "#d0bcff",
+                      "surface-variant": "#32353c",
+                      "on-tertiary-container": "#461f00",
+                      "on-error-container": "#ffdad6",
+                      "on-secondary": "#3c0091",
+                      "tertiary": "#ffb786",
+                      "on-primary-container": "#00285d",
+                      "on-surface": "#e1e2ec",
+                      "tertiary-fixed": "#ffdcc6",
+                      "inverse-primary": "#005ac2",
+                      "on-secondary-fixed-variant": "#5516be",
+                      "tertiary-fixed-dim": "#ffb786",
+                      "on-secondary-container": "#c4abff",
+                      "on-tertiary": "#502400",
+                      "error": "#ffb4ab",
+                      "surface-container-highest": "#32353c",
+                      "secondary-fixed": "#e9ddff",
+                      "on-surface-variant": "#c2c6d6",
+                      "on-secondary-fixed": "#23005c",
+                      "surface": "#10131a",
+                      "primary": "#adc6ff",
+                      "on-primary-fixed-variant": "#004395"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "element-gap": "12px",
+                      "container-padding": "24px",
+                      "unit": "4px",
+                      "inner-padding": "20px",
+                      "card-gap": "16px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Geist"],
+                      "body-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "mono-sm": ["JetBrains Mono"],
+                      "display-lg": ["Geist"],
+                      "label-md": ["Geist"],
+                      "headline-md": ["Geist"]
+              },
+              "fontSize": {
+                      "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "mono-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0a0a0a;
+            color: #e1e2ec;
+        }
+        .ai-glass {
+            background: rgba(38, 38, 38, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(66, 71, 84, 0.3);
+        }
+        .bento-card {
+            background-color: #171717;
+            border: 1px solid #262626;
+            border-radius: 0.75rem;
+        }
+        
+        /* High Density Table Styles */
+        .table-row:hover {
+            background-color: #262626;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #424754;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8c909f;
+        }
+    </style>
+</head>
+<body class="font-body-md antialiased text-on-background h-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-surface-container-lowest dark:bg-surface-container-lowest h-full w-20 flex-col border-r border-outline-variant fixed left-0 top-0 z-50 py-6 items-center justify-between">
+<div class="flex flex-col items-center w-full gap-8">
+<!-- Brand Logo -->
+<div class="flex items-center justify-center w-12 h-12 bg-primary-container/10 rounded-xl border border-primary/20">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+</div>
+<!-- Navigation Tabs -->
+<div class="flex flex-col items-center gap-4 w-full px-2">
+<a class="flex flex-col items-center justify-center w-14 h-14 rounded-xl text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors scale-95 active:scale-90 transition-all group" href="#" title="Dashboard">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">grid_view</span>
+</a>
+<a class="flex flex-col items-center justify-center w-14 h-14 rounded-xl text-primary dark:text-primary bg-primary-container/20 hover:bg-surface-variant/50 transition-colors scale-95 active:scale-90 transition-all group" href="#" title="Grievances">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assignment_late</span>
+</a>
+<a class="flex flex-col items-center justify-center w-14 h-14 rounded-xl text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors scale-95 active:scale-90 transition-all group" href="#" title="Analytics">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">query_stats</span>
+</a>
+<a class="flex flex-col items-center justify-center w-14 h-14 rounded-xl text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors scale-95 active:scale-90 transition-all group" href="#" title="Students">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">group</span>
+</a>
+<a class="flex flex-col items-center justify-center w-14 h-14 rounded-xl text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors scale-95 active:scale-90 transition-all group" href="#" title="Institutions">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">account_balance</span>
+</a>
+</div>
+</div>
+<!-- Footer Tabs -->
+<div class="flex flex-col items-center gap-4 w-full px-2">
+<a class="flex flex-col items-center justify-center w-14 h-14 rounded-xl text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors scale-95 active:scale-90 transition-all group" href="#" title="Notifications">
+<div class="relative">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</div>
+</a>
+<a class="flex flex-col items-center justify-center w-14 h-14 rounded-xl text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors scale-95 active:scale-90 transition-all group" href="#" title="Settings">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+</a>
+<button class="mt-2 w-10 h-10 rounded-full overflow-hidden border border-outline-variant hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a corporate administrator in a dark studio setting. The lighting is dramatic, highlighting the subject's face against a deep charcoal background. The subject is wearing a tailored navy blazer and a crisp white shirt, exuding authority and calm. The image has a cinematic, high-end corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdpV452NJq_2GKjfAiVo70WIr0XfRWB6WCPlVAtat3gKmI_1coMIIEAvfqoFYaMVuxisvPPMULLzmXBn8tad3DxkcduC3BM4-8Id4Nq1SBNa-dC8K7qcDSCCcpRl8ASYTCQ6f9pOzjReCSNh9-6bHem3oa1lSKM114xeofHrhhO9vUVrU6JGDdFltY3hhRCZ9_JXgpnENqvibFBKVdLP2gWMNcQLXJsL48FMIBTCKnBA_Wi-Ku0pYN"/>
+</button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-0 md:ml-20 flex-1 flex flex-col h-full bg-background overflow-hidden relative">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-40 flex justify-between items-center px-container-padding py-4 bg-background/80 backdrop-blur-xl border-b border-outline-variant/30 full-width">
+<div class="flex items-center gap-6">
+<!-- Mobile Menu Button -->
+<button class="md:hidden text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-black text-on-background dark:text-on-background tracking-tight">
+                    Case Intelligence
+                </h1>
+<!-- Navigation Links (Desktop) -->
+<nav class="hidden md:flex gap-6 ml-8">
+<a class="font-label-md text-label-md text-primary font-bold border-b-2 border-primary pb-2" href="#">Queue</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant pb-2 hover:text-primary transition-colors" href="#">In-Review</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant pb-2 hover:text-primary transition-colors" href="#">Resolved</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant pb-2 hover:text-primary transition-colors" href="#">Urgent</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<!-- Search -->
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="bg-[#0a0a0a] border border-[#262626] rounded-lg pl-9 pr-4 py-1.5 text-sm w-64 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-outline-variant text-on-surface" placeholder="Search cases, students, or keywords..." type="text"/>
+</div>
+<!-- Trailing Icons -->
+<div class="flex items-center gap-2">
+<button class="w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-variant/30 transition-colors opacity-80 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+</button>
+<button class="w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-variant/30 transition-colors opacity-80 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-sm">help_outline</span>
+</button>
+</div>
+<!-- Trailing Primary Action -->
+<button class="bg-primary text-on-primary font-label-md text-label-md px-4 py-2 rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-sm font-bold">add</span>
+                    New Case
+                </button>
+</div>
+</header>
+<!-- Canvas -->
+<div class="flex-1 overflow-auto p-container-padding flex flex-col gap-card-gap">
+<!-- Page Header & Filters -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+<div class="flex gap-2 bg-[#171717] p-1 rounded-lg border border-[#262626] overflow-x-auto w-full sm:w-auto hide-scrollbar">
+<button class="px-3 py-1.5 rounded-md bg-[#262626] text-primary font-label-md text-label-md whitespace-nowrap">All Grievances (142)</button>
+<button class="px-3 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-[#262626]/50 transition-colors font-label-md text-label-md whitespace-nowrap">Needs Review (28)</button>
+<button class="px-3 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-[#262626]/50 transition-colors font-label-md text-label-md whitespace-nowrap">Assigned to Me (5)</button>
+<button class="px-3 py-1.5 rounded-md text-error hover:text-error hover:bg-error/10 transition-colors font-label-md text-label-md whitespace-nowrap flex items-center gap-1">
+                        High Priority
+                        <span class="w-4 h-4 bg-error/20 text-error rounded-full flex items-center justify-center text-[10px]">12</span>
+</button>
+</div>
+<div class="flex items-center gap-2 w-full sm:w-auto">
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#262626] text-on-surface-variant hover:text-on-surface hover:border-outline-variant transition-colors font-label-md text-label-md w-full sm:w-auto justify-center">
+<span class="material-symbols-outlined text-sm">sort</span>
+                        Sort: Urgency
+                    </button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#262626] text-on-surface-variant hover:text-on-surface hover:border-outline-variant transition-colors font-label-md text-label-md w-full sm:w-auto justify-center">
+<span class="material-symbols-outlined text-sm">view_column</span>
+                        Columns
+                    </button>
+</div>
+</div>
+<!-- Bento Data Table -->
+<div class="bento-card flex-1 flex flex-col min-h-[500px] overflow-hidden relative">
+<!-- Table Header -->
+<div class="grid grid-cols-12 gap-4 px-inner-padding py-3 bg-[#171717] border-b border-[#262626] sticky top-0 z-10">
+<div class="col-span-2 flex items-center gap-2">
+<input class="w-4 h-4 rounded bg-[#0a0a0a] border-[#424754] text-primary focus:ring-primary/50 focus:ring-offset-0" type="checkbox"/>
+<span class="font-label-md text-label-md text-outline">REFERENCE</span>
+</div>
+<div class="col-span-3 flex items-center">
+<span class="font-label-md text-label-md text-outline">COMPLAINT SNIPPET</span>
+</div>
+<div class="col-span-1 flex items-center">
+<span class="font-label-md text-label-md text-outline">CATEGORY</span>
+</div>
+<div class="col-span-2 flex items-center">
+<span class="font-label-md text-label-md text-outline">AI INSIGHT</span>
+</div>
+<div class="col-span-1 flex items-center">
+<span class="font-label-md text-label-md text-outline">PRIORITY</span>
+</div>
+<div class="col-span-1 flex items-center">
+<span class="font-label-md text-label-md text-outline">STATUS</span>
+</div>
+<div class="col-span-2 flex items-center justify-end">
+<span class="font-label-md text-label-md text-outline">SLA / CREATED</span>
+</div>
+</div>
+<!-- Table Body (Scrollable) -->
+<div class="flex-1 overflow-y-auto">
+<!-- Row 1: Critical -->
+<div class="grid grid-cols-12 gap-4 px-inner-padding py-4 border-b border-[#262626] table-row items-center transition-colors relative">
+<!-- AI Inner Glow Indicator for High Confidence/Critical -->
+<div class="absolute left-0 top-0 bottom-0 w-0.5 bg-error"></div>
+<div class="col-span-2 flex items-center gap-2">
+<input class="w-4 h-4 rounded bg-[#0a0a0a] border-[#424754] text-primary focus:ring-primary/50 focus:ring-offset-0" type="checkbox"/>
+<span class="font-mono-sm text-mono-sm text-on-surface">GRV-24-0891</span>
+</div>
+<div class="col-span-3 pr-4">
+<p class="font-body-sm text-body-sm text-on-surface truncate">Alleged discrimination in grading by Prof. Smith during final exams.</p>
+<p class="font-body-sm text-body-sm text-outline-variant text-[11px] mt-0.5 truncate">Submitted by: Jane D. (Student ID: 89012)</p>
+</div>
+<div class="col-span-1">
+<span class="px-2 py-1 rounded bg-surface-variant text-on-surface-variant font-label-md text-[10px] uppercase tracking-wider">Academic</span>
+</div>
+<div class="col-span-2 flex flex-col gap-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-xs" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-label-md text-label-md text-primary">98% Match</span>
+</div>
+<span class="font-body-sm text-[11px] text-outline-variant truncate">Pattern detected: 3 similar cases</span>
+</div>
+<div class="col-span-1">
+<span class="px-2 py-1 rounded bg-error/10 text-error border border-error/20 font-label-md text-[10px] uppercase tracking-wider flex items-center justify-center w-fit gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                                Critical
+                            </span>
+</div>
+<div class="col-span-1">
+<span class="font-body-sm text-body-sm text-on-surface">In-Review</span>
+</div>
+<div class="col-span-2 flex flex-col items-end justify-center">
+<span class="font-mono-sm text-mono-sm text-error font-medium">0h 45m left</span>
+<span class="font-body-sm text-[11px] text-outline-variant">Today, 08:30 AM</span>
+</div>
+</div>
+<!-- Row 2: Medium -->
+<div class="grid grid-cols-12 gap-4 px-inner-padding py-4 border-b border-[#262626] table-row items-center transition-colors">
+<div class="col-span-2 flex items-center gap-2">
+<input class="w-4 h-4 rounded bg-[#0a0a0a] border-[#424754] text-primary focus:ring-primary/50 focus:ring-offset-0" type="checkbox"/>
+<span class="font-mono-sm text-mono-sm text-on-surface">GRV-24-0889</span>
+</div>
+<div class="col-span-3 pr-4">
+<p class="font-body-sm text-body-sm text-on-surface truncate">Maintenance request for broken heater in Dorm B, Room 402.</p>
+<p class="font-body-sm text-body-sm text-outline-variant text-[11px] mt-0.5 truncate">Submitted by: Mark T. (Student ID: 44321)</p>
+</div>
+<div class="col-span-1">
+<span class="px-2 py-1 rounded bg-surface-variant text-on-surface-variant font-label-md text-[10px] uppercase tracking-wider">Facilities</span>
+</div>
+<div class="col-span-2 flex flex-col gap-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-outline-variant text-xs">auto_awesome</span>
+<span class="font-label-md text-label-md text-outline-variant">65% Match</span>
+</div>
+<span class="font-body-sm text-[11px] text-outline-variant truncate">Standard routing applied</span>
+</div>
+<div class="col-span-1">
+<span class="px-2 py-1 rounded bg-tertiary-container/10 text-tertiary-container border border-tertiary-container/20 font-label-md text-[10px] uppercase tracking-wider flex items-center justify-center w-fit gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+                                Medium
+                            </span>
+</div>
+<div class="col-span-1">
+<span class="font-body-sm text-body-sm text-on-surface">Assigned</span>
+</div>
+<div class="col-span-2 flex flex-col items-end justify-center">
+<span class="font-mono-sm text-mono-sm text-on-surface">12h 30m left</span>
+<span class="font-body-sm text-[11px] text-outline-variant">Yesterday, 14:15</span>
+</div>
+</div>
+<!-- Row 3: High -->
+<div class="grid grid-cols-12 gap-4 px-inner-padding py-4 border-b border-[#262626] table-row items-center transition-colors relative">
+<div class="absolute left-0 top-0 bottom-0 w-0.5 bg-primary"></div>
+<div class="col-span-2 flex items-center gap-2">
+<input class="w-4 h-4 rounded bg-[#0a0a0a] border-[#424754] text-primary focus:ring-primary/50 focus:ring-offset-0" type="checkbox"/>
+<span class="font-mono-sm text-mono-sm text-on-surface">GRV-24-0885</span>
+</div>
+<div class="col-span-3 pr-4">
+<p class="font-body-sm text-body-sm text-on-surface truncate">Dispute over tuition fee refund policy misinterpretation.</p>
+<p class="font-body-sm text-body-sm text-outline-variant text-[11px] mt-0.5 truncate">Submitted by: Sarah K. (Student ID: 11290)</p>
+</div>
+<div class="col-span-1">
+<span class="px-2 py-1 rounded bg-surface-variant text-on-surface-variant font-label-md text-[10px] uppercase tracking-wider">Financial</span>
+</div>
+<div class="col-span-2 flex flex-col gap-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-xs" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-label-md text-label-md text-primary">82% Match</span>
+</div>
+<span class="font-body-sm text-[11px] text-primary truncate">Policy exception likely</span>
+</div>
+<div class="col-span-1">
+<span class="px-2 py-1 rounded bg-tertiary-container/10 text-tertiary-container border border-tertiary-container/20 font-label-md text-[10px] uppercase tracking-wider flex items-center justify-center w-fit gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+                                High
+                            </span>
+</div>
+<div class="col-span-1">
+<span class="font-body-sm text-body-sm text-on-surface">New</span>
+</div>
+<div class="col-span-2 flex flex-col items-end justify-center">
+<span class="font-mono-sm text-mono-sm text-tertiary-container font-medium">3h 15m left</span>
+<span class="font-body-sm text-[11px] text-outline-variant">Yesterday, 09:00</span>
+</div>
+</div>
+</div>
+<!-- Table Footer / Pagination (Mock) -->
+<div class="border-t border-[#262626] p-4 flex justify-between items-center bg-[#171717] mt-auto">
+<span class="font-body-sm text-body-sm text-outline-variant">Showing 1-10 of 142 cases</span>
+<div class="flex gap-2">
+<button class="p-1 rounded bg-[#262626] text-outline-variant hover:text-on-surface disabled:opacity-50"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<button class="p-1 rounded bg-[#262626] text-outline-variant hover:text-on-surface"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

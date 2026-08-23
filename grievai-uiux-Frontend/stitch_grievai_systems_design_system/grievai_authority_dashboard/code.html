@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Grievance AI - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#002e6a",
+                        "on-error": "#690005",
+                        "surface-container-low": "#191b23",
+                        "inverse-surface": "#e1e2ec",
+                        "secondary-container": "#571bc1",
+                        "on-tertiary-fixed": "#311400",
+                        "surface-tint": "#adc6ff",
+                        "surface-container-high": "#272a31",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary-fixed": "#d8e2ff",
+                        "outline-variant": "#424754",
+                        "tertiary-container": "#df7412",
+                        "background": "#10131a",
+                        "inverse-on-surface": "#2e3038",
+                        "secondary": "#d0bcff",
+                        "surface-dim": "#10131a",
+                        "error-container": "#93000a",
+                        "outline": "#8c909f",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "on-background": "#e1e2ec",
+                        "surface-container-lowest": "#0b0e15",
+                        "on-primary-fixed": "#001a42",
+                        "surface-bright": "#363941",
+                        "surface-container": "#1d2027",
+                        "primary-container": "#4d8eff",
+                        "secondary-fixed-dim": "#d0bcff",
+                        "surface-variant": "#32353c",
+                        "on-tertiary-container": "#461f00",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary": "#3c0091",
+                        "tertiary": "#ffb786",
+                        "on-primary-container": "#00285d",
+                        "on-surface": "#e1e2ec",
+                        "tertiary-fixed": "#ffdcc6",
+                        "inverse-primary": "#005ac2",
+                        "on-secondary-fixed-variant": "#5516be",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "on-secondary-container": "#c4abff",
+                        "on-tertiary": "#502400",
+                        "error": "#ffb4ab",
+                        "surface-container-highest": "#32353c",
+                        "secondary-fixed": "#e9ddff",
+                        "on-surface-variant": "#c2c6d6",
+                        "on-secondary-fixed": "#23005c",
+                        "surface": "#10131a",
+                        "primary": "#adc6ff",
+                        "on-primary-fixed-variant": "#004395"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "element-gap": "12px",
+                        "container-padding": "24px",
+                        "unit": "4px",
+                        "inner-padding": "20px",
+                        "card-gap": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Geist"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "mono-sm": ["JetBrains Mono"],
+                        "display-lg": ["Geist"],
+                        "label-md": ["Geist"],
+                        "headline-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "mono-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #10131a;
+            color: #e1e2ec;
+        }
+        
+        .bento-card {
+            background-color: #171717;
+            border: 1px solid #262626;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .ai-accent {
+            border-left: 2px solid #3b82f6;
+        }
+        
+        .glass-overlay {
+            background-color: rgba(38, 38, 38, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden font-body-md text-body-md bg-background text-on-background">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-20 flex flex-col items-center justify-between py-6 z-50 bg-surface-container-lowest dark:bg-surface-container-lowest border-r border-outline-variant">
+<div class="flex flex-col items-center w-full gap-8">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">G</span>
+</div>
+<div class="flex flex-col items-center gap-4 w-full px-2">
+<!-- Dashboard (Active) -->
+<a class="w-full h-12 flex items-center justify-center text-primary dark:text-primary bg-primary-container/20 rounded-xl transition-all scale-95 active:scale-90" href="#" title="Dashboard">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+</a>
+<!-- Grievances -->
+<a class="w-full h-12 flex items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors rounded-xl scale-95 active:scale-90" href="#" title="Grievances">
+<span class="material-symbols-outlined">assignment_late</span>
+</a>
+<!-- Analytics -->
+<a class="w-full h-12 flex items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors rounded-xl scale-95 active:scale-90" href="#" title="Analytics">
+<span class="material-symbols-outlined">query_stats</span>
+</a>
+<!-- Students -->
+<a class="w-full h-12 flex items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors rounded-xl scale-95 active:scale-90" href="#" title="Students">
+<span class="material-symbols-outlined">group</span>
+</a>
+<!-- Institutions -->
+<a class="w-full h-12 flex items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors rounded-xl scale-95 active:scale-90" href="#" title="Institutions">
+<span class="material-symbols-outlined">account_balance</span>
+</a>
+<!-- Settings -->
+<a class="w-full h-12 flex items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors rounded-xl scale-95 active:scale-90" href="#" title="Settings">
+<span class="material-symbols-outlined">settings</span>
+</a>
+</div>
+</div>
+<div class="flex flex-col items-center gap-4 w-full px-2">
+<!-- Notifications -->
+<a class="w-full h-12 flex items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 transition-colors rounded-xl scale-95 active:scale-90" href="#" title="Notifications">
+<span class="material-symbols-outlined">notifications</span>
+</a>
+<!-- Profile -->
+<a class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant hover:border-primary transition-colors scale-95 active:scale-90" href="#">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A highly detailed close-up portrait of a professional administrative user in a corporate setting. High-key, soft white lighting. Deep black and pristine white palette. Calm, authoritative mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuOWhjXtXIqRgz55u0REpzA3Vp1kTpOIChekmabOCrqV9dQo8YLlNK4pMfoHjxLPOQ1uFgiJhF8ff8lrVXOq71agbF4pisKIDinKb-cY1yq7c7Ew3pFvOkCNALdZeGMJXUhdkYiYiHXBOO1WaiFqcOxyeCUe1WvvCPhW96jyL2J3WxuACsPVvXpTbvKAiMBFXOhpVdfq3vLpmRYnCGJehubP-3shwQUPj-h6Sp_o5d97b0iqhNTEfZ"/>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-20 flex-1 flex flex-col h-full overflow-hidden">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-40 w-full flex justify-between items-center px-container-padding py-4 bg-background/80 backdrop-blur-xl border-b border-outline-variant/30">
+<div class="flex items-center gap-8">
+<h1 class="font-headline-md text-headline-md font-black text-on-background dark:text-on-background">Case Intelligence</h1>
+<nav class="hidden md:flex gap-6">
+<a class="font-label-md text-label-md text-primary font-bold border-b-2 border-primary pb-2 opacity-100 transition-opacity" href="#">Queue</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant pb-2 hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">In-Review</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant pb-2 hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Resolved</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant pb-2 hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Urgent</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant text-sm">search</span>
+<input class="pl-9 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/50 transition-all w-64 placeholder-on-surface-variant/50" placeholder="Search cases..." type="text"/>
+</div>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<button class="px-4 py-2 bg-[#3b82f6] text-white rounded-lg font-label-md text-label-md hover:bg-blue-600 transition-colors ml-4 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                    New Case
+                </button>
+</div>
+</header>
+<!-- Scrollable Dashboard Content -->
+<div class="flex-1 overflow-y-auto p-container-padding">
+<div class="max-w-7xl mx-auto flex flex-col gap-card-gap">
+<!-- Metrics Row -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-card-gap">
+<!-- Metric 1 -->
+<div class="bento-card flex flex-col gap-2">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Open Grievances</span>
+<div class="flex items-end justify-between">
+<span class="font-display-lg text-display-lg text-on-surface">1,248</span>
+<span class="material-symbols-outlined text-outline-variant mb-1">assignment</span>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="bento-card flex flex-col gap-2 ai-accent">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">High Priority</span>
+<div class="flex items-end justify-between">
+<span class="font-display-lg text-display-lg text-error">84</span>
+<span class="material-symbols-outlined text-error mb-1">warning</span>
+</div>
+</div>
+<!-- Metric 3 -->
+<div class="bento-card flex flex-col gap-2">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">SLA At Risk</span>
+<div class="flex items-end justify-between">
+<span class="font-display-lg text-display-lg text-tertiary-container">156</span>
+<span class="material-symbols-outlined text-tertiary-container mb-1">timer</span>
+</div>
+</div>
+<!-- Metric 4 -->
+<div class="bento-card flex flex-col gap-2">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Overdue</span>
+<div class="flex items-end justify-between">
+<span class="font-display-lg text-display-lg text-on-error-container">23</span>
+<span class="material-symbols-outlined text-on-error-container mb-1">event_busy</span>
+</div>
+</div>
+<!-- Metric 5 -->
+<div class="bento-card flex flex-col gap-2 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-[#3b82f6]/10 to-transparent pointer-events-none"></div>
+<span class="font-label-md text-label-md text-primary uppercase tracking-wider">Resolved Today</span>
+<div class="flex items-end justify-between">
+<span class="font-display-lg text-display-lg text-primary">42</span>
+<span class="material-symbols-outlined text-primary mb-1">task_alt</span>
+</div>
+</div>
+</div>
+<!-- Main Bento Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-card-gap">
+<!-- Needs Attention (Spans 8 cols) -->
+<div class="bento-card lg:col-span-8 flex flex-col gap-4 ai-accent relative">
+<div class="flex justify-between items-center border-b border-outline-variant/30 pb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#3b82f6]">auto_awesome</span>
+<h2 class="font-headline-lg text-headline-lg">Needs Attention</h2>
+</div>
+<button class="text-primary hover:text-blue-400 font-label-md text-label-md transition-colors">View All</button>
+</div>
+<div class="flex flex-col gap-2">
+<!-- Case Item 1 -->
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface">GRV-2023-8921</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Academic Integrity Violation Appeal</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="px-2 py-1 bg-[rgba(245,158,11,0.1)] text-amber-500 rounded font-mono-sm text-mono-sm">SLA: 2h</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</div>
+<!-- Case Item 2 -->
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface">GRV-2023-8944</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Housing Facility Maintenance Escalation</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="px-2 py-1 bg-[rgba(245,158,11,0.1)] text-amber-500 rounded font-mono-sm text-mono-sm">SLA: 4h</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</div>
+<!-- Case Item 3 -->
+<div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-[#3b82f6]"></div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-on-surface">GRV-2023-8950</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Financial Aid Disbursement Delay</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="px-2 py-1 bg-[rgba(59,130,246,0.1)] text-[#3b82f6] rounded font-mono-sm text-mono-sm flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">auto_awesome</span> AI Flag</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Category Distribution (Spans 4 cols) -->
+<div class="bento-card lg:col-span-4 flex flex-col gap-4">
+<div class="border-b border-outline-variant/30 pb-3">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Category Distribution</h3>
+</div>
+<div class="flex-1 flex items-center justify-center relative min-h-[200px]">
+<!-- Placeholder for Donut Chart -->
+<div class="w-40 h-40 rounded-full border-[16px] border-surface-container-low relative flex items-center justify-center">
+<div class="absolute inset-[-16px] rounded-full border-[16px] border-transparent border-t-[#3b82f6] border-r-[#3b82f6] rotate-45"></div>
+<div class="absolute inset-[-16px] rounded-full border-[16px] border-transparent border-b-secondary rotate-12"></div>
+<div class="text-center">
+<span class="block font-headline-md text-headline-md font-bold">Total</span>
+<span class="block font-body-sm text-body-sm text-outline-variant">Categories</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Department Workload (Spans 6 cols) -->
+<div class="bento-card lg:col-span-6 flex flex-col gap-4">
+<div class="border-b border-outline-variant/30 pb-3">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Department Workload</h3>
+</div>
+<div class="flex flex-col gap-4 justify-center flex-1">
+<!-- IT Support -->
+<div>
+<div class="flex justify-between mb-1">
+<span class="font-body-sm text-body-sm text-on-surface">IT Support</span>
+<span class="font-mono-sm text-mono-sm text-outline-variant">42%</span>
+</div>
+<div class="w-full bg-surface-container-low rounded-full h-2">
+<div class="bg-[#3b82f6] h-2 rounded-full" style="width: 42%"></div>
+</div>
+</div>
+<!-- HR -->
+<div>
+<div class="flex justify-between mb-1">
+<span class="font-body-sm text-body-sm text-on-surface">HR</span>
+<span class="font-mono-sm text-mono-sm text-outline-variant">28%</span>
+</div>
+<div class="w-full bg-surface-container-low rounded-full h-2">
+<div class="bg-secondary h-2 rounded-full" style="width: 28%"></div>
+</div>
+</div>
+<!-- Facilities -->
+<div>
+<div class="flex justify-between mb-1">
+<span class="font-body-sm text-body-sm text-on-surface">Facilities</span>
+<span class="font-mono-sm text-mono-sm text-outline-variant">15%</span>
+</div>
+<div class="w-full bg-surface-container-low rounded-full h-2">
+<div class="bg-tertiary-container h-2 rounded-full" style="width: 15%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Resolution Trend (Spans 6 cols) -->
+<div class="bento-card lg:col-span-6 flex flex-col gap-4">
+<div class="border-b border-outline-variant/30 pb-3">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Resolution Trend</h3>
+</div>
+<div class="flex-1 flex items-end justify-between relative min-h-[150px] pb-4 px-2">
+<!-- Faux Line Chart Area -->
+<div class="absolute inset-0 pt-10 pb-4 px-2 flex items-end">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<path d="M0,80 L20,60 L40,75 L60,30 L80,45 L100,20" fill="none" stroke="#3b82f6" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<path d="M0,100 L0,80 L20,60 L40,75 L60,30 L80,45 L100,20 L100,100 Z" fill="url(#blue-grad)" opacity="0.1"></path>
+<defs>
+<lineargradient id="blue-grad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#3b82f6"></stop>
+<stop offset="100%" stop-color="transparent"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+<!-- Axis Labels (Faux) -->
+<div class="w-full flex justify-between font-mono-sm text-mono-sm text-outline-variant absolute bottom-0 left-0 px-2">
+<span>Mon</span>
+<span>Tue</span>
+<span>Wed</span>
+<span>Thu</span>
+<span>Fri</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

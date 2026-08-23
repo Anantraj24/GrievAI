@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GrievAI - System Insights</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Geist:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#10131a",
+                      "on-primary-container": "#00285d",
+                      "background": "#10131a",
+                      "primary-fixed": "#d8e2ff",
+                      "surface-container-low": "#191b23",
+                      "on-tertiary-fixed-variant": "#6b3a13",
+                      "tertiary-fixed": "#ffdcc6",
+                      "surface-container-highest": "#32353c",
+                      "inverse-primary": "#005ac2",
+                      "error-container": "#93000a",
+                      "status-warning": "#F59E0B",
+                      "surface-bright": "#363941",
+                      "on-secondary-fixed": "#210f48",
+                      "outline": "#8c909f",
+                      "on-secondary-fixed-variant": "#4d3d76",
+                      "on-surface-variant": "#c2c6d6",
+                      "border-subtle": "#363941",
+                      "on-error-container": "#ffdad6",
+                      "on-tertiary": "#502500",
+                      "on-secondary": "#37265e",
+                      "surface": "#10131a",
+                      "primary-container": "#4d8eff",
+                      "surface-container-lowest": "#0b0e15",
+                      "primary": "#adc6ff",
+                      "surface-tint": "#adc6ff",
+                      "on-tertiary-container": "#451f00",
+                      "inverse-surface": "#e0e2ec",
+                      "on-background": "#e0e2ec",
+                      "error": "#ffb4ab",
+                      "surface-variant": "#32353c",
+                      "on-surface": "#e0e2ec",
+                      "surface-container-high": "#272a31",
+                      "on-primary-fixed-variant": "#004395",
+                      "primary-fixed-dim": "#adc6ff",
+                      "on-tertiary-fixed": "#301400",
+                      "secondary-fixed": "#e9ddff",
+                      "glass-fill": "rgba(23, 23, 23, 0.6)",
+                      "border-muted": "#262626",
+                      "tertiary": "#ffb785",
+                      "tertiary-fixed-dim": "#ffb785",
+                      "surface-container": "#1d2027",
+                      "tertiary-container": "#c28255",
+                      "secondary": "#d0bcff",
+                      "inverse-on-surface": "#2d3038",
+                      "on-primary-fixed": "#001a42",
+                      "secondary-fixed-dim": "#d0bcff",
+                      "on-secondary-container": "#c2aef0",
+                      "status-critical": "#FFB4AB",
+                      "on-surface-muted": "#8C909F",
+                      "outline-variant": "#424754",
+                      "on-primary": "#002e6a",
+                      "secondary-container": "#503f79",
+                      "surface-card": "#171717",
+                      "on-error": "#690005"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "24px",
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "margin-mobile": "16px",
+                      "card-padding": "20px",
+                      "component-gap": "12px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg": [
+                              "Geist"
+                      ],
+                      "headline-md": [
+                              "Geist"
+                      ],
+                      "display-lg-mobile": [
+                              "Geist"
+                      ],
+                      "display-lg": [
+                              "Geist"
+                      ],
+                      "label-caps": [
+                              "Geist"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "data-mono": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "letterSpacing": "0",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .lifted-state {
+            box-shadow: inset 0 0 20px rgba(77, 142, 255, 0.1);
+            border-left: 2px solid theme('colors.primary');
+        }
+        
+        .bento-card {
+            @apply bg-surface-card border border-border-muted rounded-xl p-card-padding flex flex-col relative overflow-hidden;
+        }
+
+        .metric-value {
+            @apply font-headline-lg text-headline-lg text-on-surface mt-2 mb-1;
+        }
+        
+        .metric-label {
+            @apply font-label-caps text-label-caps text-on-surface-muted uppercase tracking-wider;
+        }
+        
+        .glow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: theme('colors.primary');
+            box-shadow: 0 0 8px theme('colors.primary');
+        }
+
+        .chart-bar-blue {
+            @apply bg-primary-container rounded-t-sm w-full transition-all duration-500 ease-out;
+        }
+        .chart-bar-gray {
+            @apply bg-surface-variant rounded-t-sm w-full transition-all duration-500 ease-out;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar Shared Component -->
+<nav class="fixed left-0 top-0 h-screen w-20 hover:w-64 transition-all duration-300 z-50 border-r border-border-muted bg-surface-dim hidden md:flex flex-col py-6 items-center group overflow-hidden whitespace-nowrap">
+<div class="flex items-center w-full px-6 mb-8 group-hover:px-6">
+<div class="flex-shrink-0 w-8 h-8 bg-primary rounded-md flex items-center justify-center text-on-primary font-bold text-lg">G</div>
+<div class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col">
+<span class="text-headline-md font-headline-md font-bold text-primary tracking-tight">GrievAI</span>
+<span class="text-label-caps font-label-caps text-on-surface-muted">Admin Command</span>
+</div>
+</div>
+<div class="flex flex-col w-full gap-2 px-2 mt-4">
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors w-full group/item relative" href="#">
+<span class="material-symbols-outlined flex-shrink-0" data-icon="dashboard">dashboard</span>
+<span class="ml-4 text-label-caps font-label-caps opacity-0 group-hover:opacity-100 transition-opacity duration-300">Dashboard</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors w-full group/item relative" href="#">
+<span class="material-symbols-outlined flex-shrink-0" data-icon="account_tree">account_tree</span>
+<span class="ml-4 text-label-caps font-label-caps opacity-0 group-hover:opacity-100 transition-opacity duration-300">Institutional Issues</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors w-full group/item relative" href="#">
+<span class="material-symbols-outlined flex-shrink-0" data-icon="analytics">analytics</span>
+<span class="ml-4 text-label-caps font-label-caps opacity-0 group-hover:opacity-100 transition-opacity duration-300">Analytics</span>
+</a>
+<!-- Active Tab: System Insights -->
+<a class="flex items-center px-4 py-3 rounded-lg text-primary border-l-2 border-primary bg-primary-container/10 scale-95 transition-transform duration-150 w-full group/item relative" href="#">
+<span class="material-symbols-outlined flex-shrink-0" data-icon="insights" data-weight="fill">insights</span>
+<span class="ml-4 text-label-caps font-label-caps opacity-0 group-hover:opacity-100 transition-opacity duration-300">System Insights</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors w-full group/item relative" href="#">
+<span class="material-symbols-outlined flex-shrink-0" data-icon="history_edu">history_edu</span>
+<span class="ml-4 text-label-caps font-label-caps opacity-0 group-hover:opacity-100 transition-opacity duration-300">Audit Logs</span>
+</a>
+<a class="flex items-center px-4 py-3 rounded-lg text-on-surface-muted hover:bg-surface-container-highest/50 hover:text-on-surface transition-colors w-full group/item relative mt-auto" href="#">
+<span class="material-symbols-outlined flex-shrink-0" data-icon="settings">settings</span>
+<span class="ml-4 text-label-caps font-label-caps opacity-0 group-hover:opacity-100 transition-opacity duration-300">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-h-screen md:ml-20 w-full">
+<!-- TopAppBar Shared Component -->
+<header class="flex justify-between items-center w-full px-margin-desktop h-16 backdrop-blur-3xl border-b border-border-muted bg-glass-fill docked full-width top-0 sticky z-40">
+<div class="flex items-center gap-4">
+<div class="relative focus-within:ring-1 focus-within:ring-primary/50 transition-all rounded-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-muted text-sm">search</span>
+<input class="bg-surface-card border border-border-muted rounded-md pl-9 pr-4 py-1.5 text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all w-64" placeholder="Search insights..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-status-warning rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-border-subtle overflow-hidden ml-2 cursor-pointer">
+<img alt="Administrator Profile" class="w-full h-full object-cover" data-alt="A macro shot of a sleek, dark metallic AI core with glowing blue circuitry lines. High contrast, studio lighting, hyper-realistic, 8k resolution. Deep blacks and electric blue accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe8Blz4fmz49RwDIW7-H5Pgf48xoNcjETDKGNeN3SYXqa8E6KAKleyr7xndem9LCGehntgilA9QqJxbwGRfRp7n2I100FEBP4UsBSP3oKaM2DdvB8HTUrYCHkPN6q63F6_dh3lOqVVgKdE4cRRMxIPV-fNx4YSiOAMoxtIWlWHZ0GJk2StIpUzxmZyvycbcncg9p0b-u_LVhPpuTrPWpzAJRnA_i184sEQlXC76mdAcERNXv6W2vOc"/>
+</div>
+</div>
+</header>
+<!-- Page Canvas -->
+<div class="flex-1 p-margin-mobile md:p-margin-desktop max-w-7xl mx-auto w-full space-y-gutter overflow-y-auto">
+<!-- Page Header -->
+<div class="flex items-end justify-between mb-6">
+<div>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface font-semibold tracking-tight">AI Efficacy Monitor</h1>
+<p class="font-body-md text-body-md text-on-surface-muted mt-1">Real-time technical health and predictive performance metrics.</p>
+</div>
+<div class="flex items-center gap-2 text-primary font-data-mono text-data-mono bg-primary-container/10 px-3 py-1.5 rounded-full border border-primary/20">
+<span class="glow-dot"></span>
+                    SYSTEM ONLINE
+                </div>
+</div>
+<!-- Metrics Bento Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<div class="bento-card">
+<div class="flex justify-between items-start">
+<span class="metric-label">Total AI Analyses</span>
+<span class="material-symbols-outlined text-primary text-opacity-80" data-icon="data_usage">data_usage</span>
+</div>
+<div class="metric-value">8,421</div>
+<div class="flex items-center gap-2 mt-auto">
+<span class="text-xs text-primary font-data-mono bg-primary-container/20 px-1.5 py-0.5 rounded">+12.4%</span>
+<span class="font-body-sm text-body-sm text-on-surface-muted">vs last 30 days</span>
+</div>
+<!-- Decorative background graph -->
+<div class="absolute bottom-0 left-0 w-full h-1/3 opacity-20 pointer-events-none" style="background: linear-gradient(180deg, transparent 0%, theme('colors.primary-container') 100%); clip-path: polygon(0 100%, 0 50%, 20% 60%, 40% 40%, 60% 70%, 80% 30%, 100% 20%, 100% 100%);"></div>
+</div>
+<div class="bento-card lifted-state">
+<div class="flex justify-between items-start">
+<span class="metric-label">Success Rate</span>
+<span class="material-symbols-outlined text-primary text-opacity-80" data-icon="check_circle">check_circle</span>
+</div>
+<div class="metric-value">98.2<span class="text-lg text-on-surface-muted">%</span></div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5 mt-auto">
+<div class="bg-primary h-1.5 rounded-full" style="width: 98.2%"></div>
+</div>
+<div class="flex justify-between mt-2 font-data-mono text-[10px] text-on-surface-muted">
+<span>TARGET: 95%</span>
+<span class="text-primary">OVERPERFORMING</span>
+</div>
+</div>
+<div class="bento-card">
+<div class="flex justify-between items-start">
+<span class="metric-label">Avg. Latency</span>
+<span class="material-symbols-outlined text-status-warning text-opacity-80" data-icon="speed">speed</span>
+</div>
+<div class="metric-value">142<span class="text-lg text-on-surface-muted">ms</span></div>
+<div class="flex items-center gap-1 mt-auto h-8 items-end w-full space-x-1">
+<div class="chart-bar-blue h-[40%]"></div>
+<div class="chart-bar-blue h-[60%]"></div>
+<div class="chart-bar-blue h-[30%]"></div>
+<div class="chart-bar-blue h-[80%]"></div>
+<div class="chart-bar-gray h-[100%] bg-status-warning/80"></div>
+<div class="chart-bar-blue h-[40%]"></div>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-muted mt-2">Spike detected at 14:00 UTC</span>
+</div>
+<div class="bento-card">
+<div class="flex justify-between items-start">
+<span class="metric-label">Acceptance Rate</span>
+<span class="material-symbols-outlined text-primary text-opacity-80" data-icon="thumb_up">thumb_up</span>
+</div>
+<div class="metric-value">94.0<span class="text-lg text-on-surface-muted">%</span></div>
+<div class="flex items-center gap-2 mt-auto">
+<span class="text-xs text-error font-data-mono bg-error-container/20 px-1.5 py-0.5 rounded">-1.2%</span>
+<span class="font-body-sm text-body-sm text-on-surface-muted">Admin agreement</span>
+</div>
+</div>
+</div>
+<!-- Complex Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Histogram: Analysis Confidence -->
+<div class="bento-card lg:col-span-7 h-96">
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-md text-headline-md font-medium">Analysis Confidence Distribution</h2>
+<button class="text-on-surface-muted hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 flex items-end justify-between gap-1 w-full relative group">
+<!-- Y-Axis Labels -->
+<div class="absolute left-0 top-0 h-full flex flex-col justify-between text-[10px] font-data-mono text-on-surface-muted pb-6">
+<span>1000</span>
+<span>750</span>
+<span>500</span>
+<span>250</span>
+<span>0</span>
+</div>
+<!-- Chart Area -->
+<div class="ml-8 flex-1 flex items-end justify-between gap-1 h-full pb-6 relative border-b border-border-muted">
+<!-- Bars -->
+<div class="w-full flex justify-between items-end gap-1 px-2 h-full">
+<div class="chart-bar-gray h-[5%]" title="&lt;50%: 50 cases"></div>
+<div class="chart-bar-gray h-[8%]" title="50-60%: 80 cases"></div>
+<div class="chart-bar-gray h-[15%]" title="60-70%: 150 cases"></div>
+<div class="chart-bar-blue h-[35%]" title="70-80%: 350 cases"></div>
+<div class="chart-bar-blue h-[60%]" title="80-90%: 600 cases"></div>
+<div class="chart-bar-blue h-[90%] bg-primary shadow-[0_0_15px_theme('colors.primary')]" title="90-95%: 900 cases"></div>
+<div class="chart-bar-blue h-[70%]" title="&gt;95%: 700 cases"></div>
+</div>
+<!-- X-Axis Labels -->
+<div class="absolute -bottom-6 left-0 w-full flex justify-between text-[10px] font-data-mono text-on-surface-muted px-2">
+<span>&lt;50%</span>
+<span>60%</span>
+<span>70%</span>
+<span>80%</span>
+<span>90%</span>
+<span class="text-primary font-bold">95%</span>
+<span>&gt;95%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Human Override Trends -->
+<div class="bento-card lg:col-span-5 h-96">
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-md text-headline-md font-medium">Human Override Trends</h2>
+<div class="flex gap-2">
+<span class="flex items-center gap-1 text-[10px] font-label-caps text-on-surface-muted"><div class="w-2 h-2 bg-surface-variant rounded-full"></div> AI</span>
+<span class="flex items-center gap-1 text-[10px] font-label-caps text-on-surface"><div class="w-2 h-2 bg-primary rounded-full"></div> Human</span>
+</div>
+</div>
+<div class="flex-1 flex flex-col justify-center relative">
+<!-- Abstract Representation of Overrides -->
+<div class="space-y-4 w-full">
+<div class="flex items-center w-full">
+<div class="w-24 text-[11px] font-data-mono text-on-surface-muted truncate">Severity Class.</div>
+<div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden flex relative">
+<div class="absolute left-0 top-0 h-full bg-primary/40 w-[85%]"></div>
+<div class="absolute left-0 top-0 h-full bg-primary w-[70%] border-r border-background"></div>
+</div>
+<div class="w-12 text-right text-[11px] font-data-mono text-error">15% diff</div>
+</div>
+<div class="flex items-center w-full">
+<div class="w-24 text-[11px] font-data-mono text-on-surface-muted truncate">Entity Extract.</div>
+<div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden flex relative">
+<div class="absolute left-0 top-0 h-full bg-primary/40 w-[95%]"></div>
+<div class="absolute left-0 top-0 h-full bg-primary w-[92%] border-r border-background"></div>
+</div>
+<div class="w-12 text-right text-[11px] font-data-mono text-on-surface-muted">3% diff</div>
+</div>
+<div class="flex items-center w-full">
+<div class="w-24 text-[11px] font-data-mono text-on-surface-muted truncate">Policy Match</div>
+<div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden flex relative">
+<div class="absolute left-0 top-0 h-full bg-primary/40 w-[78%]"></div>
+<div class="absolute left-0 top-0 h-full bg-primary w-[55%] border-r border-background"></div>
+</div>
+<div class="w-12 text-right text-[11px] font-data-mono text-error font-bold">23% diff</div>
+</div>
+<div class="flex items-center w-full">
+<div class="w-24 text-[11px] font-data-mono text-on-surface-muted truncate">Sentiment Anal.</div>
+<div class="flex-1 h-2 bg-surface-container-highest rounded-full overflow-hidden flex relative">
+<div class="absolute left-0 top-0 h-full bg-primary/40 w-[98%]"></div>
+<div class="absolute left-0 top-0 h-full bg-primary w-[95%] border-r border-background"></div>
+</div>
+<div class="w-12 text-right text-[11px] font-data-mono text-on-surface-muted">3% diff</div>
+</div>
+</div>
+<div class="mt-6 p-3 bg-error-container/10 border border-error/20 rounded-lg flex items-start gap-3">
+<span class="material-symbols-outlined text-error text-sm mt-0.5" data-icon="warning">warning</span>
+<p class="font-body-sm text-[12px] text-on-surface-muted leading-tight">High divergence detected in <strong class="text-on-surface">Policy Match</strong> category. Human reviewers are consistently downgrading severity recommended by AI model v2.4.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Queue Table -->
+<div class="bento-card col-span-1 border-t-4 border-t-status-warning">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h2 class="font-headline-md text-headline-md font-medium text-status-warning flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="rule">rule</span>
+                            Low-Confidence Analysis Queue
+                        </h2>
+<p class="font-body-sm text-[12px] text-on-surface-muted mt-1">Cases flagged for manual review (Confidence &lt; 75%)</p>
+</div>
+<button class="px-4 py-2 border border-border-subtle rounded-md text-sm font-medium hover:bg-surface-container-highest transition-colors">View All</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-border-muted text-[11px] font-label-caps text-on-surface-muted uppercase tracking-wider">
+<th class="pb-3 pr-4 font-normal">Case ID</th>
+<th class="pb-3 px-4 font-normal">Trigger Node</th>
+<th class="pb-3 px-4 font-normal">AI Confidence</th>
+<th class="pb-3 px-4 font-normal">Flag Reason</th>
+<th class="pb-3 pl-4 font-normal text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm">
+<tr class="border-b border-border-muted/50 hover:bg-surface-container-highest/30 transition-colors">
+<td class="py-3 pr-4 font-data-mono text-on-surface">GRV-8921A</td>
+<td class="py-3 px-4 text-on-surface-muted">NLP_Sentiment_Engine</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 h-1.5 bg-surface-container-highest rounded-full overflow-hidden"><div class="bg-status-warning w-[62%] h-full"></div></div>
+<span class="font-data-mono text-status-warning text-[11px]">62%</span>
+</div>
+</td>
+<td class="py-3 px-4 text-on-surface-muted truncate max-w-[200px]">Ambiguous sarcasm detection in user text.</td>
+<td class="py-3 pl-4 text-right">
+<button class="text-primary hover:text-inverse-primary font-medium text-[12px] transition-colors">Review</button>
+</td>
+</tr>
+<tr class="border-b border-border-muted/50 hover:bg-surface-container-highest/30 transition-colors">
+<td class="py-3 pr-4 font-data-mono text-on-surface">GRV-8919C</td>
+<td class="py-3 px-4 text-on-surface-muted">Policy_Mapper_v2</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 h-1.5 bg-surface-container-highest rounded-full overflow-hidden"><div class="bg-error w-[48%] h-full"></div></div>
+<span class="font-data-mono text-error text-[11px]">48%</span>
+</div>
+</td>
+<td class="py-3 px-4 text-on-surface-muted truncate max-w-[200px]">Multiple conflicting policy clauses identified.</td>
+<td class="py-3 pl-4 text-right">
+<button class="text-primary hover:text-inverse-primary font-medium text-[12px] transition-colors">Review</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-highest/30 transition-colors">
+<td class="py-3 pr-4 font-data-mono text-on-surface">GRV-8905B</td>
+<td class="py-3 px-4 text-on-surface-muted">Entity_Extractor</td>
+<td class="py-3 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 h-1.5 bg-surface-container-highest rounded-full overflow-hidden"><div class="bg-status-warning w-[71%] h-full"></div></div>
+<span class="font-data-mono text-status-warning text-[11px]">71%</span>
+</div>
+</td>
+<td class="py-3 px-4 text-on-surface-muted truncate max-w-[200px]">Unrecognized institutional acronym (Dpt. HXA)</td>
+<td class="py-3 pl-4 text-right">
+<button class="text-primary hover:text-inverse-primary font-medium text-[12px] transition-colors">Review</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple animation for bars on load to simulate data population
+        document.addEventListener('DOMContentLoaded', () => {
+            const bars = document.querySelectorAll('.chart-bar-blue, .chart-bar-gray');
+            bars.forEach(bar => {
+                const targetHeight = bar.style.height;
+                bar.style.height = '0%';
+                setTimeout(() => {
+                    bar.style.height = targetHeight;
+                }, 100);
+            });
+        });
+    </script>
+</body></html>

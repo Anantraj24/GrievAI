@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GrievAI - Related Complaints</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary": "#3c0091",
+                    "inverse-on-surface": "#2e3038",
+                    "on-surface": "#e1e2ec",
+                    "error": "#ffb4ab",
+                    "surface-tint": "#adc6ff",
+                    "on-tertiary-container": "#461f00",
+                    "surface-container-lowest": "#0b0e15",
+                    "background": "#10131a",
+                    "primary-fixed-dim": "#adc6ff",
+                    "surface-container-high": "#272a31",
+                    "surface-dim": "#10131a",
+                    "on-tertiary-fixed-variant": "#723600",
+                    "surface-container": "#1d2027",
+                    "surface-variant": "#32353c",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-primary": "#002e6a",
+                    "outline": "#8c909f",
+                    "on-primary-container": "#00285d",
+                    "primary-fixed": "#d8e2ff",
+                    "on-secondary-fixed": "#23005c",
+                    "surface-container-highest": "#32353c",
+                    "primary-container": "#4d8eff",
+                    "tertiary": "#ffb786",
+                    "secondary-container": "#571bc1",
+                    "secondary": "#d0bcff",
+                    "on-error-container": "#ffdad6",
+                    "on-error": "#690005",
+                    "secondary-fixed-dim": "#d0bcff",
+                    "on-primary-fixed": "#001a42",
+                    "tertiary-fixed-dim": "#ffb786",
+                    "on-tertiary": "#502400",
+                    "secondary-fixed": "#e9ddff",
+                    "tertiary-container": "#df7412",
+                    "on-tertiary-fixed": "#311400",
+                    "on-secondary-container": "#c4abff",
+                    "surface-container-low": "#191b23",
+                    "primary": "#adc6ff",
+                    "on-surface-variant": "#c2c6d6",
+                    "inverse-surface": "#e1e2ec",
+                    "error-container": "#93000a",
+                    "surface-bright": "#363941",
+                    "on-secondary-fixed-variant": "#5516be",
+                    "on-background": "#e1e2ec",
+                    "outline-variant": "#424754",
+                    "inverse-primary": "#005ac2",
+                    "surface": "#10131a",
+                    "tertiary-fixed": "#ffdcc6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "element-gap": "12px",
+                    "container-padding": "24px",
+                    "unit": "4px",
+                    "card-gap": "16px",
+                    "inner-padding": "20px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Geist"],
+                    "display-lg": ["Geist"],
+                    "body-md": ["Inter"],
+                    "mono-sm": ["JetBrains Mono"],
+                    "label-md": ["Geist"],
+                    "body-sm": ["Inter"],
+                    "headline-md": ["Geist"]
+            },
+            "fontSize": {
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "mono-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        /* Custom Utilities for Glassmorphism and specialized shadows */
+        .glass-panel {
+            background: rgba(38, 38, 38, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .ai-glow-border:focus-within {
+            border-color: #adc6ff;
+            box-shadow: 0 0 0 2px rgba(173, 198, 255, 0.15);
+        }
+        .ai-accent-bar::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #adc6ff;
+            box-shadow: 1px 0 8px rgba(173, 198, 255, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar -->
+<nav class="w-64 h-full fixed left-0 top-0 bg-background dark:bg-background bg-surface-container-low border-r border-outline-variant flex flex-col h-screen py-container-padding z-40 hidden md:flex">
+<!-- Header -->
+<div class="px-6 mb-8 flex flex-col gap-1">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center border border-primary/20" data-alt="GrievAI Authority Logo placeholder">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="policy">policy</span>
+</div>
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tight">GrievAI</span>
+</div>
+<span class="font-mono-sm text-mono-sm text-on-surface-variant uppercase tracking-wider ml-11">Institutional OS</span>
+</div>
+<!-- CTA -->
+<div class="px-6 mb-8">
+<button class="w-full bg-primary hover:bg-primary-fixed text-on-primary font-label-md text-label-md py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-[0_0_24px_rgba(173,198,255,0.15)]">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                New Report
+            </button>
+</div>
+<!-- Navigation Links -->
+<ul class="flex flex-col gap-2 flex-grow px-3">
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant font-medium font-body-md text-body-md hover:bg-surface-container-highest transition-colors scale-95 duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<!-- ACTIVE TAB -->
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-primary font-bold border-r-2 border-primary bg-primary/5 font-body-md text-body-md hover:bg-surface-container-highest transition-colors scale-95 duration-150 ease-in-out shadow-[inset_2px_0_0_0_var(--tw-shadow-color)] shadow-primary/20" href="#">
+<span class="material-symbols-outlined" data-icon="folder_managed" style="font-variation-settings: 'FILL' 1;">folder_managed</span>
+                    Grievances
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant font-medium font-body-md text-body-md hover:bg-surface-container-highest transition-colors scale-95 duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                    Analytics
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant font-medium font-body-md text-body-md hover:bg-surface-container-highest transition-colors scale-95 duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="corporate_fare">corporate_fare</span>
+                    Institutions
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant font-medium font-body-md text-body-md hover:bg-surface-container-highest transition-colors scale-95 duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+<!-- Footer -->
+<div class="px-3 mt-auto">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant font-medium font-body-md text-body-md hover:bg-surface-container-highest transition-colors scale-95 duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+                Help Center
+            </a>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="h-16 fixed top-0 right-0 left-0 md:left-64 z-50 backdrop-blur-md bg-background/80 dark:bg-background/80 border-b border-outline-variant flex justify-between items-center px-container-padding w-auto md:w-[calc(100%-16rem)]">
+<!-- Left / Context -->
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="hover:text-primary transition-colors cursor-pointer">Grievances</span>
+<span class="material-symbols-outlined text-[16px]" data-icon="chevron_right">chevron_right</span>
+<span class="text-on-surface font-medium">Related Analysis (GRV-00142)</span>
+</div>
+<!-- Mobile Brand/Menu Trigger -->
+<div class="md:hidden flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[24px]" data-icon="menu">menu</span>
+<span class="font-headline-lg text-headline-lg font-black text-primary">GrievAI</span>
+</div>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-element-gap">
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary transition-opacity opacity-80 hover:opacity-100 hover:bg-surface-container-highest relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-error"></span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-primary bg-primary/10 hover:bg-primary/20 transition-opacity opacity-80 hover:opacity-100 relative">
+<span class="material-symbols-outlined" data-icon="sparkles" style="font-variation-settings: 'FILL' 1;">arrow_back_ios_new</span>
+<div class="absolute inset-0 rounded-full animate-ping bg-primary/20 opacity-75"></div>
+</button>
+<div class="w-px h-6 bg-outline-variant mx-1"></div>
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-opacity opacity-80 hover:opacity-100 pl-2">
+<span class="material-symbols-outlined text-[28px]" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Workspace Area -->
+<main class="pt-24 pb-12 px-4 md:px-container-padding md:ml-64 flex flex-col gap-container-padding">
+<!-- Header Section -->
+<div class="flex flex-col gap-4 max-w-5xl">
+<h1 class="font-display-lg text-display-lg text-on-surface tracking-tight">Potentially Related Complaints</h1>
+<div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+<!-- Disclaimer Badge -->
+<div class="inline-flex items-center gap-3 text-on-surface-variant font-body-sm text-body-sm bg-surface-container-low/50 py-3 px-4 rounded-lg border border-outline-variant glass-panel max-w-2xl">
+<span class="material-symbols-outlined text-primary shrink-0" data-icon="info">info</span>
+<p>Semantic similarity indicates potentially related content. It does not automatically confirm duplication. Review context carefully before merging.</p>
+</div>
+<!-- Counter -->
+<div class="flex items-center gap-2 font-mono-sm text-mono-sm text-primary bg-primary/10 px-3 py-1.5 rounded border border-primary/20 shrink-0">
+<span class="material-symbols-outlined text-[16px]" data-icon="database">database</span>
+                    17 MATCHES
+                </div>
+</div>
+</div>
+<!-- Grid Workspace -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-card-gap mt-4">
+<!-- Card 1: High Similarity Duplicate -->
+<article class="bg-surface-container flex flex-col gap-4 p-inner-padding rounded-xl border border-outline-variant relative overflow-hidden transition-all duration-300 hover:border-primary/50 hover:shadow-[0_4px_24px_rgba(173,198,255,0.05)] ai-accent-bar group">
+<!-- Header Row -->
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<span class="font-mono-sm text-mono-sm text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded border border-outline-variant">GRV-00131</span>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[14px]" data-icon="history">history</span>
+<span>Reported 2 hours ago</span>
+</div>
+</div>
+<!-- AI Badge -->
+<div class="flex items-center gap-1.5 text-primary bg-primary/10 font-label-md text-label-md px-2.5 py-1 rounded-full border border-primary/20 shadow-[0_0_12px_rgba(173,198,255,0.1)]">
+<span class="material-symbols-outlined text-[14px]" data-icon="magic_button">magic_button</span>
+                        98% Match
+                    </div>
+</div>
+<!-- Content -->
+<div class="flex flex-col gap-2 pl-1">
+<h2 class="font-headline-md text-headline-md text-on-surface leading-tight group-hover:text-primary transition-colors">No water supply in Hostel Block A</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">Complete stoppage of water in all washrooms on the 3rd and 4th floors of Block A since yesterday evening. Urgent resolution required.</p>
+</div>
+<!-- Meta Row -->
+<div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2">
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="plumbing">plumbing</span>
+<span>Infrastructure</span>
+</div>
+<!-- Status: At Risk -->
+<div class="flex items-center gap-1.5 text-tertiary-container bg-tertiary-container/10 font-label-md text-label-md px-2 py-0.5 rounded border border-tertiary-container/20">
+<div class="w-1.5 h-1.5 rounded-full bg-tertiary-container animate-pulse"></div>
+                        Escalated
+                    </div>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm ml-auto">
+<span class="material-symbols-outlined text-[16px]" data-icon="person">person</span>
+<span>Student ID: 4492</span>
+</div>
+</div>
+<div class="h-[1px] bg-outline-variant/50 w-full my-1"></div>
+<!-- Actions -->
+<div class="flex items-center justify-end gap-3 pt-1">
+<button class="text-on-surface-variant hover:text-error font-label-md text-label-md px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]" data-icon="close">close</span>
+                        Dismiss
+                    </button>
+<button class="border border-outline-variant text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-container-highest transition-colors">
+                        Mark Related
+                    </button>
+<button class="bg-gradient-to-b from-primary to-secondary text-on-primary font-label-md text-label-md px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="merge">merge</span>
+                        Mark Duplicate
+                    </button>
+</div>
+</article>
+<!-- Card 2: Related Issue -->
+<article class="bg-surface-container flex flex-col gap-4 p-inner-padding rounded-xl border border-outline-variant relative overflow-hidden transition-all duration-300 hover:border-outline hover:shadow-lg ai-accent-bar group">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<span class="font-mono-sm text-mono-sm text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded border border-outline-variant">GRV-00128</span>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[14px]" data-icon="history">history</span>
+<span>Reported 1 day ago</span>
+</div>
+</div>
+<!-- AI Badge -->
+<div class="flex items-center gap-1.5 text-primary bg-primary/10 font-label-md text-label-md px-2.5 py-1 rounded-full border border-primary/20">
+<span class="material-symbols-outlined text-[14px]" data-icon="magic_button">magic_button</span>
+                        85% Match
+                    </div>
+</div>
+<div class="flex flex-col gap-2 pl-1">
+<h2 class="font-headline-md text-headline-md text-on-surface leading-tight group-hover:text-primary transition-colors">Low water pressure in Block A washrooms</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">The flush systems and taps are barely dispensing water on the ground floor of Hostel Block A. This has been an ongoing issue for three days.</p>
+</div>
+<div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2">
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="plumbing">plumbing</span>
+<span>Infrastructure</span>
+</div>
+<!-- Status: Normal -->
+<div class="flex items-center gap-1.5 text-on-surface-variant bg-surface-variant font-label-md text-label-md px-2 py-0.5 rounded border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]" data-icon="pending">pending</span>
+                        Investigating
+                    </div>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm ml-auto">
+<span class="material-symbols-outlined text-[16px]" data-icon="person">person</span>
+<span>Staff ID: M-102</span>
+</div>
+</div>
+<div class="h-[1px] bg-outline-variant/50 w-full my-1"></div>
+<div class="flex items-center justify-end gap-3 pt-1">
+<button class="text-on-surface-variant hover:text-error font-label-md text-label-md px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]" data-icon="close">close</span>
+                        Dismiss
+                    </button>
+<button class="border border-outline-variant text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-container-highest transition-colors shadow-[0_0_12px_rgba(255,255,255,0.03)] bg-surface-container-lowest">
+                        Mark Related
+                    </button>
+<button class="bg-surface-variant text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-bright transition-colors border border-outline-variant">
+                        Mark Duplicate
+                    </button>
+</div>
+</article>
+<!-- Card 3: Historical Resolved -->
+<article class="bg-surface-container/50 flex flex-col gap-4 p-inner-padding rounded-xl border border-outline-variant border-dashed relative overflow-hidden transition-all duration-300 group opacity-80 hover:opacity-100">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<span class="font-mono-sm text-mono-sm text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded border border-outline-variant">GRV-00045</span>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[14px]" data-icon="calendar_today">calendar_today</span>
+<span>Reported 2 months ago</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant bg-surface-container-highest font-label-md text-label-md px-2.5 py-1 rounded-full border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]" data-icon="history">history</span>
+                        71% Match (Historical)
+                    </div>
+</div>
+<div class="flex flex-col gap-2 pl-1">
+<h2 class="font-headline-md text-headline-md text-on-surface leading-tight text-on-surface-variant line-through decoration-outline-variant/50">Water pump failure for Block A</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 italic">Main supply pump motor burnt out due to voltage fluctuation.</p>
+</div>
+<div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2">
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="settings_suggest">settings_suggest</span>
+<span>Maintenance</span>
+</div>
+<!-- Status: Resolved -->
+<div class="flex items-center gap-1.5 text-[#10b981] bg-[#10b981]/10 font-label-md text-label-md px-2 py-0.5 rounded border border-[#10b981]/20">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span>
+                        Resolved
+                    </div>
+</div>
+<div class="h-[1px] bg-outline-variant/50 w-full my-1"></div>
+<div class="flex items-center justify-end gap-3 pt-1">
+<button class="text-on-surface-variant hover:text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+                        View Resolution Notes
+                    </button>
+<button class="border border-outline-variant text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-container-highest transition-colors">
+                        Link as Context
+                    </button>
+</div>
+</article>
+<!-- Card 4: Another Active Duplicate -->
+<article class="bg-surface-container flex flex-col gap-4 p-inner-padding rounded-xl border border-outline-variant relative overflow-hidden transition-all duration-300 hover:border-primary/50 ai-accent-bar group">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<span class="font-mono-sm text-mono-sm text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded border border-outline-variant">GRV-00135</span>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[14px]" data-icon="history">history</span>
+<span>Reported 1 hour ago</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 text-primary bg-primary/10 font-label-md text-label-md px-2.5 py-1 rounded-full border border-primary/20">
+<span class="material-symbols-outlined text-[14px]" data-icon="magic_button">magic_button</span>
+                        94% Match
+                    </div>
+</div>
+<div class="flex flex-col gap-2 pl-1">
+<h2 class="font-headline-md text-headline-md text-on-surface leading-tight group-hover:text-primary transition-colors">No drinking water in Block A mess</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">The RO purifiers in the dining hall of Block A are not dispensing water. Suspect main line issue.</p>
+</div>
+<div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2">
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="restaurant">restaurant</span>
+<span>Facilities</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant bg-surface-variant font-label-md text-label-md px-2 py-0.5 rounded border border-outline-variant">
+<span class="material-symbols-outlined text-[14px]" data-icon="new_releases">new_releases</span>
+                        New
+                    </div>
+</div>
+<div class="h-[1px] bg-outline-variant/50 w-full my-1"></div>
+<div class="flex items-center justify-end gap-3 pt-1">
+<button class="text-on-surface-variant hover:text-error font-label-md text-label-md px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]" data-icon="close">close</span>
+                        Dismiss
+                    </button>
+<button class="border border-outline-variant text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-container-highest transition-colors">
+                        Mark Related
+                    </button>
+<button class="bg-gradient-to-b from-primary to-secondary text-on-primary font-label-md text-label-md px-4 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="merge">merge</span>
+                        Mark Duplicate
+                    </button>
+</div>
+</article>
+</div>
+<!-- Load More / Footer -->
+<div class="mt-8 flex justify-center">
+<button class="flex items-center gap-2 text-primary font-label-md text-label-md hover:bg-primary/10 px-6 py-3 rounded-full transition-colors border border-primary/20">
+<span class="material-symbols-outlined text-[18px]" data-icon="expand_more">expand_more</span>
+                View 13 More Matches
+            </button>
+</div>
+</main>
+</body></html>
