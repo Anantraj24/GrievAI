@@ -172,7 +172,7 @@ const GrievanceQueue: React.FC = () => {
             <span className="font-body-sm text-body-sm text-outline-variant">Showing 1-10 of 142 cases</span>
             <div className="flex gap-2">
               <button className="p-1 rounded bg-[#262626] text-outline-variant hover:text-on-surface disabled:opacity-50"><span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 0" }}>chevron_left</span></button>
-              <button className="p-1 rounded bg-[#262626] text-outline-variant hover:text-on-surface"><span class="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 0" }}>chevron_right</span></button>
+              <button className="p-1 rounded bg-[#262626] text-outline-variant hover:text-on-surface"><span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 0" }}>chevron_right</span></button>
             </div>
           </div>
         </div>

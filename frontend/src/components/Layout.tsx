@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 interface NavItem {
@@ -16,6 +16,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, navItems, userRoleLabel, userName: _userName }) => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <div className="bg-background text-on-surface font-body-md text-body-md antialiased overflow-x-hidden min-h-screen">
@@ -64,10 +65,71 @@ const Layout: React.FC<LayoutProps> = ({ children, navItems, userRoleLabel, user
           </Link>
         </div>
       </aside>
+
+      {/* Mobile Drawer Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <aside className="relative flex flex-col w-64 h-full bg-surface border-r border-outline-variant p-gutter overflow-y-auto">
+            {/* Header */}
+            <div className="mb-stack-lg flex items-center justify-between">
+              <div className="flex items-center gap-stack-sm">
+                <div className="w-10 h-10 rounded bg-primary-container flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-on-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>account_balance</span>
+                </div>
+                <div>
+                  <h1 className="font-headline-md text-headline-md font-bold text-primary tracking-tight">GrievAI</h1>
+                  <p className="font-label-md text-label-md text-on-surface-variant uppercase">{userRoleLabel}</p>
+                </div>
+              </div>
+              <button className="text-on-surface-variant" onClick={() => setIsMobileMenuOpen(false)}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            {/* Navigation */}
+            <nav className="flex-1 space-y-unit">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-stack-sm p-stack-sm rounded-lg cursor-pointer active:scale-95 duration-200 transition-colors ${
+                      isActive
+                        ? 'bg-secondary-container text-on-secondary-container font-medium'
+                        : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+            
+            {/* CTA */}
+            <div className="mt-auto pt-stack-md border-t border-outline-variant">
+              <Link
+                to="/student/submit"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="w-full bg-[#3B82F6] text-white font-body-md text-body-md font-medium py-2 px-4 rounded hover:bg-opacity-90 transition-colors cursor-pointer active:scale-95 duration-200 flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
+                New Case
+              </Link>
+            </div>
+          </aside>
+        </div>
+      )}
       
       {/* TopAppBar */}
       <header className="bg-background dark:bg-background text-primary dark:text-primary font-label-md text-label-md font-headline-md text-headline-md font-semibold text-on-surface fixed top-0 right-0 w-full md:w-[calc(100%-16rem)] h-16 border-b border-outline-variant flex items-center justify-between px-container-padding z-40 bg-opacity-90 backdrop-blur-md">
-        <div className="md:hidden flex items-center">
+        <div className="md:hidden flex items-center gap-3">
+          <button className="text-on-surface-variant flex items-center justify-center" onClick={() => setIsMobileMenuOpen(true)}>
+            <span className="material-symbols-outlined">menu</span>
+          </button>
           <span className="font-headline-md text-headline-md font-bold tracking-tight">GrievAI</span>
         </div>
         <div className="hidden md:flex"></div>
@@ -85,7 +147,7 @@ const Layout: React.FC<LayoutProps> = ({ children, navItems, userRoleLabel, user
       </header>
       
       {/* Main Content */}
-      <main className="pt-24 pb-container-padding px-container-padding md:ml-64 w-full max-w-[1600px] mx-auto min-h-screen flex flex-col gap-container-padding">
+      <main className="pt-24 pb-container-padding px-4 md:px-container-padding md:ml-64 w-full max-w-[1600px] mx-auto min-h-screen flex flex-col gap-container-padding">
         {children}
       </main>
     </div>

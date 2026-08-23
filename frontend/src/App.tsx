@@ -14,6 +14,11 @@ import InformationRequest from './pages/InformationRequest';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminAnalytics from './pages/AdminAnalytics';
 import SystemInsights from './pages/SystemInsights';
+import InstitutionalIssues from './pages/InstitutionalIssues';
+import InstitutionalIssueDetail from './pages/InstitutionalIssueDetail';
+import DuplicateReview from './pages/DuplicateReview';
+import ResolutionWorkspace from './pages/ResolutionWorkspace';
+import EscalationWorkspace from './pages/EscalationWorkspace';
 
 function App() {
   return (
@@ -34,6 +39,9 @@ function App() {
             <Route path="dashboard" element={<AuthorityDashboard />} />
             <Route path="queue" element={<GrievanceQueue />} />
             <Route path="workspace" element={<Workspace />} />
+            <Route path="workspace/resolve" element={<ResolutionWorkspace />} />
+            <Route path="workspace/escalate" element={<EscalationWorkspace />} />
+            <Route path="workspace/duplicate" element={<DuplicateReview />} />
             <Route path="request-info" element={<InformationRequest />} />
             <Route path="" element={<Navigate to="/authority/dashboard" replace />} />
           </Route>
@@ -41,6 +49,8 @@ function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="insights" element={<SystemInsights />} />
+            <Route path="issues" element={<InstitutionalIssues />} />
+            <Route path="issues/:id" element={<InstitutionalIssueDetail />} />
             <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
           </Route>
           <Route path="/" element={<Navigate to="/login" replace />} />

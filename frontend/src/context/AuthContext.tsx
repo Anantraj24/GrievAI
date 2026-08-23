@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -14,7 +14,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
 
-  const login = (token: string, role: string) => {
+  const login = (_token: string, role: string) => {
     setIsAuthenticated(true);
     setUserRole(role);
   };
