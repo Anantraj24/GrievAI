@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: ankane/pgvector:latest
+    container_name: grievai-db
+    environment:
+      POSTGRES_USER: grievai_user
+      POSTGRES_PASSWORD: grievai_password
+      POSTGRES_DB: grievai_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  api:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: grievai-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://grievai_user:grievai_password@db:5432/grievai_db
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+volumes:
+  pgdata:
