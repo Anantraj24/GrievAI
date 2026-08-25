@@ -1,7 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
+import { api } from '../api/api';
+
+interface DashboardData {
+  status_breakdown: Record<string, number>;
+  priority_breakdown: Record<string, number>;
+  sla_breaches: number;
+  recent_activity: any[];
+  avg_resolution_time_hours: number;
+  total: number;
+}
 
 const AdminDashboard: React.FC = () => {
+  const [data, setData] = useState<DashboardData | null>(null);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await api.get('/api/v1/analytics/dashboard');
+        setData(res.data);
+      } catch (err) {
+        console.error("Failed to fetch dashboard data", err);
+      }
+    };
+    fetchDashboard();
+  }, []);
+
+  const total = data?.total || 0;
+  const openCases = data ? (data.status_breakdown['Pending'] || 0) + (data.status_breakdown['In Progress'] || 0) : 0;
+  const resolvedCases = data ? (data.status_breakdown['Resolved'] || 0) + (data.status_breakdown['Closed'] || 0) : 0;
+  const slaBreaches = data?.sla_breaches || 0;
+  const avgResolutionTime = data?.avg_resolution_time_hours ? (data.avg_resolution_time_hours / 24).toFixed(1) : 0;
+
   return (
     <AdminLayout>
       {/* Top Metrics Section */}
@@ -12,7 +42,7 @@ const AdminDashboard: React.FC = () => {
             <p className="text-on-surface-variant text-sm font-medium">Total Grievances</p>
             <span className="material-symbols-outlined text-primary/50" style={{ fontVariationSettings: "'FILL' 0" }}>folder_open</span>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">1,248</h3>
+          <h3 className="text-2xl font-bold text-white mb-1">{total}</h3>
           <div className="flex items-center gap-1 text-green-400 text-xs font-bold">
             <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 0" }}>trending_up</span>
             <span>+12.4%</span>
@@ -25,7 +55,7 @@ const AdminDashboard: React.FC = () => {
             <p className="text-on-surface-variant text-sm font-medium">Open Cases</p>
             <span className="material-symbols-outlined text-[#F59E0B]/50" style={{ fontVariationSettings: "'FILL' 0" }}>pending_actions</span>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">84</h3>
+          <h3 className="text-2xl font-bold text-white mb-1">{openCases}</h3>
           <div className="flex items-center gap-1 text-red-400 text-xs font-bold">
             <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 0" }}>priority_high</span>
             <span>Critical Attention</span>
@@ -38,7 +68,7 @@ const AdminDashboard: React.FC = () => {
             <p className="text-on-surface-variant text-sm font-medium">Resolved</p>
             <span className="material-symbols-outlined text-green-400/50" style={{ fontVariationSettings: "'FILL' 0" }}>check_circle</span>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">1,164</h3>
+          <h3 className="text-2xl font-bold text-white mb-1">{resolvedCases}</h3>
           <div className="flex items-center gap-1 text-green-400 text-xs font-bold">
             <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 0" }}>done_all</span>
             <span>93% Completion</span>
@@ -51,7 +81,7 @@ const AdminDashboard: React.FC = () => {
             <p className="text-on-surface-variant text-sm font-medium">SLA Breach Rate</p>
             <span className="material-symbols-outlined text-error/50" style={{ fontVariationSettings: "'FILL' 0" }}>timer_off</span>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">3.2%</h3>
+          <h3 className="text-2xl font-bold text-white mb-1">{total > 0 ? ((slaBreaches / total) * 100).toFixed(1) : 0}%</h3>
           <div className="flex items-center gap-1 text-green-400 text-xs font-bold">
             <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 0" }}>trending_down</span>
             <span>-0.4% Improvement</span>
@@ -64,7 +94,7 @@ const AdminDashboard: React.FC = () => {
             <p className="text-on-surface-variant text-sm font-medium">Avg Resolution</p>
             <span className="material-symbols-outlined text-secondary/50" style={{ fontVariationSettings: "'FILL' 0" }}>schedule</span>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">1.8 Days</h3>
+          <h3 className="text-2xl font-bold text-white mb-1">{avgResolutionTime} Days</h3>
           <div className="flex items-center gap-1 text-green-400 text-xs font-bold">
             <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 0" }}>bolt</span>
             <span>Faster than avg</span>

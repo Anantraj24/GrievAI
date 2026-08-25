@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import { api } from '../api/api';
 
 const navItems = [
   { icon: 'dashboard', label: 'Dashboard', to: '/student/dashboard' },
@@ -10,10 +11,27 @@ const navItems = [
 
 const SubmitGrievance: React.FC = () => {
   const navigate = useNavigate();
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/student/success');
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const payload = {
+        description,
+        location: location || null,
+        title: null, // Let AI extract or generate a title if needed
+      };
+      await api.post('/api/v1/grievances/', payload);
+      navigate('/student/success');
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to submit grievance');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -34,6 +52,12 @@ const SubmitGrievance: React.FC = () => {
             onSubmit={handleSubmit}
             className="bg-[#1A1D23] border border-[#2D3139] rounded-lg p-container-padding flex flex-col gap-stack-md relative z-10"
           >
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-md">
+                {error}
+              </div>
+            )}
+            
             {/* Natural Language Textarea */}
             <div className="flex flex-col gap-stack-sm">
               <label className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider" htmlFor="grievance-description">
@@ -44,6 +68,8 @@ const SubmitGrievance: React.FC = () => {
                 id="grievance-description" 
                 placeholder="E.g., The main water pipe in block C has been leaking since yesterday morning..." 
                 rows={6}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 required
               ></textarea>
             </div>
@@ -66,7 +92,12 @@ const SubmitGrievance: React.FC = () => {
                 <label className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider" htmlFor="grievance-location">
                   Location (Optional)
                 </label>
-                <select className="bg-[#1A1D23] border border-[#2D3139] text-on-surface font-body-md text-body-md rounded-md p-unit h-12 px-gutter focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all appearance-none cursor-pointer" id="grievance-location" defaultValue="">
+                <select 
+                  className="bg-[#1A1D23] border border-[#2D3139] text-on-surface font-body-md text-body-md rounded-md p-unit h-12 px-gutter focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all appearance-none cursor-pointer" 
+                  id="grievance-location" 
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                >
                   <option disabled value="">Select location</option>
                   <option value="block-a">Block A</option>
                   <option value="block-b">Block B</option>
@@ -109,11 +140,11 @@ const SubmitGrievance: React.FC = () => {
             
             {/* Actions */}
             <div className="flex items-center justify-end gap-gutter mt-stack-md pt-stack-md border-t border-[#2D3139]">
-              <button onClick={() => navigate(-1)} className="px-6 py-3 font-body-lg text-body-lg font-medium text-on-surface hover:text-primary hover:bg-surface-container-high transition-colors rounded-md" type="button">
+              <button onClick={() => navigate(-1)} className="px-6 py-3 font-body-lg text-body-lg font-medium text-on-surface hover:text-primary hover:bg-surface-container-high transition-colors rounded-md" type="button" disabled={isSubmitting}>
                 Cancel
               </button>
-              <button className="bg-[#3B82F6] text-white px-8 py-3 rounded-md font-body-lg text-body-lg font-medium hover:bg-[#2563EB] transition-colors shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]" type="submit">
-                Submit Grievance
+              <button disabled={isSubmitting} className="bg-[#3B82F6] disabled:opacity-50 text-white px-8 py-3 rounded-md font-body-lg text-body-lg font-medium hover:bg-[#2563EB] transition-colors shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]" type="submit">
+                {isSubmitting ? 'Submitting...' : 'Submit Grievance'}
               </button>
             </div>
           </form>

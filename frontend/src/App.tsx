@@ -38,10 +38,10 @@ function App() {
           <Route path="/authority">
             <Route path="dashboard" element={<AuthorityDashboard />} />
             <Route path="queue" element={<GrievanceQueue />} />
-            <Route path="workspace" element={<Workspace />} />
-            <Route path="workspace/resolve" element={<ResolutionWorkspace />} />
-            <Route path="workspace/escalate" element={<EscalationWorkspace />} />
-            <Route path="workspace/duplicate" element={<DuplicateReview />} />
+            <Route path="workspace/:id" element={<Workspace />} />
+            <Route path="workspace/:id/resolve" element={<ResolutionWorkspace />} />
+            <Route path="workspace/:id/escalate" element={<EscalationWorkspace />} />
+            <Route path="workspace/:id/duplicate" element={<DuplicateReview />} />
             <Route path="request-info" element={<InformationRequest />} />
             <Route path="" element={<Navigate to="/authority/dashboard" replace />} />
           </Route>

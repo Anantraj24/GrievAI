@@ -1,15 +1,94 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import AuthorityLayout from '../components/AuthorityLayout';
+import { api } from '../api/api';
+
+interface Grievance {
+  id: string;
+  grievance_code: string;
+  title: string | null;
+  description: string;
+  status: string;
+  priority: string | null;
+  created_at: string;
+  sla_deadline: string | null;
+}
 
 const ResolutionWorkspace: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [grievance, setGrievance] = useState<Grievance | null>(null);
+  const [resolutionSummary, setResolutionSummary] = useState('');
+  const [internalNotes, setInternalNotes] = useState('');
+  const [isDrafting, setIsDrafting] = useState(false);
+  const [isResolving, setIsResolving] = useState(false);
+
+  useEffect(() => {
+    const fetchGrievance = async () => {
+      try {
+        const res = await api.get(`/api/v1/grievances/${id}`);
+        setGrievance(res.data);
+      } catch (err) {
+        console.error("Failed to fetch grievance", err);
+      }
+    };
+    if (id) fetchGrievance();
+  }, [id]);
+
+  const handleAIDraft = async () => {
+    if (!internalNotes.trim()) {
+      alert("Please provide some internal notes to generate a draft.");
+      return;
+    }
+    setIsDrafting(true);
+    try {
+      const res = await api.post(`/api/v1/grievances/${id}/draft-response`, {
+        resolution_notes: internalNotes
+      });
+      setResolutionSummary(res.data.draft);
+    } catch (err) {
+      console.error("Drafting failed", err);
+      alert("Failed to generate draft. Ensure you have authority permissions.");
+    } finally {
+      setIsDrafting(false);
+    }
+  };
+
+  const handleResolve = async () => {
+    if (!resolutionSummary.trim()) {
+      alert("Please provide a resolution summary.");
+      return;
+    }
+    setIsResolving(true);
+    try {
+      await api.patch(`/api/v1/grievances/${id}/status`, {
+        status: 'Resolved',
+        resolution_notes: resolutionSummary
+      });
+      navigate('/authority/queue');
+    } catch (err) {
+      console.error("Resolution failed", err);
+      alert("Failed to resolve grievance.");
+    } finally {
+      setIsResolving(false);
+    }
+  };
+
+  if (!grievance) {
+    return (
+      <AuthorityLayout>
+        <div className="flex-1 p-8 text-on-surface-variant flex items-center justify-center">Loading resolution workspace...</div>
+      </AuthorityLayout>
+    );
+  }
 
   return (
-    <div className="p-6 w-full max-w-7xl mx-auto flex-1 overflow-y-auto">
+    <AuthorityLayout>
+      <div className="p-6 w-full max-w-7xl mx-auto flex-1 overflow-y-auto">
       {/* Header */}
       <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <p className="font-mono text-sm text-on-surface-variant mb-1">{id || 'GRV-2023-891'}</p>
+          <p className="font-mono text-sm text-on-surface-variant mb-1">{grievance.grievance_code || grievance.id.substring(0,8)}</p>
           <h1 className="text-3xl font-bold text-on-surface font-display-lg">Resolution Workspace</h1>
         </div>
         <div className="flex gap-3">
@@ -42,21 +121,21 @@ const ResolutionWorkspace: React.FC = () => {
             <div className="flex flex-col gap-3">
               <div className="flex justify-between items-center border-b border-[#363941] pb-2">
                 <span className="text-sm text-on-surface-variant">Status</span>
-                <span className="text-xs font-bold bg-[#272a31] px-2 py-1 rounded text-primary">In Progress</span>
+                <span className="text-xs font-bold bg-[#272a31] px-2 py-1 rounded text-primary capitalize">{grievance.status.replace('_', ' ')}</span>
               </div>
               <div className="flex justify-between items-center border-b border-[#363941] pb-2">
                 <span className="text-sm text-on-surface-variant">Priority</span>
-                <span className="text-xs font-bold text-[#f59e0b] bg-[#f59e0b]/10 px-2 py-1 rounded">High</span>
+                <span className="text-xs font-bold text-[#f59e0b] bg-[#f59e0b]/10 px-2 py-1 rounded">{grievance.priority || 'Unassigned'}</span>
               </div>
               <div className="flex justify-between items-center border-b border-[#363941] pb-2">
-                <span className="text-sm text-on-surface-variant">Institution</span>
-                <span className="text-sm text-on-surface truncate max-w-[150px]">Dept. of Transport</span>
+                <span className="text-sm text-on-surface-variant">Created</span>
+                <span className="text-sm text-on-surface truncate max-w-[150px]">{new Date(grievance.created_at).toLocaleDateString()}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-on-surface-variant">Assignee</span>
                 <span className="text-sm text-on-surface flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px]">account_circle</span>
-                  J. Doe
+                  Current User
                 </span>
               </div>
             </div>
@@ -97,33 +176,58 @@ const ResolutionWorkspace: React.FC = () => {
                 </div>
               </div>
 
+              {/* Additional Notes */}
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm text-on-surface-variant">Internal Notes & Context</label>
+                  <button 
+                    type="button" 
+                    onClick={handleAIDraft}
+                    disabled={isDrafting}
+                    className="text-xs font-bold text-primary flex items-center gap-1 hover:text-primary/80 disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                    {isDrafting ? 'Drafting...' : 'AI Auto-Draft'}
+                  </button>
+                </div>
+                <input 
+                  className="bg-[#0a0a0a] border border-[#262626] rounded-lg p-3 text-sm text-on-surface w-full focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none transition-all" 
+                  placeholder="E.g., Spoke to maintenance, part arrives tomorrow." 
+                  type="text"
+                  value={internalNotes}
+                  onChange={(e) => setInternalNotes(e.target.value)}
+                />
+              </div>
+
               {/* Resolution Summary */}
               <div className="flex flex-col gap-2 flex-1">
                 <label className="text-sm text-on-surface-variant">Resolution Summary <span className="text-[#ffb4ab]">*</span></label>
                 <textarea 
                   className="bg-[#0a0a0a] border border-[#262626] rounded-lg p-3 text-sm text-on-surface w-full flex-1 min-h-[200px] resize-none focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none transition-all" 
-                  placeholder="Provide a detailed summary of how the grievance was addressed..."
+                  placeholder="Provide a detailed summary of how the grievance was addressed. You can use the AI Auto-Draft button above to generate this from your notes."
+                  value={resolutionSummary}
+                  onChange={(e) => setResolutionSummary(e.target.value)}
+                  required
                 ></textarea>
-              </div>
-
-              {/* Additional Notes */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm text-on-surface-variant">Internal Notes (Optional)</label>
-                <input 
-                  className="bg-[#0a0a0a] border border-[#262626] rounded-lg p-3 text-sm text-on-surface w-full focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none transition-all" 
-                  placeholder="Any internal metadata or non-public notes..." 
-                  type="text"
-                />
               </div>
 
               {/* Actions */}
               <div className="flex justify-end items-center gap-4 mt-4 pt-4 border-t border-[#363941]">
-                <button className="text-xs font-bold text-on-surface-variant uppercase tracking-wider hover:text-on-surface transition-colors" type="button">
+                <button 
+                  className="text-xs font-bold text-on-surface-variant uppercase tracking-wider hover:text-on-surface transition-colors" 
+                  type="button"
+                  onClick={() => navigate(-1)}
+                >
                   Cancel
                 </button>
-                <button className="bg-primary text-[#0a0a0a] px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-primary/90 transition-colors flex items-center gap-2" type="button">
+                <button 
+                  className="bg-primary text-[#0a0a0a] px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-50" 
+                  type="button"
+                  onClick={handleResolve}
+                  disabled={isResolving}
+                >
                   <span className="material-symbols-outlined text-[18px]">task_alt</span>
-                  Mark as Resolved
+                  {isResolving ? 'Resolving...' : 'Mark as Resolved'}
                 </button>
               </div>
             </form>
@@ -131,6 +235,7 @@ const ResolutionWorkspace: React.FC = () => {
         </div>
       </div>
     </div>
+    </AuthorityLayout>
   );
 };
 

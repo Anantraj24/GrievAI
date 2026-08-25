@@ -1,5 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Layout from '../components/Layout';
+import { api } from '../api/api';
+import { useAuth } from '../context/AuthContext';
+
+interface Grievance {
+  id: string;
+  grievance_code: string;
+  title: string | null;
+  description: string;
+  status: string;
+  priority: string | null;
+  created_at: string;
+}
 import Layout from '../components/Layout';
 
 const navItems = [
@@ -9,8 +22,26 @@ const navItems = [
 ];
 
 const MyGrievances: React.FC = () => {
+  const { user } = useAuth();
+  const [grievances, setGrievances] = useState<Grievance[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGrievances = async () => {
+      try {
+        const res = await api.get('/api/v1/grievances/');
+        setGrievances(res.data);
+      } catch (err) {
+        console.error("Failed to fetch grievances", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGrievances();
+  }, []);
+
   return (
-    <Layout navItems={navItems} userRoleLabel="Student Portal" userName="Anant">
+    <Layout navItems={navItems} userRoleLabel="Student Portal" userName={user?.full_name || "Student"}>
       <div className="max-w-7xl mx-auto space-y-[24px] w-full">
         {/* Page Header */}
         <div className="flex justify-between items-end">
@@ -35,7 +66,7 @@ const MyGrievances: React.FC = () => {
               <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 0" }}>folder_open</span>
             </div>
             <div>
-              <div className="font-display-lg text-display-lg text-on-surface">42</div>
+              <div className="font-display-lg text-display-lg text-on-surface">{grievances.length}</div>
               <div className="font-label-md text-label-md text-[#3B82F6] flex items-center gap-1 mt-1">
                 <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 0" }}>arrow_upward</span> +3 this week
               </div>
@@ -132,58 +163,58 @@ const MyGrievances: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="font-body-md text-body-md text-on-surface divide-y divide-[#2D3139]">
-                  {/* Row 1 */}
-                  <tr className="hover:bg-[#2D3139]/50 transition-colors group">
-                    <td className="py-3 px-4 font-label-md text-label-md text-on-surface-variant">
-                      <Link to="/student/grievance/GRV-00142" className="block w-full h-full">GRV-00142</Link>
-                    </td>
-                    <td className="py-3 px-4 font-medium">
-                      <Link to="/student/grievance/GRV-00142" className="block w-full h-full">Hostel Water Supply Issue</Link>
-                    </td>
-                    <td className="py-3 px-4 text-on-surface-variant">Infrastructure</td>
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-label-md bg-error-container/20 text-error border border-error-container/30">High</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#3B82F6]"></span>
-                        In Progress
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-on-surface-variant">2 hrs ago</td>
-                    <td className="py-3 px-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="text-on-surface-variant hover:text-primary"><span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>more_vert</span></button>
-                    </td>
-                  </tr>
-                  {/* Row 2 */}
-                  <tr className="hover:bg-[#2D3139]/50 transition-colors group">
-                    <td className="py-3 px-4 font-label-md text-label-md text-on-surface-variant">
-                      <Link to="/student/grievance/GRV-00141" className="block w-full h-full">GRV-00141</Link>
-                    </td>
-                    <td className="py-3 px-4 font-medium">
-                      <Link to="/student/grievance/GRV-00141" className="block w-full h-full">Library WiFi Disconnects</Link>
-                    </td>
-                    <td className="py-3 px-4 text-on-surface-variant">IT Support</td>
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-label-md bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">Medium</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#F59E0B]"></span>
-                        Under Review
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-on-surface-variant">Yesterday</td>
-                    <td className="py-3 px-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="text-on-surface-variant hover:text-primary"><span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>more_vert</span></button>
-                    </td>
-                  </tr>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-on-surface-variant">
+                        Loading grievances...
+                      </td>
+                    </tr>
+                  ) : grievances.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-on-surface-variant">
+                        No grievances found.
+                      </td>
+                    </tr>
+                  ) : (
+                    grievances.map((g) => (
+                      <tr key={g.id} className="hover:bg-[#2D3139]/50 transition-colors group">
+                        <td className="py-3 px-4 font-label-md text-label-md text-on-surface-variant">
+                          <Link to={`/student/grievance/${g.id}`} className="block w-full h-full">{g.grievance_code || g.id.substring(0,8)}</Link>
+                        </td>
+                        <td className="py-3 px-4 font-medium">
+                          <Link to={`/student/grievance/${g.id}`} className="block w-full h-full truncate max-w-xs">{g.title || g.description.substring(0, 40) + '...'}</Link>
+                        </td>
+                        <td className="py-3 px-4 text-on-surface-variant">--</td>
+                        <td className="py-3 px-4">
+                          {g.priority && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-label-md bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">
+                              {g.priority}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="inline-flex items-center gap-1.5 capitalize">
+                            <span className="w-2 h-2 rounded-full bg-[#3B82F6]"></span>
+                            {g.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-on-surface-variant">
+                          {new Date(g.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="py-3 px-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button className="text-on-surface-variant hover:text-primary">
+                            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>more_vert</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
             {/* Pagination */}
             <div className="p-4 border-t border-[#2D3139] flex justify-between items-center bg-surface-container-low/30">
-              <span className="font-body-md text-body-md text-on-surface-variant">Showing 1 to 2 of 42 results</span>
+              <span className="font-body-md text-body-md text-on-surface-variant">Showing 1 to {grievances.length} results</span>
               <div className="flex gap-1">
                 <button className="p-1.5 border border-[#2D3139] rounded text-on-surface-variant hover:bg-[#2D3139] transition-colors disabled:opacity-50" disabled>
                   <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>chevron_left</span>

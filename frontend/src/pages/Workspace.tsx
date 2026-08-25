@@ -1,7 +1,73 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import AuthorityLayout from '../components/AuthorityLayout';
+import { api } from '../api/api';
+
+interface Grievance {
+  id: string;
+  grievance_code: string;
+  title: string | null;
+  description: string;
+  status: string;
+  priority: string | null;
+  created_at: string;
+  category: { name: string } | null;
+  subcategory: { name: string } | null;
+}
+
+interface AIAnalysis {
+  category: string;
+  subcategory: string;
+  confidence: number;
+  essential_service_signal: boolean;
+  duration_days: number | null;
+  location: string | null;
+  previously_reported: boolean;
+}
 
 const Workspace: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [grievance, setGrievance] = useState<Grievance | null>(null);
+  const [analysis, setAnalysis] = useState<AIAnalysis | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [gRes, aRes] = await Promise.all([
+          api.get(`/api/v1/grievances/${id}`),
+          api.get(`/api/v1/ai/analyze/${id}`).catch(() => ({ data: null }))
+        ]);
+        setGrievance(gRes.data);
+        if (aRes.data) {
+          setAnalysis(aRes.data);
+        }
+      } catch (err) {
+        console.error("Failed to load workspace data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (id) fetchData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <AuthorityLayout>
+        <div className="flex-1 flex items-center justify-center p-8">Loading workspace...</div>
+      </AuthorityLayout>
+    );
+  }
+
+  if (!grievance) {
+    return (
+      <AuthorityLayout>
+        <div className="flex-1 flex items-center justify-center p-8 text-error">Grievance not found.</div>
+      </AuthorityLayout>
+    );
+  }
+
   return (
     <AuthorityLayout>
       {/* Workspace Layout */}
@@ -12,19 +78,27 @@ const Workspace: React.FC = () => {
           <div className="bg-[#171717] border border-[#262626] rounded-xl p-[20px] flex flex-col gap-4">
             <div className="flex justify-between items-start">
               <div>
-                <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Original Complaint • ID-8492</span>
-                <h2 className="font-headline-lg text-headline-lg mt-1">Hostel Water Supply Issue</h2>
+                <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Original Complaint • {grievance.grievance_code || grievance.id.substring(0,8)}</span>
+                <h2 className="font-headline-lg text-headline-lg mt-1">{grievance.title || 'Untitled Grievance'}</h2>
               </div>
-              <span className="px-3 py-1 rounded-full text-[12px] font-semibold bg-[rgba(245,158,11,0.1)] text-[#f59e0b] border border-[rgba(245,158,11,0.2)] flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]">warning</span>
-                Urgent
-              </span>
+              {grievance.priority && (
+                <span className={`px-3 py-1 rounded-full text-[12px] font-semibold flex items-center gap-1 ${
+                  grievance.priority === 'Critical' ? 'bg-error/10 text-error border-error/20' : 
+                  grievance.priority === 'High' ? 'bg-primary/10 text-primary border-primary/20' : 
+                  'bg-tertiary-container/10 text-tertiary-container border-tertiary-container/20'
+                } border`}>
+                  <span className="material-symbols-outlined text-[14px]">
+                    {grievance.priority === 'Critical' ? 'warning' : 'info'}
+                  </span>
+                  {grievance.priority}
+                </span>
+              )}
             </div>
             <div className="bg-surface-container-low p-4 rounded-lg border border-outline-variant/50">
-              <p className="font-body-lg text-body-lg text-on-surface leading-relaxed">
-                "Hostel mein 3 din se paani nahi aa raha aur warden ko complain karne ke baad bhi kuch nahi hua."
+              <p className="font-body-lg text-body-lg text-on-surface leading-relaxed whitespace-pre-wrap">
+                "{grievance.description}"
               </p>
-              <p className="text-on-surface-variant text-sm mt-2 font-mono-sm">Submitted by: Student (Block A) • 2 hours ago</p>
+              <p className="text-on-surface-variant text-sm mt-2 font-mono-sm">Submitted by: Student • {new Date(grievance.created_at).toLocaleString()}</p>
             </div>
             
             {/* Attachments */}
@@ -54,7 +128,7 @@ const Workspace: React.FC = () => {
               </div>
               <div className="relative">
                 <div className="absolute -left-[31px] w-3 h-3 rounded-full bg-outline-variant ring-4 ring-background"></div>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mb-1">10:42 AM • Today</p>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mb-1">{new Date(grievance.created_at).toLocaleString()}</p>
                 <p className="font-body-md text-body-md">Complaint registered in system via Student Portal.</p>
               </div>
             </div>
@@ -70,45 +144,57 @@ const Workspace: React.FC = () => {
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
                 <span className="font-label-md text-label-md uppercase tracking-wider">AI Intelligence</span>
               </div>
-              <span className="font-mono-sm text-primary">94% Confidence</span>
+              {analysis && (
+                <span className="font-mono-sm text-primary">{Math.round(analysis.confidence * 100)}% Confidence</span>
+              )}
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-surface-container-lowest p-3 rounded-lg border border-outline-variant/30">
-                <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Category</span>
-                <p className="font-body-md mt-1 font-medium">Hostel</p>
-              </div>
-              <div className="bg-surface-container-lowest p-3 rounded-lg border border-outline-variant/30">
-                <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Subcategory</span>
-                <p className="font-body-md mt-1 font-medium text-primary">Water Supply</p>
-              </div>
-            </div>
+            {analysis ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-surface-container-lowest p-3 rounded-lg border border-outline-variant/30">
+                    <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Category</span>
+                    <p className="font-body-md mt-1 font-medium">{analysis.category || 'Unknown'}</p>
+                  </div>
+                  <div className="bg-surface-container-lowest p-3 rounded-lg border border-outline-variant/30">
+                    <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Subcategory</span>
+                    <p className="font-body-md mt-1 font-medium text-primary">{analysis.subcategory || 'Unknown'}</p>
+                  </div>
+                </div>
             
-            <div>
-              <span className="text-[10px] text-on-surface-variant uppercase font-semibold block mb-2">Extracted Entities</span>
-              <ul className="space-y-2">
-                <li className="flex justify-between items-center bg-surface-container-low px-3 py-2 rounded">
-                  <span className="font-body-sm text-on-surface-variant">Duration</span>
-                  <span className="font-body-sm font-medium">3 days</span>
-                </li>
-                <li className="flex justify-between items-center bg-surface-container-low px-3 py-2 rounded">
-                  <span className="font-body-sm text-on-surface-variant">Location</span>
-                  <span className="font-body-sm font-medium">Hostel Block A</span>
-                </li>
-                <li className="flex justify-between items-center bg-surface-container-low px-3 py-2 rounded">
-                  <span className="font-body-sm text-on-surface-variant">Prior Report</span>
-                  <span className="font-body-sm font-medium text-[#f59e0b]">Yes (Warden)</span>
-                </li>
-              </ul>
-            </div>
-            
-            <div>
-              <span className="text-[10px] text-on-surface-variant uppercase font-semibold block mb-2">Priority Signals</span>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-1 bg-surface-container-high border border-outline-variant rounded text-xs text-on-surface">Essential Service</span>
-                <span className="px-2 py-1 bg-surface-container-high border border-outline-variant rounded text-xs text-[#f59e0b]">Repeated Complaint</span>
-              </div>
-            </div>
+                <div>
+                  <span className="text-[10px] text-on-surface-variant uppercase font-semibold block mb-2">Extracted Entities</span>
+                  <ul className="space-y-2">
+                    <li className="flex justify-between items-center bg-surface-container-low px-3 py-2 rounded">
+                      <span className="font-body-sm text-on-surface-variant">Duration</span>
+                      <span className="font-body-sm font-medium">{analysis.duration_days ? `${analysis.duration_days} days` : 'Not mentioned'}</span>
+                    </li>
+                    <li className="flex justify-between items-center bg-surface-container-low px-3 py-2 rounded">
+                      <span className="font-body-sm text-on-surface-variant">Location</span>
+                      <span className="font-body-sm font-medium">{analysis.location || 'Not specified'}</span>
+                    </li>
+                    <li className="flex justify-between items-center bg-surface-container-low px-3 py-2 rounded">
+                      <span className="font-body-sm text-on-surface-variant">Prior Report</span>
+                      <span className="font-body-sm font-medium text-[#f59e0b]">{analysis.previously_reported ? 'Yes' : 'No'}</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <span className="text-[10px] text-on-surface-variant uppercase font-semibold block mb-2">Priority Signals</span>
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.essential_service_signal && (
+                      <span className="px-2 py-1 bg-surface-container-high border border-outline-variant rounded text-xs text-on-surface">Essential Service</span>
+                    )}
+                    {analysis.previously_reported && (
+                      <span className="px-2 py-1 bg-surface-container-high border border-outline-variant rounded text-xs text-[#f59e0b]">Repeated Complaint</span>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="text-on-surface-variant p-4 text-center">AI Analysis pending or failed.</div>
+            )}
           </div>
           
           {/* Routing Action */}

@@ -1,19 +1,37 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { api } from '../api/api';
 
 const RateExperience: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [comments, setComments] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleRating = (value: number) => {
     setRating(value);
   };
 
-  const handleSubmit = () => {
-    if (rating > 0) {
-      setSubmitted(true);
+  const handleSubmit = async () => {
+    if (rating > 0 && id) {
+      setIsSubmitting(true);
+      setError(null);
+      try {
+        await api.post(`/api/v1/grievances/${id}/feedback`, {
+          rating,
+          comments: comments || null
+        });
+        setSubmitted(true);
+      } catch (err: any) {
+        console.error("Failed to submit feedback", err);
+        setError(err.response?.data?.detail || "Failed to submit feedback");
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -33,6 +51,11 @@ const RateExperience: React.FC = () => {
               </div>
               <h1 className="font-headline-lg text-headline-lg text-on-surface mb-stack-sm">Grievance Resolved</h1>
               <p className="font-body-lg text-body-lg text-on-surface-variant">How was your grievance handled?</p>
+              {error && (
+                <div className="mt-4 p-3 bg-error/10 text-error border border-error/20 rounded-lg text-sm text-center">
+                  {error}
+                </div>
+              )}
             </div>
             
             {/* Rating Component */}
@@ -63,6 +86,8 @@ const RateExperience: React.FC = () => {
                 id="comments" 
                 placeholder="Tell us more about your experience..." 
                 rows={4}
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
               ></textarea>
             </div>
             
@@ -73,7 +98,7 @@ const RateExperience: React.FC = () => {
               </button>
               <button 
                 onClick={handleSubmit}
-                disabled={rating === 0}
+                disabled={rating === 0 || isSubmitting}
                 className={`px-stack-lg py-stack-sm rounded-lg font-label-md text-label-md transition-colors shadow-lg ${
                   rating > 0 
                     ? 'bg-primary text-[#001a42] hover:bg-primary/90 shadow-primary/20' 
@@ -81,7 +106,7 @@ const RateExperience: React.FC = () => {
                 }`}
                 type="button"
               >
-                Submit Feedback
+                {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
               </button>
             </div>
           </div>
