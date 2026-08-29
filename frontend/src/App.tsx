@@ -60,15 +60,9 @@ const ProtectedRoute: React.FC<{
   return <>{children}</>;
 };
 
-// Root index redirect based on user role
+// Root index redirect - always lands on login page when opening app
 const RootRedirect: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
-  }
-  if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
-  if (user.role === 'authority') return <Navigate to="/authority/dashboard" replace />;
-  return <Navigate to="/student/dashboard" replace />;
+  return <Navigate to="/login" replace />;
 };
 
 const App: React.FC = () => {

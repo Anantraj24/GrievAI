@@ -18,22 +18,42 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [userRole, setUserRole] = useState<UserRole>('student');
-  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return !!localStorage.getItem('access_token');
+  });
+  const [userRole, setUserRole] = useState<UserRole | null>(() => {
+    return localStorage.getItem('access_token')
+      ? storage.get<UserRole>('grievai_current_role', 'student')
+      : null;
+  });
+  const [user, setUser] = useState<User | null>(() => {
+    if (!localStorage.getItem('access_token')) return null;
+    const allUsers = AdminService.getUsers();
+    const savedRole = storage.get<UserRole>('grievai_current_role', 'student');
+    const defaultUser = allUsers.find((u) => u.role === savedRole) || allUsers[0];
+    return storage.get<User | null>('grievai_current_user', defaultUser);
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Initialize or load user from storage
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setIsAuthenticated(false);
+      setUser(null);
+      setUserRole(null);
+      return;
+    }
+
     const savedRole = storage.get<UserRole>('grievai_current_role', 'student');
     const allUsers = AdminService.getUsers();
-    let defaultUser = allUsers.find((u) => u.role === savedRole) || allUsers[0];
+    const defaultUser = allUsers.find((u) => u.role === savedRole) || allUsers[0];
 
     let savedUser = storage.get<User | null>('grievai_current_user', defaultUser);
     if (savedUser && savedUser.name === 'Anant Sharma') {
       savedUser = { ...savedUser, name: 'AnantRaj', email: 'anantraj@institution.edu' };
       storage.set('grievai_current_user', savedUser);
     }
+
     setUser(savedUser);
     setUserRole(savedRole);
     setIsAuthenticated(true);
@@ -57,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const allUsers = AdminService.getUsers();
     const targetUser = allUsers.find((u) => u.role === role) || allUsers[0];
 
+    localStorage.setItem('access_token', 'jwt_demo_session_' + Date.now());
     storage.set('grievai_current_role', role);
     storage.set('grievai_current_user', targetUser);
 
@@ -76,8 +97,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('access_token');
     setIsAuthenticated(false);
-    setUserRole('student');
-    storage.set('grievai_current_role', 'student');
+    setUserRole(null);
+    setUser(null);
+    storage.remove('grievai_current_user');
+    storage.remove('grievai_current_role');
     window.location.href = '/login';
   };
 
