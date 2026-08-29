@@ -1,178 +1,265 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
-
-const navItems = [
-  { icon: 'dashboard', label: 'Dashboard', to: '/student/dashboard' },
-  { icon: 'folder_managed', label: 'My Grievances', to: '/student/grievances' },
-  { icon: 'notifications', label: 'Notifications', to: '/student/notifications' },
-];
+import { useAuth } from '../context/AuthContext';
+import { GrievanceService } from '../services/grievanceService';
+import { NotificationService } from '../services/notificationService';
+import { Grievance, SystemNotification } from '../types';
+import { StatusBadge } from '../components/common/Badge';
+import { useToast } from '../context/ToastContext';
 
 const StudentDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const toast = useToast();
+  const [grievances, setGrievances] = useState<Grievance[]>([]);
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+
+  useEffect(() => {
+    const list = GrievanceService.getByStudent(user?.id);
+    setGrievances(list);
+    const notifs = NotificationService.getForUser('student', user?.id);
+    setNotifications(notifs.slice(0, 5));
+  }, [user?.id]);
+
+  const totalCount = grievances.length;
+  const activeCount = grievances.filter((g) => g.status === 'in_progress' || g.status === 'submitted').length;
+  const reviewCount = grievances.filter((g) => g.status === 'under_review' || g.status === 'information_requested').length;
+  const resolvedCount = grievances.filter((g) => g.status === 'resolved' || g.status === 'closed').length;
+
+  const handleExport = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(grievances, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `GrievAI_Student_Report_${user?.studentId || 'Report'}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    toast.success('Grievance dossier report exported successfully');
+  };
+
   return (
-    <Layout navItems={navItems} userRoleLabel="Student Portal" userName="Anant">
+    <Layout userRoleLabel="Student Portal" userName={user?.name || 'Student'}>
       {/* Header Section */}
-      <section className="flex flex-col md:flex-row md:items-end justify-between gap-stack-md">
+      <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Welcome back, Anant</h2>
-          <p className="text-on-surface-variant mt-unit">Here is an overview of your academic and administrative requests.</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+            Welcome back, {user?.name?.split(' ')[0] || 'Student'}
+          </h2>
+          <p className="text-xs md:text-sm text-gray-400 mt-1">
+            Real-time status overview of your academic, facility, and administrative grievance cases.
+          </p>
         </div>
-        <div className="flex gap-stack-sm">
-          <button className="border border-[#2D3139] bg-transparent text-primary font-body-md text-body-md font-medium py-2 px-4 rounded hover:bg-surface-container-high transition-colors flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 0" }}>download</span>
-            Export Report
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExport}
+            className="border border-[#2D3139] bg-[#10131a] hover:bg-[#171717] text-gray-200 text-xs font-semibold py-2.5 px-4 rounded-xl transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <span className="material-symbols-outlined text-sm text-blue-400">download</span>
+            Export Dossier
           </button>
+          <Link
+            to="/student/submit"
+            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all shadow-lg shadow-blue-600/30 flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            New Case
+          </Link>
         </div>
       </section>
 
       {/* Bento Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-12 gap-gutter auto-rows-[minmax(180px,_auto)]">
+      <section className="grid grid-cols-1 md:grid-cols-12 gap-5 auto-rows-fr">
         {/* Metric Cards (Cols 1-8) */}
-        <div className="md:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-gutter h-full">
-          {/* Total */}
-          <div className="bg-surface-container-low border border-[#2D3139] rounded-lg p-container-padding flex flex-col justify-between hover:bg-[#2D3139] transition-colors duration-300">
-            <div className="flex items-center justify-between text-on-surface-variant">
-              <span className="font-label-md text-label-md uppercase">Total</span>
-              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>folder</span>
+        <div className="md:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {/* Total Cases */}
+          <Link
+            to="/student/grievances"
+            className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/50 hover:bg-[#141822] transition-all group shadow-xl"
+          >
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[11px] font-mono uppercase tracking-wider">Total Filed</span>
+              <span className="material-symbols-outlined text-blue-400 group-hover:scale-110 transition-transform">
+                folder
+              </span>
             </div>
-            <div className="font-display-lg text-display-lg text-on-surface mt-stack-md">12</div>
-          </div>
-          {/* Active */}
-          <div className="bg-surface-container-low border border-[#2D3139] rounded-lg p-container-padding flex flex-col justify-between hover:bg-[#2D3139] transition-colors duration-300">
-            <div className="flex items-center justify-between text-on-surface-variant">
-              <span className="font-label-md text-label-md uppercase">Active</span>
-              <span className="material-symbols-outlined text-error" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+            <div className="text-3xl font-bold font-mono text-white mt-4">{totalCount}</div>
+          </Link>
+
+          {/* Active Cases */}
+          <Link
+            to="/student/grievances?status=in_progress"
+            className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/50 hover:bg-[#141822] transition-all group shadow-xl"
+          >
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[11px] font-mono uppercase tracking-wider">Active</span>
+              <span className="material-symbols-outlined text-blue-400 group-hover:scale-110 transition-transform">
+                bolt
+              </span>
             </div>
-            <div className="font-display-lg text-display-lg text-on-surface mt-stack-md">3</div>
-          </div>
+            <div className="text-3xl font-bold font-mono text-blue-400 mt-4">{activeCount}</div>
+          </Link>
+
           {/* Under Review */}
-          <div className="bg-surface-container-low border border-[#2D3139] rounded-lg p-container-padding flex flex-col justify-between hover:bg-[#2D3139] transition-colors duration-300">
-            <div className="flex items-center justify-between text-on-surface-variant">
-              <span className="font-label-md text-label-md uppercase">Under Review</span>
-              <span className="material-symbols-outlined text-tertiary-container" style={{ fontVariationSettings: "'FILL' 1" }}>pending_actions</span>
+          <Link
+            to="/student/grievances?status=under_review"
+            className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 flex flex-col justify-between hover:border-amber-500/50 hover:bg-[#141822] transition-all group shadow-xl"
+          >
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[11px] font-mono uppercase tracking-wider">In Review</span>
+              <span className="material-symbols-outlined text-amber-400 group-hover:scale-110 transition-transform">
+                pending_actions
+              </span>
             </div>
-            <div className="font-display-lg text-display-lg text-on-surface mt-stack-md">5</div>
-          </div>
+            <div className="text-3xl font-bold font-mono text-amber-300 mt-4">{reviewCount}</div>
+          </Link>
+
           {/* Resolved */}
-          <div className="bg-surface-container-low border border-[#2D3139] rounded-lg p-container-padding flex flex-col justify-between hover:bg-[#2D3139] transition-colors duration-300">
-            <div className="flex items-center justify-between text-on-surface-variant">
-              <span className="font-label-md text-label-md uppercase">Resolved</span>
-              <span className="material-symbols-outlined text-[#3B82F6]" style={{ fontVariationSettings: "'FILL' 1" }}>task_alt</span>
+          <Link
+            to="/student/grievances?status=resolved"
+            className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 flex flex-col justify-between hover:border-emerald-500/50 hover:bg-[#141822] transition-all group shadow-xl"
+          >
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[11px] font-mono uppercase tracking-wider">Resolved</span>
+              <span className="material-symbols-outlined text-emerald-400 group-hover:scale-110 transition-transform">
+                task_alt
+              </span>
             </div>
-            <div className="font-display-lg text-display-lg text-on-surface mt-stack-md">4</div>
-          </div>
+            <div className="text-3xl font-bold font-mono text-emerald-400 mt-4">{resolvedCount}</div>
+          </Link>
         </div>
 
         {/* Submit Grievance CTA Card (Cols 9-12) */}
-        <div className="md:col-span-4 bg-surface-container-low border border-[#2D3139] rounded-lg p-container-padding flex flex-col justify-between relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#3B82F6]/10 to-transparent pointer-events-none"></div>
-          <div className="relative z-10 flex flex-col h-full justify-between">
+        <div className="md:col-span-4 bg-gradient-to-br from-[#121b2d] to-[#10131a] border border-blue-500/30 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+          <div className="absolute right-0 top-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="relative z-10 flex flex-col justify-between h-full">
             <div>
-              <h3 className="font-headline-md text-headline-md text-on-surface mb-unit">File a New Case</h3>
-              <p className="text-on-surface-variant text-sm">Submit an academic, administrative, or facility-related grievance directly to the review board.</p>
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 text-[10px] font-mono font-semibold uppercase tracking-wider mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+                AI-Assisted Filing
+              </div>
+              <h3 className="text-lg font-bold text-white mb-1">File a New Grievance</h3>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Autonomous triaging will classify, detect duplicates, and route your case directly to department chairs.
+              </p>
             </div>
             <Link
               to="/student/submit"
-              className="mt-stack-md w-full bg-[#3B82F6] text-white font-body-md text-body-md font-medium py-3 px-4 rounded hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 group-hover:scale-[1.02] duration-200"
+              className="mt-5 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 active:scale-98"
             >
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>edit_document</span>
-              Submit Grievance
+              <span className="material-symbols-outlined text-sm">edit_document</span>
+              Start Grievance Form
             </Link>
           </div>
         </div>
 
         {/* Recent Grievances List (Cols 1-8) */}
-        <div className="md:col-span-8 bg-surface-container-low border border-[#2D3139] rounded-lg flex flex-col h-[400px]">
-          <div className="p-container-padding border-b border-[#2D3139] flex justify-between items-center shrink-0">
-            <h3 className="font-headline-md text-headline-md text-on-surface">Recent Submissions</h3>
-            <Link to="/student/grievances" className="text-primary hover:text-primary-fixed-dim transition-colors text-sm font-medium">View All</Link>
-          </div>
-          <div className="overflow-y-auto flex-1">
-            <div className="min-w-full">
-              {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 px-container-padding py-stack-sm border-b border-[#2D3139] bg-surface-container-highest/30 sticky top-0 backdrop-blur-sm z-10">
-                <div className="col-span-4 font-label-md text-label-md text-on-surface-variant uppercase">Case ID / Subject</div>
-                <div className="col-span-3 font-label-md text-label-md text-on-surface-variant uppercase">Department</div>
-                <div className="col-span-3 font-label-md text-label-md text-on-surface-variant uppercase">Status</div>
-                <div className="col-span-2 font-label-md text-label-md text-on-surface-variant uppercase text-right">Date</div>
-              </div>
-              {/* Rows */}
-              <div className="flex flex-col">
-                <Link className="grid grid-cols-12 gap-4 px-container-padding py-stack-md border-b border-[#2D3139] hover:bg-[#2D3139]/50 transition-colors group" to="/student/grievance/GRV-2023-089">
-                  <div className="col-span-4 flex flex-col justify-center">
-                    <span className="text-on-surface font-medium group-hover:text-primary transition-colors truncate">GRV-2023-089</span>
-                    <span className="text-on-surface-variant text-sm truncate">Grade Discrepancy in CS301</span>
-                  </div>
-                  <div className="col-span-3 flex items-center text-on-surface-variant text-sm">Computer Science</div>
-                  <div className="col-span-3 flex items-center">
-                    <span className="inline-flex items-center px-2 py-1 rounded bg-[#3B82F6]/10 text-[#3B82F6] font-label-md text-label-md border border-[#3B82F6]/20">In Progress</span>
-                  </div>
-                  <div className="col-span-2 flex items-center justify-end text-on-surface-variant text-sm font-label-md">Oct 24</div>
-                </Link>
-                <Link className="grid grid-cols-12 gap-4 px-container-padding py-stack-md border-b border-[#2D3139] hover:bg-[#2D3139]/50 transition-colors group" to="/student/grievance/GRV-2023-085">
-                  <div className="col-span-4 flex flex-col justify-center">
-                    <span className="text-on-surface font-medium group-hover:text-primary transition-colors truncate">GRV-2023-085</span>
-                    <span className="text-on-surface-variant text-sm truncate">Hostel Wi-Fi Downtime</span>
-                  </div>
-                  <div className="col-span-3 flex items-center text-on-surface-variant text-sm">IT Services</div>
-                  <div className="col-span-3 flex items-center">
-                    <span className="inline-flex items-center px-2 py-1 rounded bg-error/10 text-error font-label-md text-label-md border border-error/20">Pending Action</span>
-                  </div>
-                  <div className="col-span-2 flex items-center justify-end text-on-surface-variant text-sm font-label-md">Oct 20</div>
-                </Link>
-                <Link className="grid grid-cols-12 gap-4 px-container-padding py-stack-md border-b border-[#2D3139] hover:bg-[#2D3139]/50 transition-colors group" to="/student/grievance/GRV-2023-072">
-                  <div className="col-span-4 flex flex-col justify-center">
-                    <span className="text-on-surface font-medium group-hover:text-primary transition-colors truncate">GRV-2023-072</span>
-                    <span className="text-on-surface-variant text-sm truncate">Library Book Unavailability</span>
-                  </div>
-                  <div className="col-span-3 flex items-center text-on-surface-variant text-sm">Library</div>
-                  <div className="col-span-3 flex items-center">
-                    <span className="inline-flex items-center px-2 py-1 rounded bg-surface-variant text-on-surface-variant font-label-md text-label-md border border-outline-variant">Resolved</span>
-                  </div>
-                  <div className="col-span-2 flex items-center justify-end text-on-surface-variant text-sm font-label-md">Oct 12</div>
-                </Link>
-              </div>
+        <div className="md:col-span-8 bg-[#10131a] border border-[#2D3139] rounded-2xl flex flex-col overflow-hidden shadow-xl">
+          <div className="p-5 border-b border-[#262626] flex justify-between items-center bg-[#12151c]">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-blue-400 text-lg">history</span>
+              <h3 className="text-sm font-bold text-white">Recent Case Submissions</h3>
             </div>
+            <Link
+              to="/student/grievances"
+              className="text-blue-400 hover:text-blue-300 text-xs font-semibold transition-colors flex items-center gap-1"
+            >
+              View All Grievances
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto flex-1">
+            {grievances.length === 0 ? (
+              <div className="p-8 text-center text-xs text-gray-500 italic">
+                No grievances filed yet. Click "File a New Grievance" above to submit one.
+              </div>
+            ) : (
+              <div className="min-w-[600px]">
+                {/* Table Header */}
+                <div className="grid grid-cols-12 gap-4 px-5 py-3 border-b border-[#262626] bg-[#0d1017] text-[10px] font-mono uppercase text-gray-400 tracking-wider">
+                  <div className="col-span-4">Case ID / Subject</div>
+                  <div className="col-span-3">Department</div>
+                  <div className="col-span-3">Status</div>
+                  <div className="col-span-2 text-right">Filed Date</div>
+                </div>
+                {/* Rows */}
+                <div className="divide-y divide-[#1c202a]">
+                  {grievances.slice(0, 5).map((g) => (
+                    <Link
+                      key={g.id}
+                      to={`/student/grievance/${g.id}`}
+                      className="grid grid-cols-12 gap-4 px-5 py-3.5 hover:bg-[#171b26] transition-colors items-center group text-xs"
+                    >
+                      <div className="col-span-4 flex flex-col min-w-0">
+                        <span className="font-mono text-blue-400 font-semibold group-hover:text-blue-300 transition-colors">
+                          {g.id}
+                        </span>
+                        <span className="text-gray-200 truncate font-medium">{g.title}</span>
+                      </div>
+                      <div className="col-span-3 text-gray-400 text-xs truncate">{g.department}</div>
+                      <div className="col-span-3">
+                        <StatusBadge status={g.status} />
+                      </div>
+                      <div className="col-span-2 text-right font-mono text-[11px] text-gray-400">
+                        {g.createdAt.slice(0, 10)}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Notifications Feed (Cols 9-12) */}
-        <div className="md:col-span-4 bg-surface-container-low border border-[#2D3139] rounded-lg flex flex-col h-[400px]">
-          <div className="p-container-padding border-b border-[#2D3139] flex justify-between items-center shrink-0">
-            <h3 className="font-headline-md text-headline-md text-on-surface">Recent Updates</h3>
-            <span className="bg-primary/20 text-primary text-xs font-bold px-2 py-1 rounded-full">3 New</span>
+        {/* Live Notification Feed (Cols 9-12) */}
+        <div className="md:col-span-4 bg-[#10131a] border border-[#2D3139] rounded-2xl flex flex-col overflow-hidden shadow-xl">
+          <div className="p-5 border-b border-[#262626] flex justify-between items-center bg-[#12151c]">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-purple-400 text-lg">notifications_active</span>
+              <h3 className="text-sm font-bold text-white">Live Updates</h3>
+            </div>
+            <Link to="/student/notifications" className="text-xs text-gray-400 hover:text-white">
+              Inbox ({notifications.filter((n) => !n.read).length})
+            </Link>
           </div>
-          <div className="overflow-y-auto flex-1 p-stack-md space-y-stack-md">
-            {/* Notification Item */}
-            <div className="flex gap-stack-sm relative">
-              <div className="w-8 h-8 rounded-full bg-[#3B82F6]/20 flex items-center justify-center shrink-0 border border-[#3B82F6]/30">
-                <span className="material-symbols-outlined text-sm text-[#3B82F6]" style={{ fontVariationSettings: "'FILL' 0" }}>update</span>
-              </div>
-              <div className="flex-1 pb-stack-sm border-b border-[#2D3139]">
-                <p className="text-sm text-on-surface leading-tight">Status changed to <span className="text-[#3B82F6] font-medium">In Progress</span> for GRV-2023-089</p>
-                <p className="text-xs text-on-surface-variant mt-1 font-label-md">2 hours ago</p>
-              </div>
-            </div>
-            {/* Notification Item */}
-            <div className="flex gap-stack-sm relative">
-              <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0 border border-outline-variant">
-                <span className="material-symbols-outlined text-sm text-on-surface-variant" style={{ fontVariationSettings: "'FILL' 0" }}>comment</span>
-              </div>
-              <div className="flex-1 pb-stack-sm border-b border-[#2D3139]">
-                <p className="text-sm text-on-surface leading-tight">Prof. Smith added a comment to GRV-2023-089</p>
-                <p className="text-xs text-on-surface-variant mt-1 font-label-md">5 hours ago</p>
-              </div>
-            </div>
-            {/* Notification Item */}
-            <div className="flex gap-stack-sm relative opacity-70">
-              <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0 border border-outline-variant">
-                <span className="material-symbols-outlined text-sm text-on-surface-variant" style={{ fontVariationSettings: "'FILL' 0" }}>check_circle</span>
-              </div>
-              <div className="flex-1 pb-stack-sm">
-                <p className="text-sm text-on-surface leading-tight">GRV-2023-072 was marked as Resolved</p>
-                <p className="text-xs text-on-surface-variant mt-1 font-label-md">12 days ago</p>
-              </div>
-            </div>
+
+          <div className="overflow-y-auto flex-1 p-4 space-y-3 max-h-[360px]">
+            {notifications.length === 0 ? (
+              <div className="text-center py-8 text-xs text-gray-500 italic">No new notifications.</div>
+            ) : (
+              notifications.map((n) => (
+                <Link
+                  key={n.id}
+                  to={n.link || '/student/notifications'}
+                  className={`flex gap-3 p-3 rounded-xl border transition-all ${
+                    !n.read ? 'bg-blue-950/20 border-blue-500/30' : 'bg-[#141720] border-[#262626] opacity-80'
+                  }`}
+                >
+                  <div
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                      n.type === 'success'
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : n.type === 'alert'
+                        ? 'bg-red-500/20 text-red-400'
+                        : n.type === 'warning'
+                        ? 'bg-amber-500/20 text-amber-400'
+                        : 'bg-blue-500/20 text-blue-400'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      {n.type === 'success' ? 'check_circle' : n.type === 'alert' ? 'emergency' : 'update'}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-white leading-tight">{n.title}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-2">{n.message}</p>
+                    <span className="text-[9px] font-mono text-gray-500 block mt-1">
+                      {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </section>

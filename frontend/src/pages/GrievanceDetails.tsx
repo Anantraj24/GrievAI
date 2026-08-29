@@ -1,262 +1,221 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-
-const navItems = [
-  { icon: 'dashboard', label: 'Dashboard', to: '/student/dashboard' },
-  { icon: 'folder_managed', label: 'My Grievances', to: '/student/grievances' },
-  { icon: 'notifications', label: 'Notifications', to: '/student/notifications' },
-];
+import { useAuth } from '../context/AuthContext';
+import { GrievanceService } from '../services/grievanceService';
+import { Grievance } from '../types';
+import { StatusBadge, PriorityBadge } from '../components/common/Badge';
+import { AIInsightCard } from '../components/common/AIInsightCard';
+import { Timeline } from '../components/grievances/Timeline';
+import { CommentThread } from '../components/grievances/CommentThread';
+import { EvidenceGallery } from '../components/common/EvidenceGallery';
+import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
+import { useToast } from '../context/ToastContext';
 
 const GrievanceDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const toast = useToast();
+
+  const [grievance, setGrievance] = useState<Grievance | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'timeline' | 'messages' | 'ai_insights' | 'evidence'>('timeline');
+
+  const fetchGrievance = () => {
+    if (!id) return;
+    const item = GrievanceService.getById(id);
+    if (item) {
+      setGrievance(item);
+    } else {
+      toast.error(`Grievance #${id} not found.`);
+      navigate('/student/grievances');
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchGrievance();
+  }, [id]);
+
+  if (loading || !grievance) {
+    return (
+      <Layout userRoleLabel="Student Portal">
+        <LoadingSkeleton rows={6} />
+      </Layout>
+    );
+  }
+
+  const isResolved = grievance.status === 'resolved' || grievance.status === 'closed';
 
   return (
-    <Layout navItems={navItems} userRoleLabel="Student Portal" userName="Anant">
-      <div className="flex-1 flex flex-col h-full overflow-y-auto">
-        <div className="flex-1">
-          {/* Page Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+    <Layout userRoleLabel="Student Portal" userName={user?.name || 'Student'}>
+      <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
+        {/* Navigation Breadcrumb */}
+        <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
+          <Link to="/student/grievances" className="hover:text-white transition-colors flex items-center gap-1">
+            <span className="material-symbols-outlined text-sm">arrow_back</span>
+            All Grievances
+          </Link>
+          <span>/</span>
+          <span className="text-blue-400 font-bold">{grievance.id}</span>
+        </div>
+
+        {/* Case Header Card */}
+        <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-6 flex flex-col gap-4 shadow-xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#262626] pb-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <span className="font-label-md text-label-md bg-surface-container text-on-surface-variant px-2 py-1 rounded">
-                  {id || 'GRV-00142'}
-                </span>
-                <span className="font-label-md text-label-md bg-error-container/20 text-error px-2 py-1 rounded border border-error/30 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 0" }}>priority_high</span> HIGH PRIORITY
-                </span>
-                <span className="font-label-md text-label-md bg-primary-container/20 text-primary px-2 py-1 rounded border border-primary/30 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 0" }}>sync</span> IN PROGRESS
-                </span>
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="text-xs font-mono font-bold text-blue-400">{grievance.id}</span>
+                <span className="text-gray-500">•</span>
+                <span className="text-xs font-mono text-gray-400">Tracking: {grievance.trackingCode}</span>
               </div>
-              <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg font-bold text-on-surface">Hostel Water Supply Disturbance</h2>
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">{grievance.title}</h1>
             </div>
-            <div className="flex gap-3">
-              <button className="px-4 py-2 border border-surface-variant rounded-lg text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md flex items-center gap-2">
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>assignment_return</span>
-                Reassign
-              </button>
-              <Link to={`/student/rate/${id || 'GRV-00142'}`} className="px-4 py-2 bg-primary text-on-primary rounded-lg hover:bg-primary/90 transition-colors font-label-md text-label-md flex items-center gap-2">
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>check_circle</span>
-                Mark Resolved
-              </Link>
+
+            <div className="flex items-center gap-2.5 flex-wrap self-start md:self-auto">
+              <PriorityBadge priority={grievance.priority} size="md" />
+              <StatusBadge status={grievance.status} size="md" />
             </div>
           </div>
 
-          {/* Bento Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column (Content & Attachments) */}
-            <div className="lg:col-span-8 flex flex-col gap-6">
-              {/* Original Complaint */}
-              <div className="bg-surface rounded-xl border border-surface-variant p-container-padding">
-                <h3 className="font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 0" }}>description</span>
-                  Original Complaint
-                </h3>
-                <p className="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
-                  The water supply in Block C, 3rd floor bathrooms has been severely disrupted for the past 48 hours. The pressure is practically non-existent, and the water that does come out is slightly discolored. This is affecting over 50 students during exam week. We have tried contacting the hostel warden but received no response. Immediate action is required.
+          {/* Quick Details Chips */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="bg-[#171717] p-3 rounded-xl border border-[#262626]">
+              <span className="text-[10px] font-mono text-gray-500 uppercase">Assigned Authority</span>
+              <p className="font-semibold text-white mt-0.5">{grievance.assignedAuthorityName || 'Triage Officer'}</p>
+              <p className="text-[11px] text-gray-400">{grievance.department}</p>
+            </div>
+
+            <div className="bg-[#171717] p-3 rounded-xl border border-[#262626]">
+              <span className="text-[10px] font-mono text-gray-500 uppercase">Location</span>
+              <p className="font-semibold text-white mt-0.5 truncate">{grievance.location}</p>
+              <p className="text-[11px] text-gray-400">{grievance.category}</p>
+            </div>
+
+            <div className="bg-[#171717] p-3 rounded-xl border border-[#262626]">
+              <span className="text-[10px] font-mono text-gray-500 uppercase">Filed Date</span>
+              <p className="font-semibold text-white mt-0.5">{grievance.createdAt.slice(0, 10)}</p>
+              <p className="text-[11px] text-gray-400 font-mono">
+                {new Date(grievance.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+
+            <div className="bg-[#171717] p-3 rounded-xl border border-[#262626]">
+              <span className="text-[10px] font-mono text-gray-500 uppercase">Target SLA Resolution</span>
+              <p className={`font-semibold font-mono mt-0.5 ${grievance.slaBreached ? 'text-red-400' : 'text-amber-300'}`}>
+                {grievance.slaBreached ? 'SLA Breached' : 'Within 24 Hours'}
+              </p>
+              <p className="text-[11px] text-gray-500 font-mono">Deadline: {grievance.slaDeadline.slice(0, 10)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Banners */}
+        {/* If Information Requested */}
+        {grievance.status === 'information_requested' && (
+          <div className="bg-purple-950/30 border border-purple-500/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-purple-400 text-2xl mt-0.5">help</span>
+              <div>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wide">Clarification Requested by Authority</h4>
+                <p className="text-xs text-purple-200 mt-1">{grievance.infoRequestedText || 'Please post a clarification in the message thread below.'}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveTab('messages')}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-600/30 shrink-0"
+            >
+              Reply to Authority
+            </button>
+          </div>
+        )}
+
+        {/* If Resolved - Show Rate Experience CTA or Existing Rating */}
+        {isResolved && (
+          <div className="bg-emerald-950/30 border border-emerald-500/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-emerald-400 text-2xl mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>
+                verified
+              </span>
+              <div>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wide">This Case Has Been Formally Resolved</h4>
+                <p className="text-xs text-emerald-200 mt-1 leading-relaxed">
+                  {grievance.resolutionSummary || 'The assigned department has completed remedial actions.'}
                 </p>
-                <div className="mt-6 flex items-center gap-4 text-on-surface-variant border-t border-surface-variant pt-4">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>person</span>
-                    <span className="font-label-md text-label-md">Submitted by: Student ID 2021A7PS0014</span>
+                {grievance.feedback && (
+                  <div className="flex items-center gap-2 mt-2 text-xs text-amber-300">
+                    <span>Your Rating: {grievance.feedback.rating}/5 Stars</span>
+                    <span className="text-gray-500">•</span>
+                    <span className="italic text-gray-300">"{grievance.feedback.feedbackText}"</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>calendar_today</span>
-                    <span className="font-label-md text-label-md">Oct 24, 2023, 08:30 AM</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Attachments */}
-              <div className="bg-surface rounded-xl border border-surface-variant p-container-padding">
-                <h3 className="font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 0" }}>attachment</span>
-                  Attachments
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="relative group rounded-lg overflow-hidden border border-surface-variant">
-                    <img alt="Evidence of leaking faucet" className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida/AEtjO1UbaN0UvoVl_B0hB_VA4z4wp6iJwCzqqlEiBQ5urOHbEzf558yoy58IF-DBYPdKoipBv5QvWeqoqmS6PyyHSSfsXAaIXUDYmtB-X8sHoGjL66tpBc_QyRALVsOI-rLQrmeubcsUDifqE4mLC21lV2BSxvQqz1qRUOYNw5euTdJ_8kU7715MFzN1ALhd1wEMXTMJZn5QadJ4iVZINCto7CDr4Vi6vG19V5kFBqy_AR2nCxxWrqoZTdTSG9U" />
-                    <div className="absolute inset-0 bg-surface-container-lowest/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button className="p-2 bg-surface rounded-full text-primary hover:bg-surface-container-high transition-colors">
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>zoom_in</span>
-                      </button>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-2 bg-surface-container-lowest/80 backdrop-blur-sm border-t border-surface-variant">
-                      <span className="font-label-md text-label-md text-on-surface flex justify-between items-center">
-                        evidence_img_01.jpg
-                        <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0" }}>download</span>
-                      </span>
-                    </div>
-                  </div>
-                  {/* Placeholder for another attachment to show layout */}
-                  <div className="relative rounded-lg overflow-hidden border border-surface-variant bg-surface-container-low flex items-center justify-center h-48 border-dashed border-2">
-                    <div className="text-center text-on-surface-variant">
-                      <span className="material-symbols-outlined text-4xl mb-2" style={{ fontVariationSettings: "'FILL' 0" }}>add_photo_alternate</span>
-                      <p className="font-label-md text-label-md">Request More Evidence</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Authority Response */}
-              <div className="bg-surface rounded-xl border border-surface-variant p-container-padding">
-                <h3 className="font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 0" }}>forum</span>
-                  Authority Response
-                </h3>
-                <div className="space-y-6">
-                  {/* Previous Reply */}
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 border border-surface-variant">
-                      <span className="material-symbols-outlined text-on-surface-variant" style={{ fontVariationSettings: "'FILL' 0" }}>engineering</span>
-                    </div>
-                    <div className="flex-1 bg-surface-container-low p-4 rounded-lg rounded-tl-none border border-surface-variant">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-label-md text-label-md text-on-surface font-bold">Maintenance Team</span>
-                        <span className="font-label-md text-label-md text-on-surface-variant">Oct 24, 2023, 11:45 AM</span>
-                      </div>
-                      <p className="font-body-md text-body-md text-on-surface-variant">
-                        Team dispatched to Block C. Initial inspection suggests a valve failure in the main supply line. Replacement parts requested. Expected resolution by EOD.
-                      </p>
-                    </div>
-                  </div>
-                  {/* Input Area */}
-                  <div className="flex gap-4 pt-4 border-t border-surface-variant">
-                    <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center shrink-0 border border-primary/30">
-                      <span className="font-label-md text-label-md text-primary">ST</span>
-                    </div>
-                    <div className="flex-1">
-                      <textarea className="w-full bg-surface-container-low border border-surface-variant rounded-lg p-3 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all outline-none resize-none h-24" placeholder="Reply to update..."></textarea>
-                      <div className="flex justify-between items-center mt-3">
-                        <div className="flex gap-2">
-                          <button className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded hover:bg-surface-container-high">
-                            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>attach_file</span>
-                          </button>
-                        </div>
-                        <button className="px-4 py-2 bg-surface-container-high text-on-surface rounded-lg hover:bg-surface-variant border border-surface-variant transition-colors font-label-md text-label-md flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0" }}>send</span>
-                          Post Reply
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
-            {/* Right Column (Metadata & Timeline) */}
-            <div className="lg:col-span-4 flex flex-col gap-6">
-              {/* Case Metadata */}
-              <div className="bg-surface rounded-xl border border-surface-variant p-container-padding">
-                <h3 className="font-headline-md text-headline-md text-on-surface mb-6 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 0" }}>info</span>
-                  Case Metadata
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex flex-col gap-1 border-b border-surface-variant pb-3">
-                    <span className="font-label-md text-label-md text-on-surface-variant uppercase">Assigned Department</span>
-                    <span className="font-body-lg text-body-lg text-on-surface font-medium flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-primary"></span>
-                      Hostel Administration
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1 border-b border-surface-variant pb-3">
-                    <span className="font-label-md text-label-md text-on-surface-variant uppercase">SLA Status</span>
-                    <div className="flex items-center justify-between">
-                      <span className="font-body-lg text-body-lg text-error font-medium">24h Resolution</span>
-                      <span className="font-label-md text-label-md bg-error-container/20 text-error px-2 py-1 rounded border border-error/30">14h Remaining</span>
-                    </div>
-                    <div className="w-full bg-surface-container-high rounded-full h-1.5 mt-2 overflow-hidden">
-                      <div className="bg-error h-1.5 rounded-full w-[42%]"></div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1 border-b border-surface-variant pb-3">
-                    <span className="font-label-md text-label-md text-on-surface-variant uppercase">Last Updated</span>
-                    <span className="font-body-md text-body-md text-on-surface">Oct 24, 2023, 11:45 AM</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-label-md text-label-md text-on-surface-variant uppercase">Tags</span>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      <span className="font-label-md text-label-md bg-surface-container-high text-on-surface px-2 py-1 rounded border border-surface-variant">Maintenance</span>
-                      <span className="font-label-md text-label-md bg-surface-container-high text-on-surface px-2 py-1 rounded border border-surface-variant">Plumbing</span>
-                      <span className="font-label-md text-label-md bg-surface-container-high text-on-surface px-2 py-1 rounded border border-surface-variant">Block C</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Timeline */}
-              <div className="bg-surface rounded-xl border border-surface-variant p-container-padding flex-1">
-                <h3 className="font-headline-md text-headline-md text-on-surface mb-6 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 0" }}>timeline</span>
-                  Resolution Journey
-                </h3>
-                <div className="relative pl-6 space-y-8 before:absolute before:inset-0 before:ml-7 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary before:via-surface-variant before:to-surface-variant before:left-0 before:top-2">
-                  {/* Completed Stage */}
-                  <div className="relative flex items-start gap-4">
-                    <div className="absolute -left-[33px] bg-surface rounded-full p-1 z-10 border border-primary text-primary bg-primary/10">
-                      <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0" }}>check</span>
-                    </div>
-                    <div>
-                      <h4 className="font-body-md text-body-md font-bold text-on-surface">Submitted</h4>
-                      <p className="font-label-md text-label-md text-on-surface-variant mt-1">Oct 24, 08:30 AM</p>
-                    </div>
-                  </div>
-                  {/* Completed Stage */}
-                  <div className="relative flex items-start gap-4">
-                    <div className="absolute -left-[33px] bg-surface rounded-full p-1 z-10 border border-primary text-primary bg-primary/10">
-                      <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0" }}>check</span>
-                    </div>
-                    <div>
-                      <h4 className="font-body-md text-body-md font-bold text-on-surface">Under Review</h4>
-                      <p className="font-label-md text-label-md text-on-surface-variant mt-1">Oct 24, 09:15 AM</p>
-                    </div>
-                  </div>
-                  {/* Completed Stage */}
-                  <div className="relative flex items-start gap-4">
-                    <div className="absolute -left-[33px] bg-surface rounded-full p-1 z-10 border border-primary text-primary bg-primary/10">
-                      <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0" }}>check</span>
-                    </div>
-                    <div>
-                      <h4 className="font-body-md text-body-md font-bold text-on-surface">Assigned</h4>
-                      <p className="font-label-md text-label-md text-on-surface-variant mt-1">Maintenance Team • Oct 24, 09:45 AM</p>
-                    </div>
-                  </div>
-                  {/* Active Stage */}
-                  <div className="relative flex items-start gap-4">
-                    <div className="absolute -left-[33px] bg-surface rounded-full p-1 z-10 border border-primary text-primary bg-primary/20 animate-pulse">
-                      <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0" }}>build</span>
-                    </div>
-                    <div>
-                      <h4 className="font-body-md text-body-md font-bold text-primary">In Progress</h4>
-                      <p className="font-label-md text-label-md text-on-surface-variant mt-1">Team on site. Estimating repair time.</p>
-                    </div>
-                  </div>
-                  {/* Pending Stage */}
-                  <div className="relative flex items-start gap-4 opacity-50">
-                    <div className="absolute -left-[33px] bg-surface rounded-full p-1 z-10 border border-surface-variant text-surface-variant">
-                      <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0" }}>verified</span>
-                    </div>
-                    <div>
-                      <h4 className="font-body-md text-body-md font-bold text-on-surface">Resolved</h4>
-                      <p className="font-label-md text-label-md text-on-surface-variant mt-1">Pending fix confirmation</p>
-                    </div>
-                  </div>
-                  {/* Pending Stage */}
-                  <div className="relative flex items-start gap-4 opacity-50">
-                    <div className="absolute -left-[33px] bg-surface rounded-full p-1 z-10 border border-surface-variant text-surface-variant">
-                      <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 0" }}>lock</span>
-                    </div>
-                    <div>
-                      <h4 className="font-body-md text-body-md font-bold text-on-surface">Closed</h4>
-                      <p className="font-label-md text-label-md text-on-surface-variant mt-1">Awaiting student sign-off</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {!grievance.feedback && (
+              <Link
+                to={`/student/rate/${grievance.id}`}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-600/30 shrink-0 flex items-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-sm">star</span>
+                Rate Resolution Experience
+              </Link>
+            )}
           </div>
+        )}
+
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-2 border-b border-[#262626] pb-1 overflow-x-auto">
+          {[
+            { key: 'timeline', label: 'Case Timeline', icon: 'timeline' },
+            { key: 'messages', label: `Messages (${grievance.comments.length})`, icon: 'forum' },
+            { key: 'ai_insights', label: 'AI Intelligence Triage', icon: 'auto_awesome' },
+            { key: 'evidence', label: `Evidence & Attachments (${grievance.attachments.length})`, icon: 'attachment' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as any)}
+              className={`px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 ${
+                activeTab === tab.key
+                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base">{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Contents */}
+        <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-6 shadow-xl">
+          {activeTab === 'timeline' && (
+            <div className="flex flex-col gap-4">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Formal Audit & Action Stepper</h3>
+              <Timeline events={grievance.timeline} />
+            </div>
+          )}
+
+          {activeTab === 'messages' && (
+            <div className="flex flex-col gap-4">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Student-Authority Discussion</h3>
+              <CommentThread grievanceId={grievance.id} comments={grievance.comments} onCommentAdded={fetchGrievance} />
+            </div>
+          )}
+
+          {activeTab === 'ai_insights' && (
+            <div className="flex flex-col gap-4">
+              <AIInsightCard analysis={grievance.aiAnalysis} />
+            </div>
+          )}
+
+          {activeTab === 'evidence' && (
+            <div className="flex flex-col gap-4">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Uploaded Documents & Photos</h3>
+              <EvidenceGallery attachments={grievance.attachments} />
+            </div>
+          )}
         </div>
       </div>
     </Layout>

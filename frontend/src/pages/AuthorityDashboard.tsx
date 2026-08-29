@@ -1,200 +1,216 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import AuthorityLayout from '../components/AuthorityLayout';
+import { useAuth } from '../context/AuthContext';
+import { GrievanceService } from '../services/grievanceService';
+import { Grievance } from '../types';
+import { StatusBadge, PriorityBadge } from '../components/common/Badge';
 
 const AuthorityDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const [grievances, setGrievances] = useState<Grievance[]>([]);
+
+  useEffect(() => {
+    const list = GrievanceService.getAll();
+    setGrievances(list);
+  }, []);
+
+  const urgentQueue = grievances
+    .filter((g) => g.status !== 'resolved' && g.status !== 'duplicate_closed' && g.status !== 'closed')
+    .sort((a, b) => (a.priority === 'CRITICAL' ? -1 : b.priority === 'CRITICAL' ? 1 : 0));
+
+  const pendingCount = grievances.filter((g) => g.status === 'submitted' || g.status === 'under_review').length;
+  const inProgressCount = grievances.filter((g) => g.status === 'in_progress').length;
+  const criticalCount = grievances.filter((g) => g.priority === 'CRITICAL' && g.status !== 'resolved').length;
+  const resolvedCount = grievances.filter((g) => g.status === 'resolved').length;
+
   return (
     <AuthorityLayout>
-      {/* Scrollable Dashboard Content */}
-      <div className="flex-1 overflow-y-auto p-container-padding">
-        <div className="max-w-7xl mx-auto flex flex-col gap-card-gap">
-          {/* Metrics Row */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-card-gap">
-            {/* Metric 1 */}
-            <div className="bg-[#171717] border border-[#262626] rounded-xl p-[20px] flex flex-col gap-2">
-              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Open Grievances</span>
-              <div className="flex items-end justify-between">
-                <span className="font-display-lg text-display-lg text-on-surface">1,248</span>
-                <span className="material-symbols-outlined text-outline-variant mb-1" style={{ fontVariationSettings: "'FILL' 0" }}>assignment</span>
-              </div>
+      <div className="flex flex-col gap-6 w-full">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-mono text-purple-400 font-bold uppercase tracking-wider mb-1">
+              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+              {user?.department || 'Department Review Authority'}
             </div>
-            {/* Metric 2 */}
-            <div className="bg-[#171717] border border-[#262626] rounded-xl p-[20px] flex flex-col gap-2 border-l-2 border-l-[#3b82f6]">
-              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">High Priority</span>
-              <div className="flex items-end justify-between">
-                <span className="font-display-lg text-display-lg text-error">84</span>
-                <span className="material-symbols-outlined text-error mb-1" style={{ fontVariationSettings: "'FILL' 0" }}>warning</span>
-              </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Operational Case Command
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              to="/authority/queue"
+              className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-lg shadow-purple-600/30 flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-sm">assignment_late</span>
+              Review Active Queue ({urgentQueue.length})
+            </Link>
+          </div>
+        </div>
+
+        {/* Operational Metrics Bento Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Critical Attention */}
+          <div className="bg-[#10131a] border border-red-500/30 rounded-2xl p-5 flex flex-col justify-between shadow-xl relative overflow-hidden">
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-red-400 font-bold">Critical Priority</span>
+              <span className="material-symbols-outlined text-red-400 text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                emergency
+              </span>
             </div>
-            {/* Metric 3 */}
-            <div className="bg-[#171717] border border-[#262626] rounded-xl p-[20px] flex flex-col gap-2">
-              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">SLA At Risk</span>
-              <div className="flex items-end justify-between">
-                <span className="font-display-lg text-display-lg text-tertiary-container">156</span>
-                <span className="material-symbols-outlined text-tertiary-container mb-1" style={{ fontVariationSettings: "'FILL' 0" }}>timer</span>
-              </div>
+            <div className="text-3xl font-bold font-mono text-red-400 mt-4">{criticalCount}</div>
+            <span className="text-[10px] text-gray-400 font-mono mt-1">&lt;12h resolution SLA threshold</span>
+          </div>
+
+          {/* Pending Triage */}
+          <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[11px] font-mono uppercase tracking-wider">Pending Review</span>
+              <span className="material-symbols-outlined text-amber-400 text-xl">pending_actions</span>
             </div>
-            {/* Metric 4 */}
-            <div className="bg-[#171717] border border-[#262626] rounded-xl p-[20px] flex flex-col gap-2">
-              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Overdue</span>
-              <div className="flex items-end justify-between">
-                <span className="font-display-lg text-display-lg text-on-error-container">23</span>
-                <span className="material-symbols-outlined text-on-error-container mb-1" style={{ fontVariationSettings: "'FILL' 0" }}>event_busy</span>
-              </div>
+            <div className="text-3xl font-bold font-mono text-white mt-4">{pendingCount}</div>
+            <span className="text-[10px] text-gray-400 font-mono mt-1">Awaiting authority validation</span>
+          </div>
+
+          {/* In Remediation */}
+          <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[11px] font-mono uppercase tracking-wider">In Remediation</span>
+              <span className="material-symbols-outlined text-blue-400 text-xl">construction</span>
             </div>
-            {/* Metric 5 */}
-            <div className="bg-[#171717] border border-[#262626] rounded-xl p-[20px] flex flex-col gap-2 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#3b82f6]/10 to-transparent pointer-events-none"></div>
-              <span className="font-label-md text-label-md text-primary uppercase tracking-wider">Resolved Today</span>
-              <div className="flex items-end justify-between">
-                <span className="font-display-lg text-display-lg text-primary">42</span>
-                <span className="material-symbols-outlined text-primary mb-1" style={{ fontVariationSettings: "'FILL' 0" }}>task_alt</span>
+            <div className="text-3xl font-bold font-mono text-blue-400 mt-4">{inProgressCount}</div>
+            <span className="text-[10px] text-gray-400 font-mono mt-1">Work permit dispatched</span>
+          </div>
+
+          {/* Resolved Month-to-Date */}
+          <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[11px] font-mono uppercase tracking-wider">Resolved</span>
+              <span className="material-symbols-outlined text-emerald-400 text-xl">verified</span>
+            </div>
+            <div className="text-3xl font-bold font-mono text-emerald-400 mt-4">{resolvedCount}</div>
+            <span className="text-[10px] text-gray-400 font-mono mt-1">94.8% CSAT satisfaction</span>
+          </div>
+        </div>
+
+        {/* Urgent Triage Queue & Department Workload */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Urgent Cases Table (Left 8 cols) */}
+          <div className="lg:col-span-8 bg-[#10131a] border border-[#2D3139] rounded-2xl flex flex-col overflow-hidden shadow-xl">
+            <div className="p-5 border-b border-[#262626] flex justify-between items-center bg-[#12151c]">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-purple-400 text-lg">bolt</span>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Priority Triage Queue</h3>
               </div>
+              <Link to="/authority/queue" className="text-xs text-purple-400 hover:text-purple-300 font-semibold">
+                Open Queue Matrix →
+              </Link>
+            </div>
+
+            <div className="overflow-x-auto flex-1">
+              <table className="w-full text-left border-collapse min-w-[620px]">
+                <thead>
+                  <tr className="border-b border-[#262626] bg-[#0d1017] text-[10px] font-mono uppercase text-gray-400 tracking-wider">
+                    <th className="py-3.5 px-5">Case Identifier</th>
+                    <th className="py-3.5 px-4">Subject</th>
+                    <th className="py-3.5 px-4">Priority</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1c202a] text-xs">
+                  {urgentQueue.slice(0, 5).map((g) => (
+                    <tr key={g.id} className="hover:bg-[#171b26] transition-colors group">
+                      <td className="py-3.5 px-5">
+                        <Link to={`/authority/workspace/${g.id}`} className="font-mono text-purple-400 font-bold group-hover:text-purple-300">
+                          {g.id}
+                        </Link>
+                        <span className="text-[10px] text-gray-500 block font-mono">{g.studentName}</span>
+                      </td>
+                      <td className="py-3.5 px-4 min-w-[200px]">
+                        <p className="text-gray-200 font-medium truncate max-w-xs">{g.title}</p>
+                        <p className="text-[10px] text-gray-400 truncate">{g.location}</p>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <PriorityBadge priority={g.priority} />
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <StatusBadge status={g.status} />
+                      </td>
+                      <td className="py-3.5 px-5 text-right">
+                        <Link
+                          to={`/authority/workspace/${g.id}`}
+                          className="px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-semibold transition-all inline-flex items-center gap-1"
+                        >
+                          Review Case
+                          <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* Main Bento Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-card-gap">
-            {/* Needs Attention (Spans 8 cols) */}
-            <div className="bg-[#171717] border border-[#262626] rounded-xl p-[20px] lg:col-span-8 flex flex-col gap-4 border-l-2 border-l-[#3b82f6] relative">
-              <div className="flex justify-between items-center border-b border-outline-variant/30 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#3b82f6]" style={{ fontVariationSettings: "'FILL' 0" }}>auto_awesome</span>
-                  <h2 className="font-headline-lg text-headline-lg">Needs Attention</h2>
-                </div>
-                <button className="text-primary hover:text-blue-400 font-label-md text-label-md transition-colors">View All</button>
+          {/* Fast Actions & AI Insights (Right 4 cols) */}
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            {/* AI Autonomous Triage Summary */}
+            <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 flex flex-col gap-3 shadow-xl">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-mono font-bold uppercase text-purple-300 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-base">auto_awesome</span>
+                  NLP Triage Engine
+                </h4>
+                <span className="text-[10px] font-mono text-emerald-400 font-bold">Online</span>
               </div>
+              <p className="text-xs text-gray-300 leading-relaxed">
+                98.2% of newly submitted complaints this week were auto-routed with zero manual sorting delay.
+              </p>
+              <div className="pt-2 border-t border-[#262626] flex items-center justify-between text-xs font-mono">
+                <span className="text-gray-400">Mean Routing Time:</span>
+                <span className="text-white font-bold">140ms</span>
+              </div>
+            </div>
+
+            {/* Quick Authority Navigation */}
+            <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 flex flex-col gap-3 shadow-xl">
+              <h4 className="text-xs font-mono font-bold uppercase text-gray-400">Authority Workspaces</h4>
               <div className="flex flex-col gap-2">
-                {/* Case Item 1 */}
-                <div className="p-3 bg-surface-container-low rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors flex items-center justify-between group cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-2 h-2 rounded-full bg-error"></div>
-                    <div className="flex flex-col">
-                      <span className="font-body-md text-body-md font-semibold text-on-surface">GRV-2023-8921</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">Academic Integrity Violation Appeal</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="px-2 py-1 bg-[rgba(245,158,11,0.1)] text-amber-500 rounded font-mono-sm text-mono-sm">SLA: 2h</span>
-                    <span className="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" style={{ fontVariationSettings: "'FILL' 0" }}>chevron_right</span>
-                  </div>
-                </div>
-                {/* Case Item 2 */}
-                <div className="p-3 bg-surface-container-low rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors flex items-center justify-between group cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-2 h-2 rounded-full bg-error"></div>
-                    <div className="flex flex-col">
-                      <span className="font-body-md text-body-md font-semibold text-on-surface">GRV-2023-8944</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">Housing Facility Maintenance Escalation</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="px-2 py-1 bg-[rgba(245,158,11,0.1)] text-amber-500 rounded font-mono-sm text-mono-sm">SLA: 4h</span>
-                    <span className="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" style={{ fontVariationSettings: "'FILL' 0" }}>chevron_right</span>
-                  </div>
-                </div>
-                {/* Case Item 3 */}
-                <div className="p-3 bg-surface-container-low rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors flex items-center justify-between group cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-2 h-2 rounded-full bg-[#3b82f6]"></div>
-                    <div className="flex flex-col">
-                      <span className="font-body-md text-body-md font-semibold text-on-surface">GRV-2023-8950</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">Financial Aid Disbursement Delay</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="px-2 py-1 bg-[rgba(59,130,246,0.1)] text-[#3b82f6] rounded font-mono-sm text-mono-sm flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 0" }}>auto_awesome</span> AI Flag
-                    </span>
-                    <span className="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" style={{ fontVariationSettings: "'FILL' 0" }}>chevron_right</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+                <Link
+                  to="/authority/queue"
+                  className="p-3 rounded-xl bg-[#171717] hover:bg-[#202430] border border-[#262626] text-xs font-semibold text-white flex items-center justify-between transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm text-purple-400">list_alt</span>
+                    Assigned Grievances Queue
+                  </span>
+                  <span className="material-symbols-outlined text-sm text-gray-500">chevron_right</span>
+                </Link>
 
-            {/* Category Distribution (Spans 4 cols) */}
-            <div className="bg-[#171717] border border-[#262626] rounded-xl p-[20px] lg:col-span-4 flex flex-col gap-4">
-              <div className="border-b border-outline-variant/30 pb-3">
-                <h3 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Category Distribution</h3>
-              </div>
-              <div className="flex-1 flex items-center justify-center relative min-h-[200px]">
-                {/* Placeholder for Donut Chart */}
-                <div className="w-40 h-40 rounded-full border-[16px] border-surface-container-low relative flex items-center justify-center">
-                  <div className="absolute inset-[-16px] rounded-full border-[16px] border-transparent border-t-[#3b82f6] border-r-[#3b82f6] rotate-45"></div>
-                  <div className="absolute inset-[-16px] rounded-full border-[16px] border-transparent border-b-secondary rotate-12"></div>
-                  <div className="text-center">
-                    <span className="block font-headline-md text-headline-md font-bold">Total</span>
-                    <span className="block font-body-sm text-body-sm text-outline-variant">Categories</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+                <Link
+                  to="/authority/analytics"
+                  className="p-3 rounded-xl bg-[#171717] hover:bg-[#202430] border border-[#262626] text-xs font-semibold text-white flex items-center justify-between transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm text-blue-400">query_stats</span>
+                    Department Performance Analytics
+                  </span>
+                  <span className="material-symbols-outlined text-sm text-gray-500">chevron_right</span>
+                </Link>
 
-            {/* Department Workload (Spans 6 cols) */}
-            <div className="bg-[#171717] border border-[#262626] rounded-xl p-[20px] lg:col-span-6 flex flex-col gap-4">
-              <div className="border-b border-outline-variant/30 pb-3">
-                <h3 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Department Workload</h3>
-              </div>
-              <div className="flex flex-col gap-4 justify-center flex-1">
-                {/* IT Support */}
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="font-body-sm text-body-sm text-on-surface">IT Support</span>
-                    <span className="font-mono-sm text-mono-sm text-outline-variant">42%</span>
-                  </div>
-                  <div className="w-full bg-surface-container-low rounded-full h-2">
-                    <div className="bg-[#3b82f6] h-2 rounded-full" style={{ width: '42%' }}></div>
-                  </div>
-                </div>
-                {/* HR */}
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="font-body-sm text-body-sm text-on-surface">HR</span>
-                    <span className="font-mono-sm text-mono-sm text-outline-variant">28%</span>
-                  </div>
-                  <div className="w-full bg-surface-container-low rounded-full h-2">
-                    <div className="bg-secondary h-2 rounded-full" style={{ width: '28%' }}></div>
-                  </div>
-                </div>
-                {/* Facilities */}
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="font-body-sm text-body-sm text-on-surface">Facilities</span>
-                    <span className="font-mono-sm text-mono-sm text-outline-variant">15%</span>
-                  </div>
-                  <div className="w-full bg-surface-container-low rounded-full h-2">
-                    <div className="bg-tertiary-container h-2 rounded-full" style={{ width: '15%' }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Resolution Trend (Spans 6 cols) */}
-            <div className="bg-[#171717] border border-[#262626] rounded-xl p-[20px] lg:col-span-6 flex flex-col gap-4">
-              <div className="border-b border-outline-variant/30 pb-3">
-                <h3 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Resolution Trend</h3>
-              </div>
-              <div className="flex-1 flex items-end justify-between relative min-h-[150px] pb-4 px-2">
-                {/* Faux Line Chart Area */}
-                <div className="absolute inset-0 pt-10 pb-4 px-2 flex items-end">
-                  <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-                    <path d="M0,80 L20,60 L40,75 L60,30 L80,45 L100,20" fill="none" stroke="#3b82f6" strokeWidth="2" vectorEffect="non-scaling-stroke"></path>
-                    <path d="M0,100 L0,80 L20,60 L40,75 L60,30 L80,45 L100,20 L100,100 Z" fill="url(#blue-grad)" opacity="0.1"></path>
-                    <defs>
-                      <linearGradient id="blue-grad" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="#3b82f6"></stop>
-                        <stop offset="100%" stopColor="transparent"></stop>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
-                {/* Axis Labels (Faux) */}
-                <div className="w-full flex justify-between font-mono-sm text-mono-sm text-outline-variant absolute bottom-0 left-0 px-2">
-                  <span>Mon</span>
-                  <span>Tue</span>
-                  <span>Wed</span>
-                  <span>Thu</span>
-                  <span>Fri</span>
-                </div>
+                <Link
+                  to="/authority/settings"
+                  className="p-3 rounded-xl bg-[#171717] hover:bg-[#202430] border border-[#262626] text-xs font-semibold text-white flex items-center justify-between transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm text-gray-400">settings</span>
+                    Resolution Threshold Settings
+                  </span>
+                  <span className="material-symbols-outlined text-sm text-gray-500">chevron_right</span>
+                </Link>
               </div>
             </div>
           </div>

@@ -1,156 +1,287 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { api } from '../api/api';
-
-const navItems = [
-  { icon: 'dashboard', label: 'Dashboard', to: '/student/dashboard' },
-  { icon: 'folder_managed', label: 'My Grievances', to: '/student/grievances' },
-  { icon: 'notifications', label: 'Notifications', to: '/student/notifications' },
-];
+import { useAuth } from '../context/AuthContext';
+import { GrievanceService } from '../services/grievanceService';
+import { AIEngine } from '../services/aiEngine';
+import { AIAnalysisResult } from '../types';
+import { AIInsightCard } from '../components/common/AIInsightCard';
+import { useToast } from '../context/ToastContext';
 
 const SubmitGrievance: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const toast = useToast();
+
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [category, setCategory] = useState('');
+  const [attachments, setAttachments] = useState<Array<{ name: string; size: string; type: string; url: string }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [liveAnalysis, setLiveAnalysis] = useState<AIAnalysisResult | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // Debounced real-time AI live analysis
+  useEffect(() => {
+    if (description.trim().length > 15) {
+      setIsAnalyzing(true);
+      const timer = setTimeout(() => {
+        const result = AIEngine.analyze(description, location);
+        setLiveAnalysis(result);
+        if (!category) {
+          setCategory(result.category);
+        }
+        setIsAnalyzing(false);
+      }, 350);
+      return () => clearTimeout(timer);
+    } else {
+      setLiveAnalysis(null);
+    }
+  }, [description, location, category]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const newAtt = {
+        name: file.name,
+        size: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
+        type: file.type || 'image/jpeg',
+        url: file.type.startsWith('image')
+          ? URL.createObjectURL(file)
+          : 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=600&auto=format&fit=crop&q=80',
+      };
+      setAttachments((prev) => [...prev, newAtt]);
+      toast.info(`Attached file: ${file.name}`);
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!description.trim()) {
+      toast.warning('Please provide a description of the issue.');
+      return;
+    }
+
     setIsSubmitting(true);
-    setError(null);
     try {
-      const payload = {
-        description,
-        location: location || null,
-        title: null, // Let AI extract or generate a title if needed
-      };
-      await api.post('/api/v1/grievances/', payload);
-      navigate('/student/success');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to submit grievance');
+      const created = GrievanceService.create({
+        title: title.trim() || undefined,
+        description: description.trim(),
+        location: location.trim() || 'Campus Facilities',
+        category: category || undefined,
+        studentId: user?.id || 'usr_student_01',
+        studentName: user?.name || 'AnantRaj',
+        studentEmail: user?.email || 'anantraj@institution.edu',
+        attachments,
+      });
+
+      toast.success(`Grievance #${created.id} submitted successfully!`);
+      navigate('/student/success', { state: { grievance: created } });
+    } catch {
+      toast.error('Failed to submit grievance. Please retry.');
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Layout navItems={navItems} userRoleLabel="Student Portal" userName="Anant">
-      <div className="flex-1 flex flex-col items-center justify-center relative w-full h-full">
-        {/* Focused Canvas for Submission */}
-        <div className="w-full max-w-3xl flex flex-col gap-stack-lg z-10">
-          {/* Header */}
-          <header className="text-center">
-            <h1 className="font-display-lg text-display-lg text-on-surface mb-stack-sm">Tell us what happened?</h1>
-            <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto">
-              Please provide detailed information to help us resolve the issue efficiently.
-            </p>
-          </header>
-          
-          {/* Form Card */}
-          <form 
-            onSubmit={handleSubmit}
-            className="bg-[#1A1D23] border border-[#2D3139] rounded-lg p-container-padding flex flex-col gap-stack-md relative z-10"
-          >
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-md">
-                {error}
-              </div>
-            )}
-            
-            {/* Natural Language Textarea */}
-            <div className="flex flex-col gap-stack-sm">
-              <label className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider" htmlFor="grievance-description">
-                Describe your issue
+    <Layout userRoleLabel="Student Portal" userName={user?.name || 'Student'}>
+      <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
+        {/* Page Header */}
+        <div className="flex flex-col gap-1 text-center sm:text-left">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-blue-400 font-semibold mb-1">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            AUTONOMOUS CASE TRIAGING PIPELINE
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">File an Institutional Grievance</h1>
+          <p className="text-xs sm:text-sm text-gray-400">
+            Provide details of your academic, facility, or residential grievance. Our local AI engine will classify and route it to the responsible authority.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Main Form (Left 7 cols) */}
+          <form onSubmit={handleSubmit} className="lg:col-span-7 flex flex-col gap-5 bg-[#10131a] border border-[#2D3139] rounded-2xl p-6 shadow-xl">
+            {/* Subject/Title (Optional) */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-mono text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                <span>Case Headline (Optional)</span>
+                <span className="text-[10px] text-gray-500">AI can auto-generate this</span>
               </label>
-              <textarea 
-                className="bg-[#1A1D23] border border-[#2D3139] text-on-surface font-body-lg text-body-lg rounded-md p-gutter focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all resize-none placeholder-outline" 
-                id="grievance-description" 
-                placeholder="E.g., The main water pipe in block C has been leaking since yesterday morning..." 
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. AC leaking water in Lab 402 onto computer desks"
+                className="w-full bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl p-3.5 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Natural Language Description */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-mono text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                <span>Detailed Description *</span>
+                {isAnalyzing && (
+                  <span className="text-[10px] font-mono text-purple-400 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[12px] animate-spin">sync</span>
+                    Analyzing NLP signals...
+                  </span>
+                )}
+              </label>
+              <textarea
+                required
                 rows={6}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                required
-              ></textarea>
+                placeholder="Describe what happened in detail, including time of incident, equipment or courses affected, and any safety hazards..."
+                className="w-full bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl p-4 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none leading-relaxed"
+              />
             </div>
-            
-            {/* Contextual Details Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
-              <div className="flex flex-col gap-stack-sm">
-                <label className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider" htmlFor="grievance-category">
-                  Category (Optional)
-                </label>
-                <select className="bg-[#1A1D23] border border-[#2D3139] text-on-surface font-body-md text-body-md rounded-md p-unit h-12 px-gutter focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all appearance-none cursor-pointer" id="grievance-category" defaultValue="">
-                  <option disabled value="">Select category</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="safety">Safety & Security</option>
-                  <option value="facilities">Facilities</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-stack-sm">
-                <label className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider" htmlFor="grievance-location">
-                  Location (Optional)
-                </label>
-                <select 
-                  className="bg-[#1A1D23] border border-[#2D3139] text-on-surface font-body-md text-body-md rounded-md p-unit h-12 px-gutter focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all appearance-none cursor-pointer" 
-                  id="grievance-location" 
+
+            {/* Location & Category Selectors */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Campus Location</label>
+                <input
+                  type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. Academic Block 4, Lab 402"
+                  className="w-full bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl p-3 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">Category Override</label>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl p-3 focus:outline-none focus:border-blue-500 cursor-pointer"
                 >
-                  <option disabled value="">Select location</option>
-                  <option value="block-a">Block A</option>
-                  <option value="block-b">Block B</option>
-                  <option value="block-c">Block C</option>
-                  <option value="common">Common Area</option>
+                  <option value="">Auto-Detect (Recommended)</option>
+                  <option value="Estate & Campus Facilities">Estate & Campus Facilities</option>
+                  <option value="Academic Affairs">Academic Affairs</option>
+                  <option value="IT & Digital Services">IT & Digital Services</option>
+                  <option value="Hostel & Residence">Hostel & Residence</option>
+                  <option value="Campus Safety & Harassment">Campus Safety & Harassment</option>
+                  <option value="Finance & Accounts">Finance & Accounts</option>
                 </select>
               </div>
             </div>
-            
-            {/* Evidence Upload */}
-            <div className="flex flex-col gap-stack-sm mt-stack-sm">
-              <label className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Evidence & Attachments</label>
-              <div className="border-2 border-dashed border-[#2D3139] rounded-lg p-container-padding flex flex-col items-center justify-center text-center gap-stack-sm bg-surface/50 hover:bg-surface-container-high/30 transition-colors cursor-pointer group">
-                <span className="material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-primary transition-colors" style={{ fontVariationSettings: "'FILL' 0" }}>cloud_upload</span>
-                <div>
-                  <p className="font-body-lg text-body-lg text-on-surface">Drag and drop files here, or click to browse</p>
-                  <p className="font-body-md text-body-md text-outline">Supported formats: JPG, PNG, PDF (Max 10MB)</p>
-                </div>
-              </div>
-              
-              {/* Attached Files Preview (Example) */}
-              <div className="mt-stack-sm flex flex-col gap-unit">
-                <p className="font-label-md text-label-md text-on-surface-variant">Attached Files (1)</p>
-                <div className="flex items-center justify-between p-gutter bg-surface-container-low border border-[#2D3139] rounded-md">
-                  <div className="flex items-center gap-gutter">
-                    <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0 border border-[#2D3139]">
-                      <img alt="Evidence preview" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1UbaN0UvoVl_B0hB_VA4z4wp6iJwCzqqlEiBQ5urOHbEzf558yoy58IF-DBYPdKoipBv5QvWeqoqmS6PyyHSSfsXAaIXUDYmtB-X8sHoGjL66tpBc_QyRALVsOI-rLQrmeubcsUDifqE4mLC21lV2BSxvQqz1qRUOYNw5euTdJ_8kU7715MFzN1ALhd1wEMXTMJZn5QadJ4iVZINCto7CDr4Vi6vG19V5kFBqy_AR2nCxxWrqoZTdTSG9U" />
+
+            {/* Evidence & Attachment Upload */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">
+                Photo Evidence & Documents (Optional)
+              </label>
+
+              <label className="border-2 border-dashed border-[#2D3139] hover:border-blue-500/50 bg-[#171717]/50 hover:bg-[#171717] rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all group">
+                <input type="file" onChange={handleFileUpload} className="hidden" accept="image/*,.pdf" />
+                <span className="material-symbols-outlined text-3xl text-gray-500 group-hover:text-blue-400 transition-colors mb-2">
+                  cloud_upload
+                </span>
+                <p className="text-xs font-semibold text-gray-200">Click to upload photo or document</p>
+                <p className="text-[10px] text-gray-500 font-mono mt-0.5">JPG, PNG, PDF (Up to 10MB)</p>
+              </label>
+
+              {/* Uploaded Files List */}
+              {attachments.length > 0 && (
+                <div className="flex flex-col gap-2 mt-1">
+                  {attachments.map((att, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-2.5 bg-[#171717] border border-[#262626] rounded-xl text-xs"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="material-symbols-outlined text-blue-400 text-base">image</span>
+                        <span className="text-white truncate font-medium">{att.name}</span>
+                        <span className="text-[10px] text-gray-500 font-mono shrink-0">({att.size})</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(i)}
+                        className="text-gray-500 hover:text-red-400 p-1"
+                      >
+                        <span className="material-symbols-outlined text-base">close</span>
+                      </button>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="font-body-md text-body-md text-on-surface truncate max-w-[200px] md:max-w-xs">IMG_20231025_0915.jpg</span>
-                      <span className="font-label-md text-label-md text-outline">2.4 MB</span>
-                    </div>
-                  </div>
-                  <button className="text-on-surface-variant hover:text-error transition-colors p-unit rounded-full hover:bg-surface-container-highest" type="button">
-                    <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 0" }}>delete</span>
-                  </button>
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
-            
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-gutter mt-stack-md pt-stack-md border-t border-[#2D3139]">
-              <button onClick={() => navigate(-1)} className="px-6 py-3 font-body-lg text-body-lg font-medium text-on-surface hover:text-primary hover:bg-surface-container-high transition-colors rounded-md" type="button" disabled={isSubmitting}>
+
+            {/* Submit Action */}
+            <div className="flex items-center justify-between pt-4 border-t border-[#262626] mt-2">
+              <Link
+                to="/student/dashboard"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-gray-400 hover:text-white transition-colors"
+              >
                 Cancel
-              </button>
-              <button disabled={isSubmitting} className="bg-[#3B82F6] disabled:opacity-50 text-white px-8 py-3 rounded-md font-body-lg text-body-lg font-medium hover:bg-[#2563EB] transition-colors shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]" type="submit">
-                {isSubmitting ? 'Submitting...' : 'Submit Grievance'}
+              </Link>
+
+              <button
+                type="submit"
+                disabled={isSubmitting || !description.trim()}
+                className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-blue-600/30 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
+              >
+                <span className="material-symbols-outlined text-sm">send</span>
+                {isSubmitting ? 'Submitting & Routing...' : 'Submit Grievance Docket'}
               </button>
             </div>
           </form>
+
+          {/* Real-time AI Analysis Sidebar (Right 5 cols) */}
+          <div className="lg:col-span-5 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-purple-400 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  auto_awesome
+                </span>
+                Live AI Triage Inspector
+              </h3>
+              {liveAnalysis && (
+                <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-500/30">
+                  Ready to Route
+                </span>
+              )}
+            </div>
+
+            {liveAnalysis ? (
+              <div className="flex flex-col gap-4 animate-slide-in">
+                <AIInsightCard analysis={liveAnalysis} />
+
+                {/* Duplicate Alert CTA if duplicate found */}
+                {liveAnalysis.similarGrievances.length > 0 && (
+                  <div className="bg-amber-950/30 border border-amber-500/40 rounded-xl p-4 flex flex-col gap-2 shadow-lg">
+                    <div className="flex items-center gap-2 text-amber-300 text-xs font-bold uppercase">
+                      <span className="material-symbols-outlined text-base">info</span>
+                      Similar Complaint Already In Progress
+                    </div>
+                    <p className="text-xs text-gray-300 leading-relaxed">
+                      Case #{liveAnalysis.similarGrievances[0].id} was filed previously for this area. Submitting this will automatically link your docket to the active master ticket for expedited resolution.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-[#10131a] border border-dashed border-[#2D3139] rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-3 min-h-[320px]">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 0" }}>
+                    psychology
+                  </span>
+                </div>
+                <h4 className="text-xs font-bold text-gray-300 uppercase tracking-wide">Live AI Preview Awaiting Input</h4>
+                <p className="text-xs text-gray-500 max-w-xs leading-relaxed">
+                  Start typing your description on the left. The neural analyzer will evaluate category confidence, severity, and existing duplicate complaints in real time.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-        {/* Background Atmospheric Effect */}
-        <div className="fixed inset-0 pointer-events-none z-0" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 60%)' }}></div>
       </div>
     </Layout>
   );

@@ -1,262 +1,214 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
-import { api } from '../api/api';
-
-interface DashboardData {
-  status_breakdown: Record<string, number>;
-  priority_breakdown: Record<string, number>;
-  sla_breaches: number;
-  recent_activity: any[];
-  avg_resolution_time_hours: number;
-  total: number;
-}
+import { GrievanceService } from '../services/grievanceService';
+import { AdminService } from '../services/adminService';
+import { Grievance, Department, InstitutionalIssue } from '../types';
+import { StatusBadge, PriorityBadge } from '../components/common/Badge';
 
 const AdminDashboard: React.FC = () => {
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [grievances, setGrievances] = useState<Grievance[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [issues, setIssues] = useState<InstitutionalIssue[]>([]);
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const res = await api.get('/api/v1/analytics/dashboard');
-        setData(res.data);
-      } catch (err) {
-        console.error("Failed to fetch dashboard data", err);
-      }
-    };
-    fetchDashboard();
+    setGrievances(GrievanceService.getAll());
+    setDepartments(AdminService.getDepartments());
+    setIssues(AdminService.getInstitutionalIssues());
   }, []);
 
-  const total = data?.total || 0;
-  const openCases = data ? (data.status_breakdown['Pending'] || 0) + (data.status_breakdown['In Progress'] || 0) : 0;
-  const resolvedCases = data ? (data.status_breakdown['Resolved'] || 0) + (data.status_breakdown['Closed'] || 0) : 0;
-  const slaBreaches = data?.sla_breaches || 0;
-  const avgResolutionTime = data?.avg_resolution_time_hours ? (data.avg_resolution_time_hours / 24).toFixed(1) : 0;
+  const total = grievances.length;
+  const critical = grievances.filter((g) => g.priority === 'CRITICAL' && g.status !== 'resolved').length;
+  const resolved = grievances.filter((g) => g.status === 'resolved').length;
+  const inProgress = grievances.filter((g) => g.status === 'in_progress' || g.status === 'under_review').length;
 
   return (
     <AdminLayout>
-      {/* Top Metrics Section */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
-        {/* Metric 1 */}
-        <div className="bg-[#171717] border border-[#262626] p-5 rounded-xl border-l-4 border-l-primary">
-          <div className="flex justify-between items-start mb-2">
-            <p className="text-on-surface-variant text-sm font-medium">Total Grievances</p>
-            <span className="material-symbols-outlined text-primary/50" style={{ fontVariationSettings: "'FILL' 0" }}>folder_open</span>
+      <div className="flex flex-col gap-6 w-full">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-mono text-amber-400 font-bold uppercase mb-1">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+              Institutional Governance & Ombudsman Node
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Executive Command Center</h1>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">{total}</h3>
-          <div className="flex items-center gap-1 text-green-400 text-xs font-bold">
-            <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 0" }}>trending_up</span>
-            <span>+12.4%</span>
-          </div>
-        </div>
-        
-        {/* Metric 2 */}
-        <div className="bg-[#171717] border border-[#262626] p-5 rounded-xl border-l-4 border-l-[#F59E0B]">
-          <div className="flex justify-between items-start mb-2">
-            <p className="text-on-surface-variant text-sm font-medium">Open Cases</p>
-            <span className="material-symbols-outlined text-[#F59E0B]/50" style={{ fontVariationSettings: "'FILL' 0" }}>pending_actions</span>
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-1">{openCases}</h3>
-          <div className="flex items-center gap-1 text-red-400 text-xs font-bold">
-            <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 0" }}>priority_high</span>
-            <span>Critical Attention</span>
-          </div>
-        </div>
-        
-        {/* Metric 3 */}
-        <div className="bg-[#171717] border border-[#262626] p-5 rounded-xl border-l-4 border-l-green-400">
-          <div className="flex justify-between items-start mb-2">
-            <p className="text-on-surface-variant text-sm font-medium">Resolved</p>
-            <span className="material-symbols-outlined text-green-400/50" style={{ fontVariationSettings: "'FILL' 0" }}>check_circle</span>
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-1">{resolvedCases}</h3>
-          <div className="flex items-center gap-1 text-green-400 text-xs font-bold">
-            <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 0" }}>done_all</span>
-            <span>93% Completion</span>
-          </div>
-        </div>
-        
-        {/* Metric 4 */}
-        <div className="bg-[#171717] border border-[#262626] p-5 rounded-xl border-l-4 border-l-error">
-          <div className="flex justify-between items-start mb-2">
-            <p className="text-on-surface-variant text-sm font-medium">SLA Breach Rate</p>
-            <span className="material-symbols-outlined text-error/50" style={{ fontVariationSettings: "'FILL' 0" }}>timer_off</span>
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-1">{total > 0 ? ((slaBreaches / total) * 100).toFixed(1) : 0}%</h3>
-          <div className="flex items-center gap-1 text-green-400 text-xs font-bold">
-            <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 0" }}>trending_down</span>
-            <span>-0.4% Improvement</span>
-          </div>
-        </div>
-        
-        {/* Metric 5 */}
-        <div className="bg-[#171717] border border-[#262626] p-5 rounded-xl border-l-4 border-l-secondary">
-          <div className="flex justify-between items-start mb-2">
-            <p className="text-on-surface-variant text-sm font-medium">Avg Resolution</p>
-            <span className="material-symbols-outlined text-secondary/50" style={{ fontVariationSettings: "'FILL' 0" }}>schedule</span>
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-1">{avgResolutionTime} Days</h3>
-          <div className="flex items-center gap-1 text-green-400 text-xs font-bold">
-            <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 0" }}>bolt</span>
-            <span>Faster than avg</span>
-          </div>
-        </div>
-      </section>
 
-      {/* Middle Bento Grid: Charts */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Grievance Volume Line Chart */}
-        <div className="lg:col-span-8 bg-[#171717] border border-[#262626] p-6 rounded-2xl flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-white text-lg font-bold">Grievance Volume</h3>
-              <p className="text-on-surface-variant text-sm">Weekly incoming trend</p>
-            </div>
-            <div className="flex gap-2">
-              <button className="px-3 py-1 bg-surface-container rounded text-xs font-bold text-primary">Week</button>
-              <button className="px-3 py-1 hover:bg-surface-container rounded text-xs font-bold text-on-surface-variant transition-colors">Month</button>
-            </div>
-          </div>
-          <div className="flex-1 min-h-[220px] relative mt-4">
-            {/* Visualization Simulation */}
-            <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 200">
-              <defs>
-                <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#adc6ff" stopOpacity="0.3"></stop>
-                  <stop offset="100%" stopColor="#adc6ff" stopOpacity="0"></stop>
-                </linearGradient>
-              </defs>
-              <path d="M0,160 Q80,140 160,170 T320,100 T480,120 T640,40 T800,60 L800,200 L0,200 Z" fill="url(#chartGradient)"></path>
-              <path d="M0,160 Q80,140 160,170 T320,100 T480,120 T640,40 T800,60" fill="none" stroke="#adc6ff" strokeLinecap="round" strokeWidth="4"></path>
-              <g className="text-[10px] fill-on-surface-variant/40 font-mono">
-                <text x="0" y="195">MON</text><text x="133" y="195">TUE</text><text x="266" y="195">WED</text>
-                <text x="400" y="195">THU</text><text x="533" y="195">FRI</text><text x="666" y="195">SAT</text><text x="760" y="195">SUN</text>
-              </g>
-            </svg>
-            {/* Tooltip Simulation */}
-            <div className="absolute top-10 right-40 p-2 bg-surface-container-highest border border-primary/30 rounded shadow-xl text-[10px] font-bold">
-              <p className="text-on-surface-variant">Friday, Oct 24</p>
-              <p className="text-primary text-sm">42 New Grievances</p>
-            </div>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/admin/analytics"
+              className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all shadow-lg shadow-amber-600/30 flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-sm">analytics</span>
+              Open Deep Analytics
+            </Link>
           </div>
         </div>
 
-        {/* Department Workload Bar Chart */}
-        <div className="lg:col-span-4 bg-[#171717] border border-[#262626] p-6 rounded-2xl flex flex-col">
-          <h3 className="text-white text-lg font-bold mb-1">Dept Workload</h3>
-          <p className="text-on-surface-variant text-sm mb-6">Active case distribution</p>
-          <div className="flex flex-col gap-6 flex-1 justify-center">
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
-                <span className="text-white">Facilities</span>
-                <span className="text-primary">42%</span>
-              </div>
-              <div className="h-3 w-full bg-surface-container rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full" style={{ width: '42%' }}></div>
-              </div>
+        {/* Executive KPI Metric Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Total Institutional Volume */}
+          <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[10px] font-mono uppercase tracking-wider">Total Volume</span>
+              <span className="material-symbols-outlined text-blue-400 text-xl">folder_shared</span>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
-                <span className="text-white">IT Services</span>
-                <span className="text-secondary">28%</span>
-              </div>
-              <div className="h-3 w-full bg-surface-container rounded-full overflow-hidden">
-                <div className="h-full bg-secondary rounded-full" style={{ width: '28%' }}></div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
-                <span className="text-white">Academic</span>
-                <span className="text-tertiary">30%</span>
-              </div>
-              <div className="h-3 w-full bg-surface-container rounded-full overflow-hidden">
-                <div className="h-full bg-tertiary rounded-full" style={{ width: '30%' }}></div>
-              </div>
-            </div>
+            <div className="text-3xl font-bold font-mono text-white mt-4">{total}</div>
+            <p className="text-[10px] text-gray-500 font-mono mt-1">+14% vs previous semester</p>
           </div>
-        </div>
-      </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Category Distribution Donut Chart */}
-        <div className="lg:col-span-4 bg-[#171717] border border-[#262626] p-6 rounded-2xl flex flex-col items-center">
-          <div className="w-full text-left">
-            <h3 className="text-white text-lg font-bold">Category Distribution</h3>
-            <p className="text-on-surface-variant text-sm mb-4">Sentiment-based split</p>
-          </div>
-          <div className="relative w-48 h-48 my-4">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-              <circle className="text-surface-container" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" strokeWidth="12"></circle>
-              <circle className="text-primary" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" strokeDasharray="251.2" strokeDashoffset="62.8" strokeWidth="12"></circle>
-              <circle className="text-secondary" cx="50" cy="50" fill="transparent" r="40" stroke="currentColor" strokeDasharray="251.2" strokeDashoffset="180" strokeWidth="12"></circle>
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-bold text-white">842</span>
-              <span className="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">Analyzed</span>
+          {/* Critical Open Emergencies */}
+          <div className="bg-[#10131a] border border-red-500/30 rounded-2xl p-5 shadow-xl flex flex-col justify-between relative overflow-hidden">
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-red-400 font-bold">Active Critical</span>
+              <span className="material-symbols-outlined text-red-400 text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                emergency
+              </span>
             </div>
+            <div className="text-3xl font-bold font-mono text-red-400 mt-4">{critical}</div>
+            <p className="text-[10px] text-red-400/80 font-mono mt-1">Requires Ombudsman review</p>
           </div>
-          <div className="grid grid-cols-2 w-full gap-2 mt-4 text-[11px] font-medium">
-            <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary"></span> Infra (45%)</div>
-            <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-secondary"></span> Admin (30%)</div>
-            <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-tertiary"></span> Faculty (15%)</div>
-            <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#FFB4AB]"></span> Other (10%)</div>
+
+          {/* AI Auto-Triage Accuracy */}
+          <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[10px] font-mono uppercase tracking-wider">AI Triage Rate</span>
+              <span className="material-symbols-outlined text-purple-400 text-xl">auto_awesome</span>
+            </div>
+            <div className="text-3xl font-bold font-mono text-purple-400 mt-4">98.4%</div>
+            <p className="text-[10px] text-gray-500 font-mono mt-1">Autonomous category assignment</p>
+          </div>
+
+          {/* Resolved & Closed */}
+          <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+            <div className="flex items-center justify-between text-gray-400">
+              <span className="text-[10px] font-mono uppercase tracking-wider">Resolved Cases</span>
+              <span className="material-symbols-outlined text-emerald-400 text-xl">task_alt</span>
+            </div>
+            <div className="text-3xl font-bold font-mono text-emerald-400 mt-4">{resolved}</div>
+            <p className="text-[10px] text-emerald-400/80 font-mono mt-1">{inProgress} currently in remediation</p>
           </div>
         </div>
 
-        {/* Emerging Institutional Issues & Critical Card */}
-        <div className="lg:col-span-8 flex flex-col gap-4">
-          <h2 className="text-white text-xl font-bold px-1">Emerging Institutional Issues</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-            {/* Critical Card: Hostel Water */}
-            <div className="bg-[#171717] p-6 rounded-2xl border-2 border-[#FFB4AB] relative overflow-hidden group hover:border-[#FFB4AB]/80 transition-colors">
-              <div className="absolute top-0 right-0 p-3">
-                <span className="bg-[#FFB4AB] text-on-error font-bold text-[10px] px-2 py-1 rounded-full uppercase shadow-[0_0_15px_rgba(173,198,255,0.2)]">High Priority</span>
+        {/* Systemic Institutional Issue Alert Banner */}
+        {issues.length > 0 && (
+          <div className="bg-gradient-to-r from-amber-950/40 via-[#10131a] to-[#10131a] border border-amber-500/40 rounded-2xl p-5 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                <span className="material-symbols-outlined text-2xl">warning</span>
               </div>
-              <div className="flex flex-col h-full">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#FFB4AB]/20 flex items-center justify-center text-[#FFB4AB]">
-                    <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 0" }}>water_damage</span>
-                  </div>
-                  <div>
-                    <h4 className="text-white font-bold text-lg leading-tight">Hostel Water Supply Disturbance</h4>
-                    <p className="text-on-surface-variant text-xs">Clustered Activity Detected</p>
-                  </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-bold text-white uppercase tracking-wide">Campus Anomaly Cluster Detected</h4>
+                  <span className="text-[10px] px-2 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">
+                    {issues[0].affectedStudentsCount} Students Impacted
+                  </span>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mt-auto">
-                  <div className="bg-surface-container-highest rounded-lg p-3">
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Related complaints</p>
-                    <p className="text-2xl font-bold text-white">17</p>
-                  </div>
-                  <div className="bg-surface-container-highest rounded-lg p-3">
-                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Weekly Spike</p>
-                    <p className="text-2xl font-bold text-[#FFB4AB]">↑ 34%</p>
-                  </div>
-                </div>
-                <button className="mt-4 w-full py-2 bg-[#FFB4AB] text-on-error font-bold rounded-lg text-sm transition-transform active:scale-95 hover:opacity-90">Action Immediate</button>
+                <p className="text-xs text-gray-300 mt-1">{issues[0].title}</p>
               </div>
             </div>
 
-            {/* Emerging Trend 2 */}
-            <div className="bg-[#171717] border border-[#262626] p-6 rounded-2xl flex flex-col hover:border-[#262626]/80 transition-colors">
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>wifi_off</span>
-                </div>
-                <span className="text-xs text-on-surface-variant">Last 2h ago</span>
+            <Link
+              to={`/admin/issues/${issues[0].id}`}
+              className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all shadow-md shadow-amber-600/30 shrink-0"
+            >
+              Inspect Cluster →
+            </Link>
+          </div>
+        )}
+
+        {/* 2-Column Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Live Grievance Feed (Left 8 cols) */}
+          <div className="lg:col-span-8 bg-[#10131a] border border-[#2D3139] rounded-2xl flex flex-col overflow-hidden shadow-xl">
+            <div className="p-5 border-b border-[#262626] flex justify-between items-center bg-[#12151c]">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-400 text-lg">stream</span>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Live Institutional Grievance Stream</h3>
               </div>
-              <h4 className="text-white font-bold mb-2">Library Wi-Fi Connectivity</h4>
-              <p className="text-on-surface-variant text-sm mb-4">Pattern identified in Block C; 5 new complaints regarding inconsistent speeds during peak hours.</p>
-              <div className="flex items-center gap-4 mt-auto">
-                <div className="flex -space-x-2">
-                  <div className="w-6 h-6 rounded-full border border-background bg-slate-400"></div>
-                  <div className="w-6 h-6 rounded-full border border-background bg-slate-500"></div>
-                  <div className="w-6 h-6 rounded-full border border-background bg-slate-600"></div>
-                </div>
-                <span className="text-[10px] text-on-surface-variant">IT Team investigating</span>
+              <span className="text-[10px] font-mono text-gray-500 uppercase">Real-Time Ingestion</span>
+            </div>
+
+            <div className="overflow-x-auto flex-1">
+              <table className="w-full text-left border-collapse min-w-[620px]">
+                <thead>
+                  <tr className="border-b border-[#262626] bg-[#0d1017] text-[10px] font-mono uppercase text-gray-400 tracking-wider">
+                    <th className="py-3 px-5">Docket ID & Student</th>
+                    <th className="py-3 px-4">Category & Department</th>
+                    <th className="py-3 px-4">Priority</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-5 text-right">Review</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1c202a] text-xs">
+                  {grievances.slice(0, 6).map((g) => (
+                    <tr key={g.id} className="hover:bg-[#171b26] transition-colors">
+                      <td className="py-3.5 px-5">
+                        <span className="font-mono text-amber-400 font-bold block">{g.id}</span>
+                        <span className="text-gray-200 font-medium">{g.studentName}</span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="text-gray-200 font-semibold block">{g.department}</span>
+                        <span className="text-[11px] text-gray-400">{g.subcategory}</span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <PriorityBadge priority={g.priority} />
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <StatusBadge status={g.status} />
+                      </td>
+                      <td className="py-3.5 px-5 text-right">
+                        <Link
+                          to={`/authority/workspace/${g.id}`}
+                          className="px-3 py-1.5 rounded-lg bg-amber-600/20 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/30 text-xs font-semibold transition-all inline-flex items-center gap-1"
+                        >
+                          Dossier
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Department Efficiency Leaderboard (Right 4 cols) */}
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 flex flex-col gap-3 shadow-xl">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-mono font-bold uppercase text-gray-400">Department SLA Index</h3>
+                <Link to="/admin/departments" className="text-xs text-amber-400 hover:underline">
+                  Manage →
+                </Link>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {departments.map((d) => (
+                  <div key={d.id} className="p-3 rounded-xl bg-[#171717] border border-[#262626] flex flex-col gap-1.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-white truncate">{d.name}</span>
+                      <span className="font-mono text-emerald-400 font-bold">{d.slaComplianceRate}%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-gray-400 font-mono">
+                      <span>Caseload: {d.activeCaseload} active</span>
+                      <span>Target: {d.targetResolutionHours}h</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          d.slaComplianceRate > 92 ? 'bg-emerald-500' : 'bg-amber-500'
+                        }`}
+                        style={{ width: `${d.slaComplianceRate}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
     </AdminLayout>
   );
 };

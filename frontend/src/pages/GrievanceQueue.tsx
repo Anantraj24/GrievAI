@@ -1,160 +1,221 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import AuthorityLayout from '../components/AuthorityLayout';
-import { api } from '../api/api';
-
-interface Grievance {
-  id: string;
-  grievance_code: string;
-  title: string | null;
-  description: string;
-  status: string;
-  priority: string | null;
-  created_at: string;
-  sla_deadline: string | null;
-}
+import { GrievanceService } from '../services/grievanceService';
+import { Grievance } from '../types';
+import { StatusBadge, PriorityBadge } from '../components/common/Badge';
+import { EmptyState } from '../components/common/EmptyState';
 
 const GrievanceQueue: React.FC = () => {
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [grievances, setGrievances] = useState<Grievance[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDept, setSelectedDept] = useState('ALL');
+  const [selectedPriority, setSelectedPriority] = useState('ALL');
+
+  const tabParam = searchParams.get('tab') || 'ALL';
 
   useEffect(() => {
-    const fetchGrievances = async () => {
-      try {
-        const res = await api.get('/api/v1/grievances/');
-        setGrievances(res.data);
-      } catch (err) {
-        console.error("Failed to fetch grievances", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchGrievances();
+    const list = GrievanceService.getAll();
+    setGrievances(list);
   }, []);
+
+  const handleTabChange = (tab: string) => {
+    if (tab === 'ALL') {
+      searchParams.delete('tab');
+      setSearchParams(searchParams);
+    } else {
+      setSearchParams({ tab });
+    }
+  };
+
+  const filtered = grievances.filter((g) => {
+    const matchesSearch =
+      g.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      g.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      g.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      g.location.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesDept = selectedDept === 'ALL' || g.department === selectedDept;
+    const matchesPriority = selectedPriority === 'ALL' || g.priority === selectedPriority;
+
+    let matchesTab = true;
+    if (tabParam === 'critical') {
+      matchesTab = g.priority === 'CRITICAL';
+    } else if (tabParam === 'under_review') {
+      matchesTab = g.status === 'under_review' || g.status === 'submitted';
+    } else if (tabParam === 'in_progress') {
+      matchesTab = g.status === 'in_progress';
+    } else if (tabParam === 'resolved') {
+      matchesTab = g.status === 'resolved';
+    } else if (tabParam === 'sla_breached') {
+      matchesTab = g.slaBreached;
+    }
+
+    return matchesSearch && matchesDept && matchesPriority && matchesTab;
+  });
+
+  const departmentList = Array.from(new Set(grievances.map((g) => g.department)));
 
   return (
     <AuthorityLayout>
-      {/* Canvas */}
-      <div className="flex-1 overflow-auto p-container-padding flex flex-col gap-card-gap">
-        {/* Page Header & Filters */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
-          <div className="flex gap-2 bg-[#171717] p-1 rounded-lg border border-[#262626] overflow-x-auto w-full sm:w-auto hide-scrollbar">
-            <button className="px-3 py-1.5 rounded-md bg-[#262626] text-primary font-label-md text-label-md whitespace-nowrap">All Grievances (142)</button>
-            <button className="px-3 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-[#262626]/50 transition-colors font-label-md text-label-md whitespace-nowrap">Needs Review (28)</button>
-            <button className="px-3 py-1.5 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-[#262626]/50 transition-colors font-label-md text-label-md whitespace-nowrap">Assigned to Me (5)</button>
-            <button className="px-3 py-1.5 rounded-md text-error hover:text-error hover:bg-error/10 transition-colors font-label-md text-label-md whitespace-nowrap flex items-center gap-1">
-              High Priority
-              <span className="w-4 h-4 bg-error/20 text-error rounded-full flex items-center justify-center text-[10px]">12</span>
-            </button>
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#262626] text-on-surface-variant hover:text-on-surface hover:border-outline-variant transition-colors font-label-md text-label-md w-full sm:w-auto justify-center">
-              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 0" }}>sort</span>
-              Sort: Urgency
-            </button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#262626] text-on-surface-variant hover:text-on-surface hover:border-outline-variant transition-colors font-label-md text-label-md w-full sm:w-auto justify-center">
-              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 0" }}>view_column</span>
-              Columns
-            </button>
+      <div className="flex flex-col gap-6 w-full">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Assigned Grievances Queue</h1>
+            <p className="text-xs text-gray-400 mt-1">
+              Active operational queue of student cases requiring triage, AI response approval, and resolution.
+            </p>
           </div>
         </div>
 
-        {/* Bento Data Table */}
-        <div className="bg-[#171717] border border-[#262626] rounded-xl flex-1 flex flex-col min-h-[500px] overflow-hidden relative">
-          {/* Table Header */}
-          <div className="grid grid-cols-12 gap-4 px-[20px] py-3 bg-[#171717] border-b border-[#262626] sticky top-0 z-10">
-            <div className="col-span-2 flex items-center gap-2">
-              <input className="w-4 h-4 rounded bg-[#0a0a0a] border-[#424754] text-primary focus:ring-primary/50 focus:ring-offset-0" type="checkbox" />
-              <span className="font-label-md text-label-md text-outline">REFERENCE</span>
-            </div>
-            <div className="col-span-3 flex items-center">
-              <span className="font-label-md text-label-md text-outline">COMPLAINT SNIPPET</span>
-            </div>
-            <div className="col-span-1 flex items-center">
-              <span className="font-label-md text-label-md text-outline">CATEGORY</span>
-            </div>
-            <div className="col-span-2 flex items-center">
-              <span className="font-label-md text-label-md text-outline">AI INSIGHT</span>
-            </div>
-            <div className="col-span-1 flex items-center">
-              <span className="font-label-md text-label-md text-outline">PRIORITY</span>
-            </div>
-            <div className="col-span-1 flex items-center">
-              <span className="font-label-md text-label-md text-outline">STATUS</span>
-            </div>
-            <div className="col-span-2 flex items-center justify-end">
-              <span className="font-label-md text-label-md text-outline">SLA / CREATED</span>
-            </div>
+        {/* Filter Controls Bar */}
+        <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-xl">
+          {/* Search Box */}
+          <div className="relative flex-1 max-w-md">
+            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+              search
+            </span>
+            <input
+              type="text"
+              placeholder="Search by case ID, student name, keyword..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:border-purple-500"
+            />
           </div>
 
-          <div className="flex-1 overflow-y-auto">
-            {loading ? (
-              <div className="p-4 text-center text-on-surface-variant">Loading grievances...</div>
-            ) : grievances.length === 0 ? (
-              <div className="p-4 text-center text-on-surface-variant">No grievances found.</div>
-            ) : (
-              grievances.map((g) => (
-                <div 
-                  key={g.id}
-                  onClick={() => navigate(`/authority/workspace/${g.id}`)}
-                  className="grid grid-cols-12 gap-4 px-[20px] py-4 border-b border-[#262626] hover:bg-[#262626] items-center transition-colors relative cursor-pointer group"
-                >
-                  <div className={`absolute left-0 top-0 bottom-0 w-0.5 ${g.priority === 'Critical' ? 'bg-error' : g.priority === 'High' ? 'bg-primary' : 'bg-transparent'}`}></div>
-                  <div className="col-span-2 flex items-center gap-2">
-                    <input className="w-4 h-4 rounded bg-[#0a0a0a] border-[#424754] text-primary focus:ring-primary/50 focus:ring-offset-0" type="checkbox" onClick={(e) => e.stopPropagation()} />
-                    <span className="font-mono-sm text-mono-sm text-on-surface group-hover:text-primary transition-colors">{g.grievance_code || g.id.substring(0,8)}</span>
-                  </div>
-                  <div className="col-span-3 pr-4">
-                    <p className="font-body-sm text-body-sm text-on-surface truncate">{g.title || g.description.substring(0, 50)}</p>
-                    <p className="font-body-sm text-body-sm text-outline-variant text-[11px] mt-0.5 truncate">Submitted by: Student</p>
-                  </div>
-                  <div className="col-span-1">
-                    <span className="px-2 py-1 rounded bg-surface-variant text-on-surface-variant font-label-md text-[10px] uppercase tracking-wider">Unknown</span>
-                  </div>
-                  <div className="col-span-2 flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-outline-variant text-xs" style={{ fontVariationSettings: "'FILL' 0" }}>auto_awesome</span>
-                      <span className="font-label-md text-label-md text-outline-variant">--</span>
-                    </div>
-                  </div>
-                  <div className="col-span-1">
-                    {g.priority && (
-                      <span className={`px-2 py-1 rounded border font-label-md text-[10px] uppercase tracking-wider flex items-center justify-center w-fit gap-1
-                        ${g.priority === 'Critical' ? 'bg-error/10 text-error border-error/20' : 
-                          g.priority === 'High' ? 'bg-primary/10 text-primary border-primary/20' : 
-                          'bg-tertiary-container/10 text-tertiary-container border-tertiary-container/20'}`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${g.priority === 'Critical' ? 'bg-error' : g.priority === 'High' ? 'bg-primary' : 'bg-tertiary-container'}`}></span>
-                        {g.priority}
-                      </span>
-                    )}
-                  </div>
-                  <div className="col-span-1">
-                    <span className="font-body-sm text-body-sm text-on-surface capitalize">{g.status.replace('_', ' ')}</span>
-                  </div>
-                  <div className="col-span-2 flex flex-col items-end justify-center">
-                    {g.sla_deadline ? (
-                      <span className="font-mono-sm text-mono-sm text-error font-medium">{new Date(g.sla_deadline).toLocaleDateString()}</span>
-                    ) : (
-                      <span className="font-mono-sm text-mono-sm text-on-surface-variant">No SLA</span>
-                    )}
-                    <span className="font-body-sm text-[11px] text-outline-variant">{new Date(g.created_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Department Dropdown */}
+            <select
+              value={selectedDept}
+              onChange={(e) => setSelectedDept(e.target.value)}
+              className="bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-purple-500"
+            >
+              <option value="ALL">All Departments</option>
+              {departmentList.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
 
-          {/* Table Footer / Pagination */}
-          <div className="border-t border-[#262626] p-4 flex justify-between items-center bg-[#171717] mt-auto">
-            <span className="font-body-sm text-body-sm text-outline-variant">Showing 1-{grievances.length} of {grievances.length} cases</span>
-            <div className="flex gap-2">
-              <button className="p-1 rounded bg-[#262626] text-outline-variant hover:text-on-surface disabled:opacity-50"><span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 0" }}>chevron_left</span></button>
-              <button className="p-1 rounded bg-[#262626] text-outline-variant hover:text-on-surface"><span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 0" }}>chevron_right</span></button>
-            </div>
+            {/* Priority Dropdown */}
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value)}
+              className="bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-purple-500"
+            >
+              <option value="ALL">All Priorities</option>
+              <option value="CRITICAL">Critical</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
           </div>
         </div>
+
+        {/* Tab Filters */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {[
+            { key: 'ALL', label: 'All Cases', count: grievances.length },
+            { key: 'critical', label: 'Critical Alert', count: grievances.filter((g) => g.priority === 'CRITICAL').length },
+            { key: 'under_review', label: 'Needs Triage', count: grievances.filter((g) => g.status === 'under_review' || g.status === 'submitted').length },
+            { key: 'in_progress', label: 'In Remediation', count: grievances.filter((g) => g.status === 'in_progress').length },
+            { key: 'sla_breached', label: 'SLA Breached', count: grievances.filter((g) => g.slaBreached).length },
+            { key: 'resolved', label: 'Resolved', count: grievances.filter((g) => g.status === 'resolved').length },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => handleTabChange(tab.key)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 ${
+                (tabParam === 'ALL' && tab.key === 'ALL') || tabParam === tab.key
+                  ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                  : 'bg-[#10131a] text-gray-400 hover:text-white border border-[#262626]'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-black/30 text-[10px] font-mono">
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Queue Table */}
+        {filtered.length === 0 ? (
+          <EmptyState
+            icon="task"
+            title="No Grievances in this Queue Filter"
+            description="All cases matching this criteria have been resolved or filtered out."
+            actionText="Reset Filters"
+            onAction={() => {
+              setSearchQuery('');
+              setSelectedDept('ALL');
+              setSelectedPriority('ALL');
+              handleTabChange('ALL');
+            }}
+          />
+        ) : (
+          <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl overflow-hidden shadow-xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[800px]">
+                <thead>
+                  <tr className="border-b border-[#262626] bg-[#0d1017] text-[10px] font-mono uppercase text-gray-400 tracking-wider">
+                    <th className="py-3.5 px-5">Case ID & Student</th>
+                    <th className="py-3.5 px-4">Subject & Location</th>
+                    <th className="py-3.5 px-4">Department</th>
+                    <th className="py-3.5 px-4">Priority</th>
+                    <th className="py-3.5 px-4">SLA Deadline</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-5 text-right">Workspace</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1c202a] text-xs">
+                  {filtered.map((g) => (
+                    <tr key={g.id} className="hover:bg-[#171b26] transition-colors group">
+                      <td className="py-4 px-5">
+                        <Link to={`/authority/workspace/${g.id}`} className="flex flex-col">
+                          <span className="font-mono text-purple-400 font-bold group-hover:text-purple-300 transition-colors">
+                            {g.id}
+                          </span>
+                          <span className="text-gray-300 font-medium">{g.studentName}</span>
+                          <span className="text-[10px] text-gray-500 font-mono">{g.studentEmail}</span>
+                        </Link>
+                      </td>
+                      <td className="py-4 px-4 max-w-xs">
+                        <p className="text-white font-semibold truncate">{g.title}</p>
+                        <p className="text-[11px] text-gray-400 truncate mt-0.5">{g.location}</p>
+                      </td>
+                      <td className="py-4 px-4 text-gray-300">{g.department}</td>
+                      <td className="py-4 px-4">
+                        <PriorityBadge priority={g.priority} />
+                      </td>
+                      <td className="py-4 px-4 font-mono text-[11px]">
+                        <span className={g.slaBreached ? 'text-red-400 font-bold' : 'text-amber-300'}>
+                          {g.slaBreached ? 'OVERDUE' : g.slaDeadline.slice(0, 10)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <StatusBadge status={g.status} />
+                      </td>
+                      <td className="py-4 px-5 text-right">
+                        <Link
+                          to={`/authority/workspace/${g.id}`}
+                          className="px-3.5 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs font-semibold transition-all inline-flex items-center gap-1.5 shadow-sm"
+                        >
+                          <span className="material-symbols-outlined text-sm">open_in_new</span>
+                          Open Case
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </AuthorityLayout>
   );

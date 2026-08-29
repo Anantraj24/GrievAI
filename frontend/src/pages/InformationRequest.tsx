@@ -1,141 +1,131 @@
-import React, { useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import AuthorityLayout from '../components/AuthorityLayout';
+import { useAuth } from '../context/AuthContext';
+import { GrievanceService } from '../services/grievanceService';
+import { Grievance } from '../types';
+import { useToast } from '../context/ToastContext';
+
+const PRESET_REQUESTS = [
+  'Please upload a high-resolution photo showing the serial number and physical condition of the affected device.',
+  'Please specify the exact room number, floor wing, and equipment desk ID.',
+  'Please attach the official bank statement PDF showing the dual transaction debit and 12-digit UTR reference.',
+  'Please upload your signed midterm exam booklet and the course instructor solution key.',
+  'Please provide names of any eyewitnesses or resident students affected by this incident.',
+];
 
 const InformationRequest: React.FC = () => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const [searchParams] = useSearchParams();
+  const grievanceId = searchParams.get('id') || 'GRV-2024-089';
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const toast = useToast();
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
+  const [grievance, setGrievance] = useState<Grievance | null>(null);
+  const [message, setMessage] = useState(PRESET_REQUESTS[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0].name);
-    }
-  };
+  useEffect(() => {
+    const item = GrievanceService.getById(grievanceId);
+    if (item) setGrievance(item);
+  }, [grievanceId]);
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsDragOver(true);
-  };
+    if (!grievance || !user || !message.trim()) return;
 
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setSelectedFile(e.dataTransfer.files[0].name);
+    setIsSubmitting(true);
+    try {
+      GrievanceService.requestInfo(grievance.id, user.name, message.trim());
+      toast.success(`Clarification request dispatched to ${grievance.studentName}!`);
+      navigate(`/authority/workspace/${grievance.id}`);
+    } catch {
+      toast.error('Failed to dispatch clarification request.');
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-surface-container-lowest text-on-surface min-h-screen flex flex-col font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
-      {/* Simplified Header for Focused Task */}
-      <header className="flex items-center justify-between h-16 px-gutter border-b border-surface-variant bg-surface/80 backdrop-blur-md sticky top-0 z-50">
-        <Link to="/authority/workspace" className="flex items-center gap-stack-sm text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md group">
-          <span className="material-symbols-outlined text-[18px] group-active:-translate-x-1 transition-transform">arrow_back</span>
-          Return to Case
-        </Link>
-        <div className="font-headline-md text-headline-md font-bold text-on-surface flex items-center gap-stack-sm">
-          <span className="material-symbols-outlined text-primary">gavel</span>
-          GrievAI
-        </div>
-        <div className="w-24"></div> {/* Spacer for centering */}
-      </header>
-      
-      {/* Main Content Canvas */}
-      <main className="flex-grow flex items-center justify-center p-gutter md:p-container-padding py-12">
-        <div className="w-full max-w-3xl">
-          {/* Page Header */}
-          <div className="mb-stack-lg text-center md:text-left">
-            <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-stack-sm">
-              Information Requested for GRV-00142
-            </h1>
-            <p className="font-body-lg text-body-lg text-on-surface-variant">
-              Please provide the requested details to proceed with your case review.
-            </p>
+    <AuthorityLayout>
+      <div className="max-w-2xl mx-auto w-full my-4 flex flex-col gap-6">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-mono text-purple-400 font-bold uppercase mb-1">
+            <span className="material-symbols-outlined text-sm">contact_support</span>
+            Information Clarification Relay
           </div>
-          
-          {/* Task Card */}
-          <div className="bg-surface border border-surface-variant rounded-lg p-gutter md:p-container-padding shadow-sm">
-            {/* Authority Request Block */}
-            <div className="bg-surface-container-high border-l-4 border-primary rounded-r p-stack-md mb-stack-lg">
-              <div className="flex items-start gap-stack-sm">
-                <span className="material-symbols-outlined text-primary mt-1">announcement</span>
-                <div>
-                  <h2 className="font-label-md text-label-md text-primary mb-unit uppercase tracking-wider">Authority Request</h2>
-                  <p className="font-body-lg text-body-lg text-on-surface">
-                    "Please provide a clear photo of the maintenance notice that was posted on your floor regarding the water shutoff on Oct 12th. If you have any additional context regarding the timeline, please include it below."
-                  </p>
-                </div>
-              </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Request Clarification from Student</h1>
+          <p className="text-xs text-gray-400 mt-1">
+            Request additional evidence or specifications from the student to facilitate thorough investigation.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-6 sm:p-8 flex flex-col gap-5 shadow-2xl">
+          {/* Case Info */}
+          <div className="bg-[#171717] border border-[#262626] rounded-xl p-4 flex items-center justify-between text-xs">
+            <div>
+              <span className="text-[10px] font-mono text-gray-500 uppercase">Target Student</span>
+              <p className="font-semibold text-white">{grievance?.studentName} ({grievance?.studentEmail})</p>
             </div>
-            
-            <form className="space-y-stack-lg">
-              {/* Response Field */}
-              <div className="space-y-stack-sm focus-within:ring-2 focus-within:ring-primary/10 rounded">
-                <label className="block font-label-md text-label-md text-on-surface" htmlFor="response-text">Your Response</label>
-                <textarea 
-                  className="w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-body-md text-body-md rounded p-stack-md focus:border-primary focus:ring-0 transition-colors resize-y" 
-                  id="response-text" 
-                  placeholder="Type your explanation or additional context here..." 
-                  rows={5}
-                ></textarea>
-              </div>
-              
-              {/* File Upload Area */}
-              <div className="space-y-stack-sm">
-                <label className="block font-label-md text-label-md text-on-surface">Supporting Documents</label>
-                <div 
-                  className={`border-2 border-dashed transition-colors rounded-lg p-container-padding text-center cursor-pointer group flex flex-col items-center justify-center min-h-[160px] ${isDragOver ? 'border-primary bg-surface-container-low' : 'border-outline-variant hover:border-primary bg-surface-container-lowest hover:bg-surface-container-low'}`}
-                  onClick={handleUploadClick}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <div className="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center mb-stack-sm group-hover:scale-110 transition-transform duration-200">
-                    <span className="material-symbols-outlined text-primary text-2xl">upload_file</span>
-                  </div>
-                  <p className="font-body-lg text-body-lg text-on-surface mb-unit">
-                    {selectedFile ? `Selected: ${selectedFile}` : 'Click to upload or drag and drop'}
-                  </p>
-                  {!selectedFile && (
-                    <p className="font-body-md text-body-md text-on-surface-variant">
-                      SVG, PNG, JPG or PDF (max. 10MB)
-                    </p>
-                  )}
-                  {/* Hidden File Input */}
-                  <input 
-                    className="hidden" 
-                    id="file-upload" 
-                    multiple 
-                    type="file" 
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                  />
-                </div>
-              </div>
-              
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row items-center justify-end gap-stack-md pt-stack-md border-t border-surface-variant mt-stack-lg">
-                <button className="w-full sm:w-auto font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container px-stack-lg py-3 rounded transition-colors" type="button">
-                  Save Draft
-                </button>
-                <button className="w-full sm:w-auto font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-fixed px-stack-lg py-3 rounded transition-colors flex items-center justify-center gap-stack-sm" type="submit">
-                  <span className="material-symbols-outlined text-[18px]">send</span>
-                  Submit Information
-                </button>
-              </div>
-            </form>
+            <span className="font-mono text-xs font-bold text-purple-400">Case #{grievance?.id}</span>
           </div>
-        </div>
-      </main>
-    </div>
+
+          {/* Preset Chips */}
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-mono text-gray-400 uppercase tracking-wider">Fast Presets</span>
+            <div className="flex flex-col gap-2">
+              {PRESET_REQUESTS.map((preset, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setMessage(preset)}
+                  className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                    message === preset
+                      ? 'bg-purple-950/30 border-purple-500/50 text-white font-medium shadow-md'
+                      : 'bg-[#171717] border-[#262626] text-gray-400 hover:text-white'
+                  }`}
+                >
+                  "{preset}"
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom Message */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-mono text-gray-400 uppercase tracking-wider">
+              Clarification Request Message *
+            </label>
+            <textarea
+              required
+              rows={4}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Specify the exact documentation or clarification required from student..."
+              className="w-full bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl p-3.5 focus:outline-none focus:border-purple-500 resize-none leading-relaxed font-mono"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between pt-3 border-t border-[#262626]">
+            <Link
+              to={`/authority/workspace/${grievanceId}`}
+              className="text-xs text-gray-400 hover:text-white transition-colors"
+            >
+              Cancel
+            </Link>
+
+            <button
+              type="submit"
+              disabled={isSubmitting || !message.trim()}
+              className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-purple-600/30 flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-sm">send</span>
+              {isSubmitting ? 'Dispatching...' : 'Dispatch Request to Student'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </AuthorityLayout>
   );
 };
 
