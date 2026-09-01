@@ -1,65 +1,63 @@
 import uuid
-from typing import Dict, Any, Tuple, Optional
+from typing import Optional, Tuple
 from sqlalchemy.orm import Session
-from ..models import Grievance, Department, AIAnalysis
-from ..schemas.enums import Priority
-from .sla_service import calculate_sla_deadline
-
-def determine_priority_and_routing(
-    db: Session, 
-    grievance: Grievance, 
-    ai_analysis: AIAnalysis
-) -> Tuple[Optional[str], Optional[uuid.UUID]]:
-    """
-    Deterministic engine to map AI-extracted entities and sentiment 
-    to a Priority and Department.
-    """
-    entities = ai_analysis.extracted_json.get("entities", {})
-    sentiment = ai_analysis.extracted_json.get("sentiment", {})
-    
-    predicted_priority = Priority.MEDIUM.value
-    predicted_department_id = None
-    
-    urgency = entities.get("urgency", "Low").upper()
-    cat = entities.get("category", "").lower()
-    
-    # Priority logic
-    if urgency == "HIGH" or sentiment.get("sentiment") in ["Angry", "Distressed"] or sentiment.get("requires_empathy"):
-        predicted_priority = Priority.HIGH.value
-    elif urgency == "LOW" and sentiment.get("sentiment") == "Neutral":
-        predicted_priority = Priority.LOW.value
-        
-    # Department routing logic
-    # Fetch all active departments to match
-    departments = db.query(Department).filter(Department.is_active == True).all()
-    dept_map = {d.name.lower(): d.id for d in departments}
-    
-    if "maintenance" in cat or "facilities" in cat:
-        if "maintenance" in dept_map:
-            predicted_department_id = dept_map["maintenance"]
-    elif "academic" in cat:
-        if "academic affairs" in dept_map:
-            predicted_department_id = dept_map["academic affairs"]
-    elif "administrative" in cat:
-        if "administration" in dept_map:
-            predicted_department_id = dept_map["administration"]
-            
-    return predicted_priority, predicted_department_id
+from app.models import Grievance, AIAnalysis, Category, Department
+from app.rules.priority import calculate_priority
+from app.rules.sla import calculate_sla_deadline
+from app.rules.routing import resolve_department_routing
 
 def apply_routing(db: Session, grievance_id: uuid.UUID):
+    """
+    Applies deterministic priority scoring, SLA computation, and department assignment
+    based on the latest AI analysis signals and configured routing rules.
+    """
     grievance = db.query(Grievance).filter(Grievance.id == grievance_id).first()
-    ai_analysis = db.query(AIAnalysis).filter(AIAnalysis.grievance_id == grievance_id).order_by(AIAnalysis.created_at.desc()).first()
-    
-    if not grievance or not ai_analysis:
+    if not grievance:
         return
-        
-    priority, dept_id = determine_priority_and_routing(db, grievance, ai_analysis)
-    
-    if priority and not grievance.priority:
-        grievance.priority = priority
-        grievance.sla_deadline = calculate_sla_deadline(priority, grievance.created_at)
-        
-    if dept_id and not grievance.assigned_department_id:
-        grievance.assigned_department_id = dept_id
-        
+
+    ai_analysis = db.query(AIAnalysis).filter(
+        AIAnalysis.grievance_id == grievance_id
+    ).order_by(AIAnalysis.created_at.desc()).first()
+
+    signals = ai_analysis.priority_signals if ai_analysis else {}
+    extracted = ai_analysis.extracted_json if ai_analysis else {}
+
+    cat_name = None
+    if grievance.category:
+        cat_name = grievance.category.name
+    elif extracted.get("category"):
+        cat_name = extracted.get("category")
+
+    # 1. Deterministic Priority Calculation
+    priority_level, reasons = calculate_priority(
+        text=f"{grievance.title or ''} {grievance.description}",
+        category_name=cat_name,
+        safety_signal=signals.get("safety_signal", False),
+        essential_service_signal=signals.get("essential_service_signal", False),
+        affected_scope=signals.get("affected_scope", "Individual"),
+        duration_days=extracted.get("duration_days", 1)
+    )
+
+    if not grievance.priority:
+        grievance.priority = priority_level.value
+        grievance.priority_reasons = reasons
+
+    # 2. SLA Deadline Computation
+    if not grievance.sla_deadline:
+        grievance.sla_deadline = calculate_sla_deadline(
+            created_at=grievance.created_at,
+            priority=grievance.priority
+        )
+
+    # 3. Deterministic Department Routing
+    if not grievance.assigned_department_id:
+        dept_id = resolve_department_routing(
+            db=db,
+            category_id=grievance.category_id,
+            subcategory_id=grievance.subcategory_id,
+            category_name=cat_name
+        )
+        if dept_id:
+            grievance.assigned_department_id = dept_id
+
     db.commit()

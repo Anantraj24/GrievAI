@@ -1,16 +1,26 @@
 import httpx
 import json
-from typing import Dict, Any, List
+import logging
+from typing import Dict, Any, List, Optional
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 class OllamaClient:
-    def __init__(self, base_url: str = "http://localhost:11434", model: str = "llama3"):
+    def __init__(
+        self,
+        base_url: str = settings.OLLAMA_BASE_URL,
+        model: str = settings.OLLAMA_LLM_MODEL,
+        embed_model: str = settings.OLLAMA_EMBED_MODEL
+    ):
         self.base_url = base_url
         self.model = model
+        self.embed_model = embed_model
         
     async def _generate(self, prompt: str, system: str = "") -> str:
-        """Helper to call Ollama generate API"""
-        async with httpx.AsyncClient() as client:
-            try:
+        """Helper to call Ollama generate API with timeout and error resilience"""
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.post(
                     f"{self.base_url}/api/generate",
                     json={
@@ -19,98 +29,106 @@ class OllamaClient:
                         "system": system,
                         "stream": False,
                         "options": {
-                            "temperature": 0.1 # Low temperature for structured output
+                            "temperature": 0.1
                         }
-                    },
-                    timeout=30.0
+                    }
                 )
                 response.raise_for_status()
                 data = response.json()
                 return data.get("response", "")
-            except Exception as e:
-                # Log error in production
-                print(f"Ollama generation failed: {e}")
-                return "{}"
-                
-    async def extract_entities(self, text: str) -> Dict[str, Any]:
-        """Extract key entities from text using LLM."""
-        system_prompt = \"\"\"
-        You are an entity extraction system. Extract key entities from the grievance description.
-        Output MUST be valid JSON with the following format and NO markdown wrapping or other text:
-        {
-            "urgency": "High/Medium/Low",
-            "category": "Maintenance/Academic/Administrative/Other",
-            "key_entities": ["entity1", "entity2"]
-        }
-        \"\"\"
-        
-        response = await self._generate(prompt=text, system=system_prompt)
-        try:
-            # Clean response in case the model added markdown blocks
-            clean_response = response.strip()
-            if clean_response.startswith("```json"):
-                clean_response = clean_response[7:]
-            if clean_response.endswith("```"):
-                clean_response = clean_response[:-3]
-            
-            return json.loads(clean_response)
-        except json.JSONDecodeError:
-            return {"error": "Failed to parse JSON from model output", "raw": response}
+        except Exception as e:
+            logger.warning(f"Ollama generation request failed or timed out: {e}")
+            return "{}"
 
-    async def analyze_sentiment(self, text: str) -> Dict[str, Any]:
-        """Analyze sentiment and tone of the grievance."""
-        system_prompt = \"\"\"
-        Analyze the sentiment and emotional tone of this text.
-        Output MUST be valid JSON with the following format and NO markdown wrapping or other text:
-        {
-            "sentiment": "Positive/Neutral/Negative/Angry/Distressed",
-            "score": 0.0 to 1.0,
-            "requires_empathy": true/false
-        }
-        \"\"\"
+    async def analyze_grievance(self, text: str, location: Optional[str] = None) -> Dict[str, Any]:
+        """Extract structured NLU triage data from grievance text."""
+        system_prompt = """You are an expert grievance triage and NLU classification engine.
+Analyze the student grievance description and location.
+Return ONLY valid JSON matching this exact schema with NO markdown codeblocks or other text:
+{
+    "language": "English/Hindi/Hinglish/Other",
+    "issue_summary": "Concise 1-2 sentence factual summary",
+    "category": "Estate & Campus Facilities/Academic Affairs/IT & Digital Services/Hostel & Residence/Campus Safety & Harassment/Finance & Accounts/Other",
+    "subcategory": "Specific subcategory or null",
+    "location": "Extracted location or null",
+    "duration_days": 1,
+    "previously_reported": false,
+    "reported_to": null,
+    "affected_scope": "Individual/Room/Floor/Hostel/Department/Campus",
+    "safety_signal": false,
+    "essential_service_signal": false,
+    "confidence": 0.90
+}"""
         
-        response = await self._generate(prompt=text, system=system_prompt)
+        prompt = f"Grievance Description:\n{text}\n\nReported Location:\n{location or 'Not specified'}"
+        response = await self._generate(prompt=prompt, system=system_prompt)
+        
         try:
             clean_response = response.strip()
             if clean_response.startswith("```json"):
                 clean_response = clean_response[7:]
+            if clean_response.startswith("```"):
+                clean_response = clean_response[3:]
             if clean_response.endswith("```"):
                 clean_response = clean_response[:-3]
-                
-            return json.loads(clean_response)
-        except json.JSONDecodeError:
-            return {"error": "Failed to parse JSON", "raw": response}
             
+            parsed = json.loads(clean_response.strip())
+            if isinstance(parsed, dict) and "confidence" in parsed:
+                return parsed
+        except Exception as e:
+            logger.warning(f"Could not parse Ollama JSON output: {e}, raw: {response[:100]}")
+            
+        # Resilient fallback state
+        return {
+            "language": "English",
+            "issue_summary": text[:150] if len(text) > 150 else text,
+            "category": "Other",
+            "subcategory": None,
+            "location": location,
+            "duration_days": 1,
+            "previously_reported": False,
+            "reported_to": None,
+            "affected_scope": "Individual",
+            "safety_signal": False,
+            "essential_service_signal": False,
+            "confidence": 0.0,
+            "fallback": True
+        }
+
     async def generate_embedding(self, text: str) -> List[float]:
-        """Generate vector embedding for semantic search."""
-        async with httpx.AsyncClient() as client:
-            try:
+        """Generate dense vector embedding for semantic similarity search."""
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.post(
                     f"{self.base_url}/api/embeddings",
                     json={
-                        "model": "nomic-embed-text", # Standard embedding model
+                        "model": self.embed_model,
                         "prompt": text
-                    },
-                    timeout=30.0
+                    }
                 )
                 response.raise_for_status()
                 data = response.json()
-                return data.get("embedding", [])
-            except Exception as e:
-                print(f"Ollama embedding failed: {e}")
-                return []
-                
-    async def draft_response(self, text: str, resolution_notes: str) -> str:
-        """Draft a professional response to the student."""
-        system_prompt = \"\"\"
-        You are an administrative assistant. Draft a polite, professional response to the student 
-        regarding their grievance. Use the resolution notes provided.
-        Keep it concise and empathetic. Do not include placeholders, generate the final text.
-        \"\"\"
-        prompt = f"Grievance: {text}\nResolution Notes: {resolution_notes}"
+                return data.get("embedding", [0.0] * 1024)
+        except Exception as e:
+            logger.warning(f"Ollama embedding request failed: {e}")
+            # Return synthetic 1024-dim zero vector for offline fallback
+            return [0.0] * 1024
+
+    async def draft_response(self, grievance_text: str, resolution_notes: str, tone: str = "Formal") -> str:
+        """Draft a polite, context-aware institutional response."""
+        system_prompt = f"""You are an administrative officer drafting a {tone.lower()} official response to a student regarding their grievance.
+Guidelines:
+- Tone: {tone}
+- Clear, empathetic, professional, and actionable
+- Do not include placeholders like [Insert Date] or [Name]
+- Provide a direct complete response ready to send to the student."""
         
+        prompt = f"Grievance Description:\n{grievance_text}\n\nInternal Action/Resolution Notes:\n{resolution_notes}"
         response = await self._generate(prompt=prompt, system=system_prompt)
-        return response.strip()
+        draft = response.strip()
+        if not draft or draft == "{}":
+            return f"Thank you for contacting administrative support regarding your grievance. We have processed your request ({resolution_notes}) and updated the case status."
+        return draft
 
 # Global singleton instance
-ai_client = OllamaClient(model="llama3") # Can be configured via settings
+ai_client = OllamaClient()

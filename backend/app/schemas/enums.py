@@ -5,6 +5,8 @@ class RoleEnum(str, Enum):
     AUTHORITY = "authority"
     ADMIN = "admin"
 
+Role = RoleEnum
+
 class GrievanceStatus(str, Enum):
     SUBMITTED = "SUBMITTED"
     PENDING_REVIEW = "PENDING_REVIEW"
@@ -17,11 +19,15 @@ class GrievanceStatus(str, Enum):
     REJECTED = "REJECTED"
     ESCALATED = "ESCALATED"
 
+Status = GrievanceStatus
+
 class PriorityLevel(str, Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
     CRITICAL = "CRITICAL"
+
+Priority = PriorityLevel
 
 class RelationType(str, Enum):
     DUPLICATE = "DUPLICATE"

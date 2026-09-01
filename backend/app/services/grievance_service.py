@@ -1,52 +1,72 @@
 import uuid
 from typing import Optional
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
-from ..models import Grievance, User
-from ..schemas.enums import Status, Role
+from fastapi import HTTPException, status
+from app.models import Grievance, User, StatusHistory, AuditLog
+from app.rules.state_machine import validate_transition
 
 def transition_grievance_status(
     db: Session,
     grievance_id: uuid.UUID,
     new_status: str,
     current_user: User,
-    resolution_notes: Optional[str] = None
+    reason: Optional[str] = None
 ) -> Grievance:
+    """
+    Executes a status transition adhering strictly to state machine validation,
+    enforcing role-based permissions and recording an immutable StatusHistory record.
+    """
     grievance = db.query(Grievance).filter(Grievance.id == grievance_id).first()
     if not grievance:
-        raise HTTPException(status_code=404, detail="Grievance not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Grievance not found"
+        )
         
     old_status = grievance.status
-    
-    # Simple RBAC for transitions
-    if current_user.role.name == Role.STUDENT.value:
-        if old_status == Status.PENDING.value and new_status == Status.CLOSED.value:
-            # Student can close their own grievance if it's pending
-            pass
-        else:
-            raise HTTPException(status_code=403, detail="Students cannot perform this transition")
-            
-    elif current_user.role.name in [Role.AUTHORITY.value, Role.ADMIN.value]:
-        # Valid forward transitions
-        valid_transitions = {
-            Status.PENDING.value: [Status.IN_PROGRESS.value, Status.RESOLVED.value, Status.REJECTED.value],
-            Status.IN_PROGRESS.value: [Status.RESOLVED.value, Status.REJECTED.value, Status.ESCALATED.value],
-            Status.ESCALATED.value: [Status.IN_PROGRESS.value, Status.RESOLVED.value, Status.REJECTED.value],
-            Status.RESOLVED.value: [Status.CLOSED.value], # Awaiting student closure, or auto-close
-            Status.REJECTED.value: [Status.CLOSED.value],
-            Status.CLOSED.value: []
+    role_name = current_user.role.name if current_user.role else "student"
+    is_owner = (grievance.student_id == current_user.id)
+
+    try:
+        validate_transition(
+            old_status=old_status,
+            new_status=new_status,
+            actor_role=role_name,
+            is_owner=is_owner
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+    # 1. Update Grievance Status
+    grievance.status = new_status.upper().strip()
+
+    # 2. Record Immutable Status History
+    history_entry = StatusHistory(
+        grievance_id=grievance.id,
+        actor_id=current_user.id,
+        previous_status=old_status,
+        new_status=grievance.status,
+        reason=reason
+    )
+    db.add(history_entry)
+
+    # 3. Create Audit Log
+    audit = AuditLog(
+        actor_id=current_user.id,
+        action="GRIEVANCE_STATUS_CHANGED",
+        entity_type="grievance",
+        entity_id=grievance.id,
+        metadata_json={
+            "old_status": old_status,
+            "new_status": grievance.status,
+            "reason": reason
         }
-        
-        if new_status not in valid_transitions.get(old_status, []):
-            raise HTTPException(status_code=400, detail=f"Invalid transition from {old_status} to {new_status}")
-            
-    else:
-        raise HTTPException(status_code=403, detail="Unauthorized role")
-        
-    grievance.status = new_status
-    if resolution_notes:
-        grievance.resolution_notes = resolution_notes
-        
+    )
+    db.add(audit)
+
     db.commit()
     db.refresh(grievance)
     return grievance

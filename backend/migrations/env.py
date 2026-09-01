@@ -26,7 +26,7 @@ from app.core.config import settings
 target_metadata = Base.metadata
 
 # Override sqlalchemy.url with the one from settings
-config.set_main_option("sqlalchemy.url", str(settings.SQLALCHEMY_DATABASE_URI))
+config.set_main_option("sqlalchemy.url", str(settings.DATABASE_URL))
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
