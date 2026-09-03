@@ -78,6 +78,20 @@ def seed():
                 "department": None,
             },
             {
+                "email": "authority@example.com",
+                "full_name": "Dr. Authority Officer",
+                "password": "password123",
+                "role": "authority",
+                "department": "Estate & Campus Facilities",
+            },
+            {
+                "email": "admin@example.com",
+                "full_name": "Sarah Jenkins",
+                "password": "password123",
+                "role": "admin",
+                "department": None,
+            },
+            {
                 "email": "anantraj@institution.edu",
                 "full_name": "AnantRaj",
                 "password": "password123",
@@ -87,23 +101,16 @@ def seed():
             {
                 "email": "ramesh.sharma@institution.edu",
                 "full_name": "Dr. Ramesh Sharma",
-                "password": "admin123",
+                "password": "password123",
                 "role": "authority",
                 "department": "Estate & Campus Facilities",
             },
             {
                 "email": "arvind.nambiar@institution.edu",
                 "full_name": "Prof. Arvind Nambiar",
-                "password": "admin123",
+                "password": "password123",
                 "role": "authority",
                 "department": "Academic Affairs & Examinations",
-            },
-            {
-                "email": "admin@example.com",
-                "full_name": "Sarah Jenkins",
-                "password": "admin123",
-                "role": "admin",
-                "department": None,
             }
         ]
 
@@ -124,6 +131,11 @@ def seed():
                 )
                 db.add(user)
                 user_count += 1
+            else:
+                user.password_hash = get_password_hash(u_item["password"])
+                user.role_id = role.id
+                if dept:
+                    user.department_id = dept.id
         db.commit()
         print(f"[OK] Seeded {user_count} Users")
 
