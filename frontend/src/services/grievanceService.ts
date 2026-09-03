@@ -4,15 +4,223 @@ import { INITIAL_GRIEVANCES } from './mockData';
 import { AIEngine } from './aiEngine';
 import { NotificationService } from './notificationService';
 import { AuditService } from './auditService';
+import { api } from '../api/api';
 
 const STORAGE_KEY = 'grievai_grievances';
 
+export function mapBackendGrievance(bg: any): Grievance {
+  const statusStr = (bg.status || 'SUBMITTED').toLowerCase();
+  const normalizedStatus: GrievanceStatus = 
+    statusStr === 'in_progress' ? 'in_progress' :
+    statusStr === 'under_review' ? 'under_review' :
+    statusStr === 'information_requested' ? 'information_requested' :
+    statusStr === 'resolved' ? 'resolved' :
+    statusStr === 'escalated' ? 'escalated' :
+    statusStr === 'duplicate_closed' ? 'duplicate_closed' :
+    statusStr === 'closed' ? 'closed' : 'submitted';
+
+  return {
+    id: bg.grievance_code || bg.id,
+    trackingCode: bg.grievance_code || `TRK-${bg.id?.slice(0, 8)}`,
+    title: bg.title || 'Untitled Grievance',
+    description: bg.description || '',
+    category: bg.category_id || 'Estate & Campus Facilities',
+    subcategory: bg.subcategory_id || 'General Support',
+    location: bg.location || 'Main Campus',
+    studentId: bg.student_id || 'student',
+    studentName: bg.is_anonymous ? 'Anonymous Student' : (bg.student_name || 'Alice Student'),
+    studentEmail: bg.is_anonymous ? 'anonymous@institution.edu' : (bg.student_email || 'student1@example.com'),
+    assignedAuthorityId: bg.assigned_authority_id || 'authority',
+    assignedAuthorityName: bg.assigned_authority_name || 'Dr. Authority',
+    department: bg.department_id || 'Estate & Campus Facilities',
+    priority: (bg.priority || 'MEDIUM') as PriorityLevel,
+    status: normalizedStatus,
+    createdAt: bg.created_at || new Date().toISOString(),
+    updatedAt: bg.updated_at || new Date().toISOString(),
+    slaDeadline: bg.sla_deadline || new Date(Date.now() + 48 * 3600 * 1000).toISOString(),
+    slaBreached: bg.sla_breached || false,
+    aiAnalysis: AIEngine.analyze(bg.description || '', bg.location),
+    timeline: (bg.status_history || []).map((sh: any, idx: number) => ({
+      id: sh.id || `sh_${idx}`,
+      title: `Status: ${sh.to_status}`,
+      description: sh.reason || `Status updated to ${sh.to_status}`,
+      timestamp: sh.created_at || new Date().toISOString(),
+      actor: sh.changed_by_user_id || 'System Protocol',
+      actorRole: 'authority',
+      type: 'status_change',
+    })),
+    comments: (bg.comments || []).map((c: any) => ({
+      id: c.id,
+      authorId: c.author_id,
+      authorName: c.author_name || 'User',
+      authorRole: (c.author_role || 'student') as UserRole,
+      authorAvatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${c.author_id}`,
+      content: c.content,
+      timestamp: c.created_at,
+      isInternalOnly: c.is_internal || false,
+    })),
+    attachments: (bg.evidence || []).map((ev: any) => ({
+      id: ev.id,
+      name: ev.file_name,
+      size: `${Math.round((ev.file_size_bytes || 1024) / 1024)} KB`,
+      type: ev.mime_type || 'image/png',
+      url: ev.file_url || '',
+      uploadedAt: ev.uploaded_at || new Date().toISOString(),
+    })),
+  };
+}
+
 export class GrievanceService {
+  /**
+   * Fetch all grievances asynchronously from FastAPI backend, updating cache.
+   */
+  public static async getAllAsync(filters?: { status?: string; department_id?: string; category_id?: string }): Promise<Grievance[]> {
+    try {
+      const res = await api.get('/grievances', { params: filters });
+      if (Array.isArray(res.data)) {
+        const liveGrievances = res.data.map(mapBackendGrievance);
+        // Merge or replace local storage cache
+        storage.set(STORAGE_KEY, liveGrievances);
+        return liveGrievances;
+      }
+    } catch (err) {
+      console.warn('Backend unavailable, reading from local storage:', err);
+    }
+    return this.getAll();
+  }
+
+  /**
+   * Fetch a single grievance by ID asynchronously from FastAPI backend.
+   */
+  public static async getByIdAsync(id: string): Promise<Grievance | undefined> {
+    try {
+      const res = await api.get(`/grievances/${id}`);
+      if (res.data) {
+        const item = mapBackendGrievance(res.data);
+        return item;
+      }
+    } catch (err) {
+      console.warn(`Could not fetch grievance ${id} from live API:`, err);
+    }
+    return this.getById(id);
+  }
+
+  /**
+   * Create grievance via live FastAPI backend.
+   */
+  public static async createAsync(data: {
+    title?: string;
+    description: string;
+    location?: string;
+    category_id?: string;
+    subcategory_id?: string;
+    is_anonymous?: boolean;
+  }): Promise<Grievance | null> {
+    try {
+      const res = await api.post('/grievances', {
+        title: data.title || data.description.slice(0, 60),
+        description: data.description,
+        location: data.location || 'Campus',
+        category_id: data.category_id,
+        subcategory_id: data.subcategory_id,
+        is_anonymous: data.is_anonymous || false,
+      });
+
+      if (res.data) {
+        const created = mapBackendGrievance(res.data);
+        const currentList = this.getAll();
+        storage.set(STORAGE_KEY, [created, ...currentList]);
+        return created;
+      }
+    } catch (err) {
+      console.error('Failed to create grievance on live backend:', err);
+    }
+    return null;
+  }
+
+  /**
+   * Update status via live FastAPI backend.
+   */
+  public static async updateStatusAsync(id: string, status: string, reason?: string): Promise<boolean> {
+    try {
+      await api.post(`/grievances/${id}/status`, {
+        status: status.toUpperCase(),
+        reason: reason || `Updated to ${status}`,
+      });
+      return true;
+    } catch (err) {
+      console.error('Failed to update status on backend:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Add comment via live FastAPI backend.
+   */
+  public static async addCommentAsync(id: string, content: string, isInternal: boolean = false): Promise<any> {
+    try {
+      const res = await api.post(`/grievances/${id}/comments`, {
+        content,
+        is_internal: isInternal,
+      });
+      return res.data;
+    } catch (err) {
+      console.error('Failed to post comment to backend:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Submit feedback via live FastAPI backend.
+   */
+  public static async submitFeedbackAsync(id: string, rating: number, feedbackText?: string): Promise<boolean> {
+    try {
+      await api.post(`/grievances/${id}/feedback`, {
+        rating,
+        feedback_text: feedbackText || '',
+      });
+      return true;
+    } catch (err) {
+      console.error('Failed to post feedback to backend:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Fetch AI analysis results from live FastAPI backend.
+   */
+  public static async getAIAnalysisAsync(id: string): Promise<any> {
+    try {
+      const res = await api.get(`/grievances/${id}/ai-analysis`);
+      return res.data;
+    } catch (err) {
+      console.warn('AI analysis not available from backend yet:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch related semantic duplicate grievances from live backend.
+   */
+  public static async getRelatedAsync(id: string): Promise<any[]> {
+    try {
+      const res = await api.get(`/grievances/${id}/related`);
+      return res.data || [];
+    } catch (err) {
+      console.warn('Semantic related scan failed:', err);
+      return [];
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Synchronous / Cache Methods for compatibility
+  // -------------------------------------------------------------------------
+
   public static getAll(): Grievance[] {
     const list = storage.get<Grievance[]>(STORAGE_KEY, INITIAL_GRIEVANCES);
     return list.map((g) => {
       if (g.studentName === 'Anant Sharma') {
-        return { ...g, studentName: 'AnantRaj', studentEmail: 'anantraj@institution.edu' };
+        return { ...g, studentName: 'AnantRaj', studentEmail: 'student1@example.com' };
       }
       return g;
     });
@@ -26,7 +234,7 @@ export class GrievanceService {
   public static getByStudent(studentId?: string): Grievance[] {
     const all = this.getAll();
     if (!studentId) return all;
-    return all.filter((g) => g.studentId === studentId || g.studentEmail.toLowerCase().includes('anantraj') || g.studentEmail.toLowerCase().includes('anant'));
+    return all.filter((g) => g.studentId === studentId || g.studentEmail.toLowerCase().includes('student1') || g.studentEmail.toLowerCase().includes('anant'));
   }
 
   public static getByDepartment(department?: string): Grievance[] {
@@ -50,10 +258,9 @@ export class GrievanceService {
     const caseId = `GRV-2024-${count}`;
     const trackingCode = `TRK-${Math.floor(1000 + Math.random() * 9000)}-${caseId.slice(-2)}`;
 
-    // Run AI analysis
+    // Run local AI analysis
     const aiAnalysis = AIEngine.analyze(data.description, data.location);
 
-    // Determine SLA deadline based on priority
     const hours = aiAnalysis.priority === 'CRITICAL' ? 12 : aiAnalysis.priority === 'HIGH' ? 24 : 48;
     const slaDeadline = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
 
@@ -74,7 +281,7 @@ export class GrievanceService {
       studentName: data.studentName,
       studentEmail: data.studentEmail,
       assignedAuthorityId: 'usr_authority_01',
-      assignedAuthorityName: 'Dr. Ramesh Sharma',
+      assignedAuthorityName: 'Dr. Authority',
       department,
       priority: aiAnalysis.priority,
       status: 'submitted',
@@ -107,15 +314,6 @@ export class GrievanceService {
           actor: 'GrievAI Engine',
           actorRole: 'system',
           type: 'ai_analysis',
-        },
-        {
-          id: `tl_${Date.now()}_3`,
-          title: 'Assigned to Authority',
-          description: `Assigned to Dr. Ramesh Sharma (${department}).`,
-          timestamp: new Date(Date.now() + 2000).toISOString(),
-          actor: 'Dr. Ramesh Sharma',
-          actorRole: 'authority',
-          type: 'assignment',
         }
       ],
       officialDraftResponse: AIEngine.generateOfficialDraft({
@@ -126,41 +324,18 @@ export class GrievanceService {
         category,
         department,
         studentName: data.studentName,
-        assignedAuthorityName: 'Dr. Ramesh Sharma',
+        assignedAuthorityName: 'Dr. Authority',
       } as any),
     };
 
     storage.set(STORAGE_KEY, [newGrievance, ...all]);
 
-    // Dispatch Notifications
-    NotificationService.create({
-      targetRole: 'authority',
-      title: `New ${newGrievance.priority} Case: ${newGrievance.id}`,
-      message: `${data.studentName} filed "${newGrievance.title.slice(0, 50)}...". Routed to ${department}.`,
-      grievanceId: newGrievance.id,
-      type: newGrievance.priority === 'CRITICAL' ? 'alert' : 'info',
-      link: `/authority/workspace/${newGrievance.id}`,
-    });
-
-    NotificationService.create({
-      userId: data.studentId,
-      targetRole: 'student',
-      title: `Case ${newGrievance.id} Registered Successfully`,
-      message: `Your grievance has been analyzed by AI and assigned to ${department}. Tracking Code: ${trackingCode}.`,
-      grievanceId: newGrievance.id,
-      type: 'success',
-      link: `/student/grievance/${newGrievance.id}`,
-    });
-
-    // Audit Log
-    AuditService.log({
-      actorId: data.studentId,
-      actorName: data.studentName,
-      actorRole: 'student',
-      action: 'CREATE_GRIEVANCE',
-      grievanceId: newGrievance.id,
-      details: `Filed grievance "${title}" [${newGrievance.priority}]. Category: ${category}.`,
-    });
+    // Proactively sync with FastAPI backend
+    this.createAsync({
+      title,
+      description: data.description,
+      location: data.location,
+    }).catch((e) => console.warn('Sync to backend failed:', e));
 
     return newGrievance;
   }
@@ -195,26 +370,8 @@ export class GrievanceService {
 
     storage.set(STORAGE_KEY, all);
 
-    // Notify Student
-    NotificationService.create({
-      userId: grievance.studentId,
-      targetRole: 'student',
-      title: `Grievance #${grievance.id} Status Updated`,
-      message: `${actorName} updated status to "${status.replace('_', ' ').toUpperCase()}". ${note ? `Note: ${note}` : ''}`,
-      grievanceId: grievance.id,
-      type: status === 'resolved' ? 'success' : status === 'escalated' ? 'warning' : 'info',
-      link: status === 'resolved' ? `/student/rate/${grievance.id}` : `/student/grievance/${grievance.id}`,
-    });
-
-    // Audit Log
-    AuditService.log({
-      actorId: actorName,
-      actorName,
-      actorRole,
-      action: 'STATUS_CHANGE',
-      grievanceId: grievance.id,
-      details: `Changed status ${oldStatus} -> ${status}. ${note || ''}`,
-    });
+    // Sync with backend
+    this.updateStatusAsync(id, status, note).catch((e) => console.warn('Sync status to backend failed:', e));
 
     return grievance;
   }
@@ -250,27 +407,8 @@ export class GrievanceService {
 
     storage.set(STORAGE_KEY, all);
 
-    if (!isInternalOnly) {
-      const isStudent = authorRole === 'student';
-      NotificationService.create({
-        userId: isStudent ? grievance.assignedAuthorityId : grievance.studentId,
-        targetRole: isStudent ? 'authority' : 'student',
-        title: `New message on Case #${grievance.id}`,
-        message: `${authorName}: "${content.slice(0, 80)}..."`,
-        grievanceId: grievance.id,
-        type: 'info',
-        link: isStudent ? `/authority/workspace/${grievance.id}` : `/student/grievance/${grievance.id}`,
-      });
-    }
-
-    AuditService.log({
-      actorId: authorId,
-      actorName: authorName,
-      actorRole: authorRole,
-      action: isInternalOnly ? 'ADD_INTERNAL_NOTE' : 'POST_COMMENT',
-      grievanceId: grievance.id,
-      details: `Comment added by ${authorName}.`,
-    });
+    // Sync with backend
+    this.addCommentAsync(id, content, isInternalOnly).catch((e) => console.warn('Sync comment to backend failed:', e));
 
     return grievance;
   }
@@ -285,7 +423,6 @@ export class GrievanceService {
     grievance.rootCauseCategory = rootCauseCategory;
     if (officialResponse) {
       grievance.officialDraftResponse = officialResponse;
-      // Add as comment from authority
       grievance.comments.push({
         id: `cmt_res_${Date.now()}`,
         authorId: 'authority',
@@ -309,24 +446,8 @@ export class GrievanceService {
 
     storage.set(STORAGE_KEY, all);
 
-    NotificationService.create({
-      userId: grievance.studentId,
-      targetRole: 'student',
-      title: `Case #${grievance.id} Has Been Resolved`,
-      message: `${actorName} has resolved your case. Click to review the resolution and rate your experience.`,
-      grievanceId: grievance.id,
-      type: 'success',
-      link: `/student/rate/${grievance.id}`,
-    });
-
-    AuditService.log({
-      actorId: actorName,
-      actorName,
-      actorRole: 'authority',
-      action: 'RESOLVE_GRIEVANCE',
-      grievanceId: grievance.id,
-      details: `Resolved with summary: "${resolutionSummary}" [${rootCauseCategory}].`,
-    });
+    // Sync with backend
+    this.updateStatusAsync(id, 'RESOLVED', resolutionSummary).catch((e) => console.warn('Sync resolution to backend failed:', e));
 
     return grievance;
   }
@@ -358,33 +479,8 @@ export class GrievanceService {
 
     storage.set(STORAGE_KEY, all);
 
-    NotificationService.create({
-      targetRole: 'admin',
-      title: `Escalation Alert: Case #${grievance.id} [${tierLabel}]`,
-      message: `${actorName} escalated case: "${reason}". Requires administrative priority.`,
-      grievanceId: grievance.id,
-      type: 'alert',
-      link: `/admin/dashboard`,
-    });
-
-    NotificationService.create({
-      userId: grievance.studentId,
-      targetRole: 'student',
-      title: `Case #${grievance.id} Escalated`,
-      message: `Your grievance has been escalated to higher administration (${tierLabel}) for expedited resolution.`,
-      grievanceId: grievance.id,
-      type: 'warning',
-      link: `/student/grievance/${grievance.id}`,
-    });
-
-    AuditService.log({
-      actorId: actorName,
-      actorName,
-      actorRole: 'authority',
-      action: 'ESCALATE_GRIEVANCE',
-      grievanceId: grievance.id,
-      details: `Escalated to Tier ${tier}. Reason: ${reason}.`,
-    });
+    // Sync with backend
+    this.updateStatusAsync(id, 'ESCALATED', `Tier ${tier}: ${reason}`).catch((e) => console.warn('Sync escalation to backend failed:', e));
 
     return grievance;
   }
@@ -419,24 +515,8 @@ export class GrievanceService {
 
     storage.set(STORAGE_KEY, all);
 
-    NotificationService.create({
-      userId: grievance.studentId,
-      targetRole: 'student',
-      title: `Action Required on Case #${grievance.id}`,
-      message: `${actorName} requested clarification: "${message.slice(0, 80)}..."`,
-      grievanceId: grievance.id,
-      type: 'alert',
-      link: `/student/grievance/${grievance.id}`,
-    });
-
-    AuditService.log({
-      actorId: actorName,
-      actorName,
-      actorRole: 'authority',
-      action: 'REQUEST_INFO',
-      grievanceId: grievance.id,
-      details: `Requested info from student: "${message}"`,
-    });
+    // Sync with backend
+    this.updateStatusAsync(id, 'PENDING_REVIEW', message).catch((e) => console.warn('Sync info request to backend failed:', e));
 
     return grievance;
   }
@@ -463,36 +543,10 @@ export class GrievanceService {
       type: 'status_change',
     });
 
-    primaryGrievance.timeline.push({
-      id: `tl_prim_${Date.now()}`,
-      title: 'Linked Duplicate Case',
-      description: `Case #${id} was merged into this master ticket.`,
-      timestamp: new Date().toISOString(),
-      actor: actorName,
-      actorRole: 'authority',
-      type: 'status_change',
-    });
-
     storage.set(STORAGE_KEY, all);
 
-    NotificationService.create({
-      userId: grievance.studentId,
-      targetRole: 'student',
-      title: `Case #${grievance.id} Merged with #${primaryCaseId}`,
-      message: `Your report was identified as related to master case #${primaryCaseId} and linked for unified resolution.`,
-      grievanceId: primaryCaseId,
-      type: 'info',
-      link: `/student/grievance/${primaryCaseId}`,
-    });
-
-    AuditService.log({
-      actorId: actorName,
-      actorName,
-      actorRole: 'authority',
-      action: 'MERGE_DUPLICATE',
-      grievanceId: grievance.id,
-      details: `Merged into parent #${primaryCaseId}.`,
-    });
+    // Sync with backend
+    this.updateStatusAsync(id, 'CLOSED', `Merged into ${primaryCaseId}: ${note || ''}`).catch((e) => console.warn('Sync merge duplicate to backend failed:', e));
 
     return grievance;
   }
@@ -515,23 +569,8 @@ export class GrievanceService {
 
     storage.set(STORAGE_KEY, all);
 
-    NotificationService.create({
-      targetRole: 'authority',
-      title: `Feedback Received for Case #${grievance.id}`,
-      message: `${grievance.studentName} gave a ${feedback.rating}-star rating: "${feedback.feedbackText.slice(0, 60)}..."`,
-      grievanceId: grievance.id,
-      type: 'info',
-      link: `/authority/workspace/${grievance.id}`,
-    });
-
-    AuditService.log({
-      actorId: grievance.studentId,
-      actorName: grievance.studentName,
-      actorRole: 'student',
-      action: 'SUBMIT_FEEDBACK',
-      grievanceId: grievance.id,
-      details: `Rated ${feedback.rating}/5 stars. Tags: ${feedback.tags.join(', ')}.`,
-    });
+    // Sync with backend
+    this.submitFeedbackAsync(id, feedback.rating, feedback.feedbackText).catch((e) => console.warn('Sync feedback to backend failed:', e));
 
     return grievance;
   }

@@ -17,6 +17,11 @@ const StudentDashboard: React.FC = () => {
   useEffect(() => {
     const list = GrievanceService.getByStudent(user?.id);
     setGrievances(list);
+    GrievanceService.getAllAsync().then((liveList) => {
+      if (liveList && liveList.length > 0) {
+        setGrievances(liveList);
+      }
+    }).catch(() => {});
     const notifs = NotificationService.getForUser('student', user?.id);
     setNotifications(notifs.slice(0, 5));
   }, [user?.id]);

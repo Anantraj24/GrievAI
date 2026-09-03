@@ -13,6 +13,11 @@ const AuthorityDashboard: React.FC = () => {
   useEffect(() => {
     const list = GrievanceService.getAll();
     setGrievances(list);
+    GrievanceService.getAllAsync().then((liveList) => {
+      if (liveList && liveList.length > 0) {
+        setGrievances(liveList);
+      }
+    }).catch(() => {});
   }, []);
 
   const urgentQueue = grievances
