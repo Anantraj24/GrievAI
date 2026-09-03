@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Base URL for the FastAPI backend
-const BASE_URL = 'http://localhost:8000';
+// Base URL for the FastAPI backend (with /api/v1 prefix)
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 export const api = axios.create({
     baseURL: BASE_URL,
@@ -28,7 +28,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Handle 401 Unauthorized globally
+        // Handle 401 Unauthorized globally if expired
         if (error.response && error.response.status === 401) {
             if (window.location.pathname !== '/login') {
                 localStorage.removeItem('access_token');

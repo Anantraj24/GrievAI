@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { AdminService } from '../services/adminService';
 import { useToast } from '../context/ToastContext';
-import { User } from '../types';
+import { api } from '../api/api';
 
 const Register: React.FC = () => {
   const { login } = useAuth();
@@ -13,29 +12,38 @@ const Register: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [studentId, setStudentId] = useState('');
-  const [department, setDepartment] = useState('Computer Science & Engineering');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !studentId) return;
+    if (!name || !email || !password) return;
 
-    const newUser: User = {
-      id: `usr_student_${Date.now()}`,
-      name,
-      email,
-      role: 'student',
-      studentId,
-      department,
-      avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80`,
-      joinedDate: new Date().toISOString().slice(0, 10),
-      status: 'active',
-    };
+    setIsSubmitting(true);
+    try {
+      // 1. Register with live backend
+      await api.post('/auth/register', {
+        email: email.trim(),
+        full_name: name.trim(),
+        password: password,
+      });
 
-    AdminService.saveUser(newUser);
-    login('jwt_token_' + Date.now(), 'student', newUser);
-    toast.success(`Account registered! Welcome to GrievAI, ${name}.`);
-    navigate('/student/dashboard');
+      // 2. Automatically log in to get session JWT
+      const loginRes = await api.post('/auth/login', {
+        email: email.trim(),
+        password: password,
+      });
+
+      await login(loginRes.data.access_token, 'student');
+      toast.success(`Account registered! Welcome to GrievAI, ${name}.`);
+      navigate('/student/dashboard');
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      const errMsg = err?.response?.data?.detail || 'Registration failed. Please check your credentials.';
+      toast.error(errMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -55,7 +63,8 @@ const Register: React.FC = () => {
             <input
               type="text"
               required
-              placeholder="e.g. AnantRaj"
+              disabled={isSubmitting}
+              placeholder="e.g. Alice Student"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl p-3 focus:outline-none focus:border-blue-500"
@@ -63,10 +72,10 @@ const Register: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-mono text-gray-400 uppercase">Student ID / Roll No</label>
+            <label className="text-xs font-mono text-gray-400 uppercase">Student ID / Roll No (Optional)</label>
             <input
               type="text"
-              required
+              disabled={isSubmitting}
               placeholder="e.g. STU-2024-8841"
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
@@ -75,26 +84,12 @@ const Register: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-mono text-gray-400 uppercase">Academic Department</label>
-            <select
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              className="bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl p-3 focus:outline-none focus:border-blue-500"
-            >
-              <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-              <option value="Electrical & Electronics Engineering">Electrical & Electronics Engineering</option>
-              <option value="Mechanical Engineering">Mechanical Engineering</option>
-              <option value="Civil Engineering & Architecture">Civil Engineering & Architecture</option>
-              <option value="Management & Commerce">Management & Commerce</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
             <label className="text-xs font-mono text-gray-400 uppercase">Institutional Email</label>
             <input
               type="email"
               required
-              placeholder="anantraj@institution.edu"
+              disabled={isSubmitting}
+              placeholder="student@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl p-3 focus:outline-none focus:border-blue-500 font-mono"
@@ -106,6 +101,7 @@ const Register: React.FC = () => {
             <input
               type="password"
               required
+              disabled={isSubmitting}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -115,9 +111,17 @@ const Register: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl mt-2 transition-all shadow-lg shadow-blue-600/30"
+            disabled={isSubmitting}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl mt-2 transition-all shadow-lg shadow-blue-600/30 disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            Create Account & Sign In
+            {isSubmitting ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span>Creating Account...</span>
+              </>
+            ) : (
+              'Create Account & Sign In'
+            )}
           </button>
         </form>
 
