@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 # 24 hours
     
+    # Environment & Server
+    ENVIRONMENT: str = "production"
+    PORT: int = 8000
+
     # Database
     DATABASE_URL: str = "postgresql+psycopg://grievai_user:grievai_password@localhost:5432/grievai_db"
 
@@ -18,12 +22,22 @@ class Settings(BaseSettings):
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_LLM_MODEL: str = "llama3"
     OLLAMA_EMBED_MODEL: str = "bge-m3"
+    OLLAMA_TIMEOUT_SECONDS: float = 15.0
 
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    CORS_ORIGINS: Union[List[str], str] = ["http://localhost:3000", "http://localhost:5173", "http://localhost:80", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]
 
     # Storage
     EVIDENCE_STORAGE_DIR: str = "storage/evidence"
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, (list, str)):
+            return v
+        return ["*"]
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

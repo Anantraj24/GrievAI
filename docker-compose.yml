@@ -5,13 +5,20 @@ services:
     image: ankane/pgvector:latest
     container_name: grievai-db
     environment:
-      POSTGRES_USER: grievai_user
-      POSTGRES_PASSWORD: grievai_password
-      POSTGRES_DB: grievai_db
+      POSTGRES_USER: ${POSTGRES_USER:-grievai_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-grievai_password}
+      POSTGRES_DB: ${POSTGRES_DB:-grievai_db}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-grievai_user} -d ${POSTGRES_DB:-grievai_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - grievai-network
     restart: unless-stopped
 
   api:
@@ -23,22 +30,37 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://grievai_user:grievai_password@db:5432/grievai_db
+      - ENVIRONMENT=development
+      - PORT=8000
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:80
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
-      - ./backend:/app
+      - ./backend/storage:/app/storage
+    networks:
+      - grievai-network
     restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:8000/api/v1
     container_name: grievai-frontend
     ports:
       - "3000:80"
     depends_on:
       - api
+    networks:
+      - grievai-network
     restart: unless-stopped
+
+networks:
+  grievai-network:
+    driver: bridge
 
 volumes:
   pgdata:
+    driver: local
