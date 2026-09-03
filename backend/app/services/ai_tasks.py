@@ -1,10 +1,13 @@
 import uuid
 import asyncio
 import logging
-from app.models import Grievance, GrievanceEmbedding, AIAnalysis, StatusHistory
+from typing import List
+from sqlalchemy import or_
+from app.models import Grievance, GrievanceEmbedding, AIAnalysis, GrievanceRelation
 from app.ai.ai_service import ai_client
 from app.core.database import SessionLocal
 from app.services.routing_service import apply_routing
+from app.api.ai import cosine_similarity
 
 logger = logging.getLogger(__name__)
 
@@ -12,8 +15,8 @@ async def process_grievance_ai(grievance_id: uuid.UUID):
     """
     Background task to process grievance with AI:
     1. Extract structured NLU entities, category, signals & confidence
-    2. Generate vector embedding
-    3. Save AI analysis and embedding record
+    2. Generate vector embedding & store in grievance_embeddings
+    3. Find semantic duplicates and store in grievance_relations
     4. Apply deterministic routing, priority & SLA calculation
     """
     db = SessionLocal()
@@ -35,8 +38,35 @@ async def process_grievance_ai(grievance_id: uuid.UUID):
                     embedding_model="bge-m3"
                 )
                 db.add(db_embedding)
+                db.flush()
+
+            # 2. Semantic Similarity Scan against previous embeddings
+            previous_embeddings = db.query(GrievanceEmbedding).filter(
+                GrievanceEmbedding.grievance_id != grievance_id
+            ).all()
+
+            for prev in previous_embeddings:
+                if prev.embedding:
+                    score = cosine_similarity(list(embedding), list(prev.embedding))
+                    if score >= 0.75:
+                        rel_type = "DUPLICATE" if score >= 0.85 else "RELATED"
+                        # Check existing relation
+                        existing_rel = db.query(GrievanceRelation).filter(
+                            or_(
+                                (GrievanceRelation.grievance_id_a == grievance_id) & (GrievanceRelation.grievance_id_b == prev.grievance_id),
+                                (GrievanceRelation.grievance_id_a == prev.grievance_id) & (GrievanceRelation.grievance_id_b == grievance_id)
+                            )
+                        ).first()
+                        if not existing_rel:
+                            rel = GrievanceRelation(
+                                grievance_id_a=grievance_id,
+                                grievance_id_b=prev.grievance_id,
+                                similarity_score=round(score, 3),
+                                relation_type=rel_type
+                            )
+                            db.add(rel)
             
-        # 2. Extract Structured NLU Analysis
+        # 3. Extract Structured NLU Analysis
         analysis_data = await ai_client.analyze_grievance(text=text_content, location=grievance.location)
         
         ai_analysis = AIAnalysis(
@@ -54,7 +84,7 @@ async def process_grievance_ai(grievance_id: uuid.UUID):
         db.add(ai_analysis)
         db.commit()
         
-        # 3. Apply Deterministic Priority & Routing
+        # 4. Apply Deterministic Priority & Routing
         apply_routing(db, grievance_id)
         
     except Exception as e:

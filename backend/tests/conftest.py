@@ -8,7 +8,7 @@ from fastapi import Depends
 
 from app.main import app
 from app.core.database import Base, get_db
-from app.models import Role, User, Department, Category, Subcategory
+from app.models import Role, User, Department, Category, Subcategory, SLARule
 from app.core.security import get_password_hash
 from app.api.deps import require_role
 
@@ -66,6 +66,15 @@ def clean_and_seed_db():
 
         subcat = Subcategory(category_id=cat.id, name="Plumbing & Water Supply")
         db.add(subcat)
+        db.flush()
+
+        # Seed standard SLA rules
+        db.add_all([
+            SLARule(priority="CRITICAL", hours=12),
+            SLARule(priority="HIGH", hours=24),
+            SLARule(priority="MEDIUM", hours=48),
+            SLARule(priority="LOW", hours=120)
+        ])
         db.flush()
 
         # Seed default test users

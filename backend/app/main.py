@@ -28,9 +28,12 @@ def health_check():
     return {"status": "ok", "message": "GrievAI backend is running."}
 
 # Mount routers
-from app.api import auth, grievances, analytics, evidence, ai
+from app.api import auth, grievances, analytics, evidence, ai, notifications, admin
 app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
 app.include_router(grievances.router, prefix=f"{settings.API_V1_STR}/grievances", tags=["grievances"])
 app.include_router(ai.router, prefix=f"{settings.API_V1_STR}", tags=["ai"])
 app.include_router(evidence.router, prefix=f"{settings.API_V1_STR}", tags=["evidence"])
 app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["analytics"])
+app.include_router(notifications.router, prefix=f"{settings.API_V1_STR}/notifications", tags=["notifications"])
+app.include_router(admin.router, prefix=f"{settings.API_V1_STR}/admin", tags=["admin"])
+
