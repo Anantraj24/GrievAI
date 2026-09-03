@@ -6,6 +6,30 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+ADVERSARIAL_INJECTION_PATTERNS = [
+    "ignore previous instructions",
+    "ignore all previous",
+    "disregard all previous",
+    "system prompt override",
+    "you are now dan",
+    "bypass safety",
+    "jailbreak",
+    "sudo mode",
+    "unrestricted mode"
+]
+
+def sanitize_text_input(text: str) -> str:
+    """Detect and neutralize prompt injection keywords before sending to LLM."""
+    if not text:
+        return ""
+    cleaned = text
+    for pattern in ADVERSARIAL_INJECTION_PATTERNS:
+        if pattern.lower() in cleaned.lower():
+            logger.warning(f"Potential prompt injection pattern detected and neutralized: {pattern}")
+            import re
+            cleaned = re.sub(re.escape(pattern), "[REDACTED_INPUT]", cleaned, flags=re.IGNORECASE)
+    return cleaned
+
 class OllamaClient:
     def __init__(
         self,
@@ -19,13 +43,14 @@ class OllamaClient:
         
     async def _generate(self, prompt: str, system: str = "") -> str:
         """Helper to call Ollama generate API with timeout and error resilience"""
+        safe_prompt = sanitize_text_input(prompt)
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.post(
                     f"{self.base_url}/api/generate",
                     json={
                         "model": self.model,
-                        "prompt": prompt,
+                        "prompt": safe_prompt,
                         "system": system,
                         "stream": False,
                         "options": {

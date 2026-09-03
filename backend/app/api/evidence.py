@@ -73,10 +73,18 @@ async def upload_evidence(
     with open(file_path, "wb") as f:
         f.write(content)
 
+    raw_name = os.path.basename(file.filename or storage_key).replace("\x00", "")
+    for dangerous in [".exe", ".bat", ".cmd", ".sh", ".py", ".js", ".vbs", ".dll", ".php", ".ps1"]:
+        if dangerous in raw_name.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Executable or script attachments are strictly prohibited."
+            )
+
     evidence = Evidence(
         grievance_id=grievance.id,
         uploader_id=current_user.id,
-        original_filename=file.filename or storage_key,
+        original_filename=raw_name,
         mime_type=content_type,
         file_size_bytes=file_size,
         storage_key=storage_key,
