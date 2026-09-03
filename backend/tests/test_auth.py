@@ -1,59 +1,7 @@
 import pytest
-import uuid
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
-from fastapi import Depends, HTTPException
+from app.models import User
 
-from app.main import app
-from app.core.database import Base, get_db
-from app.models import Role, User, Department
-from app.api.deps import require_role, get_current_active_user
-
-# In-memory SQLite for fast, isolated test execution
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-
-test_engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-app.dependency_overrides[get_db] = override_get_db
-
-# Dummy protected route for RBAC testing
-@app.get("/api/v1/test-admin-only")
-def admin_only_endpoint(user: User = Depends(require_role(["admin"]))):
-    return {"message": "Welcome Admin", "user_id": str(user.id)}
-
-@app.get("/api/v1/test-authority-or-admin")
-def authority_or_admin_endpoint(user: User = Depends(require_role(["authority", "admin"]))):
-    return {"message": "Welcome Staff", "user_id": str(user.id)}
-
-@pytest.fixture(autouse=True)
-def setup_database():
-    Base.metadata.create_all(bind=test_engine)
-    db = TestingSessionLocal()
-    student_role = Role(name="student", permissions={"can_submit": True})
-    admin_role = Role(name="admin", permissions={"is_superadmin": True})
-    authority_role = Role(name="authority", permissions={"can_resolve": True})
-    db.add_all([student_role, admin_role, authority_role])
-    db.commit()
-    yield
-    Base.metadata.drop_all(bind=test_engine)
-
-client = TestClient(app)
-
-def test_register_student_success():
+def test_register_student_success(client):
     payload = {
         "email": "newstudent@example.com",
         "password": "securepassword123",
@@ -67,7 +15,7 @@ def test_register_student_success():
     assert data["role"] == "student"
     assert "id" in data
 
-def test_register_duplicate_email_fails():
+def test_register_duplicate_email_fails(client):
     payload = {
         "email": "duplicate@example.com",
         "password": "password123",
@@ -80,7 +28,7 @@ def test_register_duplicate_email_fails():
     assert res2.status_code == 400
     assert "already exists" in res2.json()["detail"]
 
-def test_login_success_and_profile_me():
+def test_login_success_and_profile_me(client):
     reg_payload = {
         "email": "testuser@example.com",
         "password": "mysecretpassword",
@@ -107,7 +55,7 @@ def test_login_success_and_profile_me():
     assert me_data["email"] == "testuser@example.com"
     assert me_data["full_name"] == "Test User"
 
-def test_login_invalid_password_fails():
+def test_login_invalid_password_fails(client):
     reg_payload = {
         "email": "wrongpwd@example.com",
         "password": "correctpassword",
@@ -122,11 +70,11 @@ def test_login_invalid_password_fails():
     assert login_res.status_code == 400
     assert "Incorrect email or password" in login_res.json()["detail"]
 
-def test_unauthenticated_me_fails():
+def test_unauthenticated_me_fails(client):
     res = client.get("/api/v1/auth/me")
     assert res.status_code == 401
 
-def test_rbac_student_blocked_from_admin_route():
+def test_rbac_student_blocked_from_admin_route(client):
     # 1. Register student
     reg_payload = {
         "email": "student_rbac@example.com",
