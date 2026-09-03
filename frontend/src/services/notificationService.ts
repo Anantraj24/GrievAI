@@ -1,10 +1,57 @@
 import { SystemNotification, UserRole } from '../types';
 import { storage } from './storage';
 import { INITIAL_NOTIFICATIONS } from './mockData';
+import { api } from '../api/api';
 
 const STORAGE_KEY = 'grievai_notifications';
 
 export class NotificationService {
+  /**
+   * Fetch live in-app notifications from FastAPI backend.
+   */
+  public static async getAllAsync(unreadOnly: boolean = false): Promise<SystemNotification[]> {
+    try {
+      const res = await api.get('/notifications', { params: { unread_only: unreadOnly } });
+      if (res.data && Array.isArray(res.data.items)) {
+        const liveNotifs: SystemNotification[] = res.data.items.map((item: any) => ({
+          id: item.id,
+          userId: item.user_id,
+          title: item.event_type?.replace(/_/g, ' ') || 'Notification',
+          message: item.message,
+          type: item.event_type?.toLowerCase().includes('critical') ? 'alert' : 'info',
+          createdAt: item.created_at,
+          read: item.is_read,
+          grievanceId: item.grievance_id,
+          link: item.grievance_id ? `/student/grievance/${item.grievance_id}` : undefined,
+        }));
+        storage.set(STORAGE_KEY, liveNotifs);
+        return liveNotifs;
+      }
+    } catch (err) {
+      console.warn('Could not fetch notifications from live backend:', err);
+    }
+    return this.getAll();
+  }
+
+  public static async markAsReadAsync(id: string): Promise<void> {
+    try {
+      await api.post(`/notifications/${id}/read`);
+    } catch (err) {
+      console.warn(`Could not mark notification ${id} as read on backend:`, err);
+    }
+    this.markAsRead(id);
+  }
+
+  public static async markAllAsReadAsync(): Promise<void> {
+    try {
+      await api.post('/notifications/read-all');
+    } catch (err) {
+      console.warn('Could not mark all notifications read on backend:', err);
+    }
+    const all = this.getAll();
+    storage.set(STORAGE_KEY, all.map((n) => ({ ...n, read: true })));
+  }
+
   public static getAll(): SystemNotification[] {
     return storage.get<SystemNotification[]>(STORAGE_KEY, INITIAL_NOTIFICATIONS);
   }
