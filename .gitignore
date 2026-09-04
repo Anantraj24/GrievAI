@@ -9,5 +9,10 @@ __pycache__
 .DS_Store
 *.log
 .pytest_cache
+storage/evidence/*
+!storage/evidence/.gitkeep
+storage/*
 backend/storage/evidence/*
 !backend/storage/evidence/.gitkeep
+backend/storage/*
+*.db
