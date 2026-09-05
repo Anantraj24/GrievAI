@@ -4,6 +4,8 @@ from app.schemas.enums import GrievanceStatus, RoleEnum
 ALLOWED_TRANSITIONS: Dict[str, List[str]] = {
     GrievanceStatus.SUBMITTED.value: [
         GrievanceStatus.PENDING_REVIEW.value,
+        GrievanceStatus.ASSIGNED.value,
+        GrievanceStatus.CLOSED.value,
         GrievanceStatus.REJECTED.value,
     ],
     GrievanceStatus.PENDING_REVIEW.value: [

@@ -37,21 +37,37 @@ const ResolutionWorkspace: React.FC = () => {
       setResolutionSummary(`Remedial maintenance and corrective protocol completed for ${item.location}.`);
       setOfficialResponse(item.officialDraftResponse || '');
     }
+    GrievanceService.getByIdAsync(id).then((asyncItem) => {
+      if (asyncItem) {
+        setGrievance(asyncItem);
+        setOfficialResponse(asyncItem.officialDraftResponse || '');
+      }
+    }).catch(() => {});
   }, [id]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!grievance || !user || !resolutionSummary.trim()) return;
 
     setIsSubmitting(true);
     try {
-      GrievanceService.resolve(
-        grievance.id,
-        user.name,
-        resolutionSummary.trim(),
-        rootCause,
-        notifyStudent ? officialResponse : undefined
-      );
+      try {
+        await GrievanceService.resolveAsync(
+          grievance.id,
+          user.name,
+          resolutionSummary.trim(),
+          rootCause,
+          notifyStudent ? officialResponse : undefined
+        );
+      } catch {
+        GrievanceService.resolve(
+          grievance.id,
+          user.name,
+          resolutionSummary.trim(),
+          rootCause,
+          notifyStudent ? officialResponse : undefined
+        );
+      }
       toast.success(`Case #${grievance.id} marked as RESOLVED! Student has been notified.`);
       navigate(`/authority/workspace/${grievance.id}`);
     } catch {

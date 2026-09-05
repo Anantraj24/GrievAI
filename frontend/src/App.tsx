@@ -60,8 +60,14 @@ const ProtectedRoute: React.FC<{
   return <>{children}</>;
 };
 
-// Root index redirect - always lands on login page when opening app
+// Root index redirect - lands on user dashboard if logged in, else login
 const RootRedirect: React.FC = () => {
+  const { isAuthenticated, user } = useAuth();
+  if (isAuthenticated && user) {
+    if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+    if (user.role === 'authority') return <Navigate to="/authority/dashboard" replace />;
+    return <Navigate to="/student/dashboard" replace />;
+  }
   return <Navigate to="/login" replace />;
 };
 

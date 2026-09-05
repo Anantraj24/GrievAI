@@ -11,62 +11,84 @@ const STORAGE_KEY = 'grievai_grievances';
 export function mapBackendGrievance(bg: any): Grievance {
   const statusStr = (bg.status || 'SUBMITTED').toLowerCase();
   const normalizedStatus: GrievanceStatus = 
-    statusStr === 'in_progress' ? 'in_progress' :
-    statusStr === 'under_review' ? 'under_review' :
-    statusStr === 'information_requested' ? 'information_requested' :
+    statusStr === 'in_progress' || statusStr === 'assigned' ? 'in_progress' :
+    statusStr === 'under_review' || statusStr === 'pending_review' || statusStr === 'reopened' ? 'under_review' :
+    statusStr === 'information_requested' || statusStr === 'needs_information' ? 'information_requested' :
     statusStr === 'resolved' ? 'resolved' :
     statusStr === 'escalated' ? 'escalated' :
     statusStr === 'duplicate_closed' ? 'duplicate_closed' :
-    statusStr === 'closed' ? 'closed' : 'submitted';
+    statusStr === 'closed' || statusStr === 'rejected' ? 'closed' : 'submitted';
 
   return {
-    id: bg.grievance_code || bg.id,
+    id: bg.id,
     trackingCode: bg.grievance_code || `TRK-${bg.id?.slice(0, 8)}`,
     title: bg.title || 'Untitled Grievance',
     description: bg.description || '',
-    category: bg.category_id || 'Estate & Campus Facilities',
-    subcategory: bg.subcategory_id || 'General Support',
+    category: bg.category_name || bg.category?.name || 'Estate & Campus Facilities',
+    subcategory: bg.subcategory_name || bg.subcategory?.name || 'General Support',
     location: bg.location || 'Main Campus',
     studentId: bg.student_id || 'student',
-    studentName: bg.is_anonymous ? 'Anonymous Student' : (bg.student_name || 'Alice Student'),
-    studentEmail: bg.is_anonymous ? 'anonymous@institution.edu' : (bg.student_email || 'student1@example.com'),
-    assignedAuthorityId: bg.assigned_authority_id || 'authority',
-    assignedAuthorityName: bg.assigned_authority_name || 'Dr. Authority',
-    department: bg.department_id || 'Estate & Campus Facilities',
+    studentName: bg.is_anonymous ? 'Anonymous Student' : (bg.student_name || 'Student'),
+    studentEmail: bg.is_anonymous ? 'anonymous@institution.edu' : (bg.student_email || 'student@institution.edu'),
+    assignedAuthorityId: bg.assigned_authority_id || undefined,
+    assignedAuthorityName: bg.assigned_authority_name || undefined,
+    department: bg.assigned_department_name || bg.assigned_department?.name || 'General Administration',
     priority: (bg.priority || 'MEDIUM') as PriorityLevel,
     status: normalizedStatus,
     createdAt: bg.created_at || new Date().toISOString(),
     updatedAt: bg.updated_at || new Date().toISOString(),
     slaDeadline: bg.sla_deadline || new Date(Date.now() + 48 * 3600 * 1000).toISOString(),
     slaBreached: bg.sla_breached || false,
-    aiAnalysis: AIEngine.analyze(bg.description || '', bg.location),
+    aiAnalysis: bg.ai_analysis ? {
+      summary: bg.ai_analysis.issue_summary || bg.description?.slice(0, 100) || '',
+      category: bg.ai_analysis.category || bg.category_name || 'General',
+      subcategory: bg.ai_analysis.subcategory || '',
+      confidenceScore: Math.round((bg.ai_analysis.confidence || 0.85) * 100),
+      priority: (bg.priority || 'MEDIUM') as PriorityLevel,
+      priorityReason: (bg.priority_reasons && bg.priority_reasons[0]) || 'AI Triage Protocol',
+      urgencyScore: bg.priority === 'CRITICAL' ? 10 : bg.priority === 'HIGH' ? 8 : 5,
+      sentiment: bg.ai_analysis.safety_signal ? 'Very Negative' : 'Neutral',
+      recommendedDepartment: bg.assigned_department_name || 'Administration',
+      routingReason: 'Automated taxonomy routing rule matched.',
+      extractedEntities: bg.location ? [{ label: 'Location', value: bg.location, category: 'location' }] : [],
+      similarGrievances: [],
+      severitySignals: bg.ai_analysis.safety_signal ? ['Safety Hazard Detected'] : [],
+      suggestedAction: 'Review details and route to on-call duty supervisor.',
+      analyzedAt: bg.created_at || new Date().toISOString(),
+    } : AIEngine.analyze(bg.description || '', bg.location),
     timeline: (bg.status_history || []).map((sh: any, idx: number) => ({
       id: sh.id || `sh_${idx}`,
-      title: `Status: ${sh.to_status}`,
-      description: sh.reason || `Status updated to ${sh.to_status}`,
+      title: `Status: ${sh.new_status || sh.to_status || 'Updated'}`,
+      description: sh.reason || `Status updated to ${sh.new_status || sh.to_status}`,
       timestamp: sh.created_at || new Date().toISOString(),
-      actor: sh.changed_by_user_id || 'System Protocol',
+      actor: sh.actor_name || sh.changed_by_user_id || 'System Protocol',
       actorRole: 'authority',
       type: 'status_change',
     })),
     comments: (bg.comments || []).map((c: any) => ({
       id: c.id,
       authorId: c.author_id,
-      authorName: c.author_name || 'User',
+      authorName: c.author_name || 'Staff',
       authorRole: (c.author_role || 'student') as UserRole,
       authorAvatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${c.author_id}`,
       content: c.content,
       timestamp: c.created_at,
-      isInternalOnly: c.is_internal || false,
+      isInternalOnly: c.is_internal_only ?? c.is_internal ?? false,
     })),
     attachments: (bg.evidence || []).map((ev: any) => ({
       id: ev.id,
-      name: ev.file_name,
+      name: ev.original_filename || ev.file_name || 'Evidence Attachment',
       size: `${Math.round((ev.file_size_bytes || 1024) / 1024)} KB`,
       type: ev.mime_type || 'image/png',
-      url: ev.file_url || '',
-      uploadedAt: ev.uploaded_at || new Date().toISOString(),
+      url: ev.file_url || `${api.defaults.baseURL}/grievances/${bg.id}/evidence/${ev.id}`,
+      uploadedAt: ev.created_at || ev.uploaded_at || new Date().toISOString(),
     })),
+    feedback: bg.feedback ? {
+      rating: bg.feedback.rating,
+      tags: bg.feedback.tags || ['Remediation Verified'],
+      feedbackText: bg.feedback.feedback_text || bg.feedback.comment || '',
+      submittedAt: bg.feedback.submitted_at || bg.feedback.created_at || new Date().toISOString(),
+    } : undefined,
   };
 }
 
@@ -77,8 +99,9 @@ export class GrievanceService {
   public static async getAllAsync(filters?: { status?: string; department_id?: string; category_id?: string }): Promise<Grievance[]> {
     try {
       const res = await api.get('/grievances', { params: filters });
-      if (Array.isArray(res.data)) {
-        const liveGrievances = res.data.map(mapBackendGrievance);
+      const items = Array.isArray(res.data?.items) ? res.data.items : (Array.isArray(res.data) ? res.data : null);
+      if (items) {
+        const liveGrievances = items.map(mapBackendGrievance);
         // Merge or replace local storage cache
         storage.set(STORAGE_KEY, liveGrievances);
         return liveGrievances;
@@ -129,7 +152,7 @@ export class GrievanceService {
       if (res.data) {
         const created = mapBackendGrievance(res.data);
         const currentList = this.getAll();
-        storage.set(STORAGE_KEY, [created, ...currentList]);
+        storage.set(STORAGE_KEY, [created, ...currentList.filter(g => g.id !== created.id)]);
         return created;
       }
     } catch (err) {
@@ -141,15 +164,47 @@ export class GrievanceService {
   /**
    * Update status via live FastAPI backend.
    */
-  public static async updateStatusAsync(id: string, status: string, reason?: string): Promise<boolean> {
+  public static async updateStatusAsync(
+    id: string,
+    status: string,
+    reason?: string,
+    _actorName?: string,
+    _actorRole?: string
+  ): Promise<boolean> {
     try {
+      const mappedStatus = status.toUpperCase().replace(/\s+/g, '_');
       await api.post(`/grievances/${id}/status`, {
-        status: status.toUpperCase(),
+        status: mappedStatus === 'UNDER_REVIEW' ? 'PENDING_REVIEW' : mappedStatus,
         reason: reason || `Updated to ${status}`,
       });
       return true;
     } catch (err) {
       console.error('Failed to update status on backend:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Formally resolve case via live FastAPI backend.
+   */
+  public static async resolveAsync(
+    id: string,
+    _actorName: string,
+    resolutionSummary: string,
+    _category?: string,
+    officialDraftResponse?: string
+  ): Promise<boolean> {
+    try {
+      const reason = officialDraftResponse
+        ? `${resolutionSummary}\n\nOfficial Notice: ${officialDraftResponse}`
+        : resolutionSummary;
+      const success = await this.updateStatusAsync(id, 'RESOLVED', reason);
+      if (officialDraftResponse) {
+        await this.addCommentAsync(id, officialDraftResponse, false).catch(() => {});
+      }
+      return success;
+    } catch (err) {
+      console.error('Failed to resolve grievance on backend:', err);
       return false;
     }
   }
@@ -161,7 +216,7 @@ export class GrievanceService {
     try {
       const res = await api.post(`/grievances/${id}/comments`, {
         content,
-        is_internal: isInternal,
+        is_internal_only: isInternal,
       });
       return res.data;
     } catch (err) {
@@ -228,7 +283,8 @@ export class GrievanceService {
 
   public static getById(id: string): Grievance | undefined {
     const all = this.getAll();
-    return all.find((g) => g.id.toLowerCase() === id.toLowerCase());
+    const query = id.toLowerCase();
+    return all.find((g) => g.id.toLowerCase() === query || (g.trackingCode && g.trackingCode.toLowerCase() === query));
   }
 
   public static getByStudent(studentId?: string): Grievance[] {

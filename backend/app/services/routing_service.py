@@ -38,18 +38,36 @@ def apply_routing(db: Session, grievance_id: uuid.UUID):
         duration_days=extracted.get("duration_days", 1)
     )
 
-    if not grievance.priority:
+    # Priority Hierarchy comparison helper
+    PRIORITY_WEIGHT = {"LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4}
+    current_weight = PRIORITY_WEIGHT.get(grievance.priority or "MEDIUM", 2)
+    new_weight = PRIORITY_WEIGHT.get(priority_level.value, 2)
+
+    # Update priority if not set or if AI signals escalated the severity
+    if not grievance.priority or new_weight > current_weight or signals.get("safety_signal"):
         grievance.priority = priority_level.value
         grievance.priority_reasons = reasons
-
-    # 2. SLA Deadline Computation
-    if not grievance.sla_deadline:
+        # Recompute SLA deadline based on updated priority
         grievance.sla_deadline = calculate_sla_deadline(
             created_at=grievance.created_at,
             priority=grievance.priority
         )
 
-    # 3. Deterministic Department Routing
+    # 2. SLA Deadline Computation if still missing
+    if not grievance.sla_deadline:
+        grievance.sla_deadline = calculate_sla_deadline(
+            created_at=grievance.created_at,
+            priority=grievance.priority or "MEDIUM"
+        )
+
+    # 3. Deterministic Category resolution if not set by student
+    if not grievance.category_id and extracted.get("category"):
+        matched_cat = db.query(Category).filter(Category.name.ilike(f"%{extracted.get('category').strip()}%")).first()
+        if matched_cat:
+            grievance.category_id = matched_cat.id
+            cat_name = matched_cat.name
+
+    # 4. Deterministic Department Routing
     if not grievance.assigned_department_id:
         dept_id = resolve_department_routing(
             db=db,

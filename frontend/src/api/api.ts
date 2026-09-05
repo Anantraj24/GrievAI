@@ -28,9 +28,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Handle 401 Unauthorized globally if expired
+        // Handle 401 Unauthorized globally if token expired
         if (error.response && error.response.status === 401) {
-            if (window.location.pathname !== '/login') {
+            if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
                 localStorage.removeItem('access_token');
                 window.location.href = '/login';
             }

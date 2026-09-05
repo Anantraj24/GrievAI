@@ -44,7 +44,11 @@ def generate_grievance_code(db: Session) -> str:
     """Generates a sequential human-readable code: GRV-YYYY-XXXX"""
     year = datetime.now().year
     count = db.query(Grievance).count() + 1
-    return f"GRV-{year}-{count:04d}"
+    while True:
+        code = f"GRV-{year}-{count:04d}"
+        if not db.query(Grievance).filter(Grievance.grievance_code == code).first():
+            return code
+        count += 1
 
 def map_grievance_to_response(g: Grievance, current_user: User) -> GrievanceResponse:
     """Helper to convert SQLAlchemy Grievance to Pydantic GrievanceResponse with access controls"""
@@ -352,17 +356,25 @@ def assign_grievance(
     elif assignee.department_id:
         grievance.assigned_department_id = assignee.department_id
 
+    old_status = grievance.status
     # Auto-transition from SUBMITTED / PENDING_REVIEW to ASSIGNED
-    if grievance.status in [GrievanceStatus.SUBMITTED.value, GrievanceStatus.PENDING_REVIEW.value]:
+    if old_status in [GrievanceStatus.SUBMITTED.value, GrievanceStatus.PENDING_REVIEW.value]:
         grievance.status = GrievanceStatus.ASSIGNED.value
+        history_entry = StatusHistory(
+            grievance_id=grievance.id,
+            actor_id=current_user.id,
+            previous_status=old_status,
+            new_status=GrievanceStatus.ASSIGNED.value,
+            reason=f"Assigned to {assignee.full_name}" + (f": {assign_in.notes}" if assign_in.notes else "")
+        )
+        db.add(history_entry)
 
     # Record assignment
     assignment = GrievanceAssignment(
         grievance_id=grievance.id,
         assigned_to=assignee.id,
         assigned_by=current_user.id,
-        department_id=grievance.assigned_department_id,
-        notes=assign_in.notes
+        reason=assign_in.notes
     )
     db.add(assignment)
     db.commit()

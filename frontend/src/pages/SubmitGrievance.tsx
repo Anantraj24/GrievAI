@@ -69,21 +69,30 @@ const SubmitGrievance: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const created = GrievanceService.create({
+      let created = await GrievanceService.createAsync({
         title: title.trim() || undefined,
         description: description.trim(),
         location: location.trim() || 'Campus Facilities',
-        category: category || undefined,
-        studentId: user?.id || 'usr_student_01',
-        studentName: user?.name || 'AnantRaj',
-        studentEmail: user?.email || 'anantraj@institution.edu',
-        attachments,
       });
 
-      toast.success(`Grievance #${created.id} submitted successfully!`);
+      if (!created) {
+        created = GrievanceService.create({
+          title: title.trim() || undefined,
+          description: description.trim(),
+          location: location.trim() || 'Campus Facilities',
+          category: category || undefined,
+          studentId: user?.id || 'usr_student_01',
+          studentName: user?.name || 'Student',
+          studentEmail: user?.email || 'student@institution.edu',
+          attachments,
+        });
+      }
+
+      toast.success(`Grievance #${created.trackingCode || created.id} submitted successfully!`);
       navigate('/student/success', { state: { grievance: created } });
     } catch {
       toast.error('Failed to submit grievance. Please retry.');
+    } finally {
       setIsSubmitting(false);
     }
   };

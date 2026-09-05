@@ -20,6 +20,11 @@ const MyGrievances: React.FC = () => {
   useEffect(() => {
     const list = GrievanceService.getByStudent(user?.id);
     setGrievances(list);
+    GrievanceService.getAllAsync().then((liveList) => {
+      if (liveList && liveList.length > 0) {
+        setGrievances(liveList);
+      }
+    }).catch(() => {});
   }, [user?.id]);
 
   const handleStatusFilter = (status: string) => {

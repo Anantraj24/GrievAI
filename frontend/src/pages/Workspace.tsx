@@ -23,16 +23,29 @@ const Workspace: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'ai_draft' | 'timeline' | 'messages' | 'evidence'>('overview');
 
-  const fetchGrievance = () => {
+  const fetchGrievance = async () => {
     if (!id) return;
     const item = GrievanceService.getById(id);
     if (item) {
       setGrievance(item);
-    } else {
-      toast.error(`Case #${id} not found.`);
-      navigate('/authority/queue');
+      setLoading(false);
     }
-    setLoading(false);
+    try {
+      const asyncItem = await GrievanceService.getByIdAsync(id);
+      if (asyncItem) {
+        setGrievance(asyncItem);
+      } else if (!item) {
+        toast.error(`Case #${id} not found.`);
+        navigate('/authority/queue');
+      }
+    } catch {
+      if (!item) {
+        toast.error(`Case #${id} not found.`);
+        navigate('/authority/queue');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -47,22 +60,36 @@ const Workspace: React.FC = () => {
     );
   }
 
-  const handleStatusChange = (newStatus: GrievanceStatus) => {
+  const handleStatusChange = async (newStatus: GrievanceStatus) => {
     if (!grievance || !user) return;
-    GrievanceService.updateStatus(grievance.id, newStatus, user.name, 'authority');
+    try {
+      await GrievanceService.updateStatusAsync(grievance.id, newStatus, user.name, 'authority');
+    } catch {
+      GrievanceService.updateStatus(grievance.id, newStatus, user.name, 'authority');
+    }
     toast.success(`Case #${grievance.id} status updated to ${newStatus.toUpperCase()}`);
     fetchGrievance();
   };
 
-  const handleApproveDraft = (finalDraft: string) => {
+  const handleApproveDraft = async (finalDraft: string) => {
     if (!grievance || !user) return;
-    GrievanceService.resolve(
-      grievance.id,
-      user.name,
-      'Approved official AI response dispatched to student.',
-      grievance.category,
-      finalDraft
-    );
+    try {
+      await GrievanceService.resolveAsync(
+        grievance.id,
+        user.name,
+        'Approved official AI response dispatched to student.',
+        grievance.category,
+        finalDraft
+      );
+    } catch {
+      GrievanceService.resolve(
+        grievance.id,
+        user.name,
+        'Approved official AI response dispatched to student.',
+        grievance.category,
+        finalDraft
+      );
+    }
     toast.success(`Official response dispatched and Case #${grievance.id} marked as Resolved!`);
     fetchGrievance();
     navigate('/authority/queue');

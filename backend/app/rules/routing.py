@@ -41,17 +41,18 @@ def resolve_department_routing(
     if cat_text:
         cat_lower = cat_text.lower()
         departments = db.query(Department).filter(Department.is_active == True).all()
+        import re
         for dept in departments:
             dept_lower = dept.name.lower()
             if any(term in dept_lower for term in ["facilities", "estate"]) and any(term in cat_lower for term in ["facilities", "estate", "plumbing", "electrical"]):
                 return dept.id
             if "academic" in dept_lower and "academic" in cat_lower:
                 return dept.id
-            if "it" in dept_lower and ("it" in cat_lower or "digital" in cat_lower or "wifi" in cat_lower):
+            if bool(re.search(r'\b(it|digital|information technology|computing)\b', dept_lower)) and any(term in cat_lower for term in ["it", "digital", "wifi", "network", "internet", "erp"]):
                 return dept.id
-            if "hostel" in dept_lower and ("hostel" in cat_lower or "residence" in cat_lower or "mess" in cat_lower):
+            if "hostel" in dept_lower and any(term in cat_lower for term in ["hostel", "residence", "mess", "dining"]):
                 return dept.id
-            if "finance" in dept_lower and ("finance" in cat_lower or "fee" in cat_lower or "account" in cat_lower):
+            if "finance" in dept_lower and any(term in cat_lower for term in ["finance", "fee", "account", "scholarship"]):
                 return dept.id
 
     return None

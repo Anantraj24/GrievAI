@@ -69,10 +69,27 @@ async def process_grievance_ai(grievance_id: uuid.UUID):
         # 3. Extract Structured NLU Analysis
         analysis_data = await ai_client.analyze_grievance(text=text_content, location=grievance.location)
         
+        pred_cat_id = None
+        pred_subcat_id = None
+        from app.models import Category, Subcategory
+        if analysis_data.get("category"):
+            matched_c = db.query(Category).filter(Category.name.ilike(f"%{analysis_data.get('category').strip()}%")).first()
+            if matched_c:
+                pred_cat_id = matched_c.id
+                if analysis_data.get("subcategory"):
+                    matched_sc = db.query(Subcategory).filter(
+                        Subcategory.category_id == matched_c.id,
+                        Subcategory.name.ilike(f"%{analysis_data.get('subcategory').strip()}%")
+                    ).first()
+                    if matched_sc:
+                        pred_subcat_id = matched_sc.id
+
         ai_analysis = AIAnalysis(
             grievance_id=grievance_id,
             model_name="llama3",
             extracted_json=analysis_data,
+            predicted_category_id=pred_cat_id,
+            predicted_subcategory_id=pred_subcat_id,
             classification_confidence=analysis_data.get("confidence", 0.0),
             priority_signals={
                 "safety_signal": analysis_data.get("safety_signal", False),

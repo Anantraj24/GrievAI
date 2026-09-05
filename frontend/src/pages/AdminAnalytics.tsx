@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '../components/AdminLayout';
+import { api } from '../api/api';
 import {
   AreaChart,
   Area,
@@ -53,6 +54,26 @@ const SENTIMENT_BREAKDOWN = [
 
 const AdminAnalytics: React.FC = () => {
   const [timeRange, setTimeRange] = useState<'30d' | '90d' | '1y'>('30d');
+  const [totalDockets, setTotalDockets] = useState<number>(552);
+  const [resolutionRate, setResolutionRate] = useState<string>('93.4%');
+  const [avgResolutionTime, setAvgResolutionTime] = useState<string>('18.6h');
+
+  useEffect(() => {
+    api.get('/analytics/dashboard')
+      .then((res: any) => {
+        if (res.data) {
+          const total = res.data.total_grievances || res.data.total;
+          if (total !== undefined) setTotalDockets(total);
+          if (res.data.avg_resolution_hours) {
+            setAvgResolutionTime(`${res.data.avg_resolution_hours.toFixed(1)}h`);
+          }
+          if (res.data.resolution_rate !== undefined) {
+            setResolutionRate(`${(res.data.resolution_rate * 100).toFixed(1)}%`);
+          }
+        }
+      })
+      .catch(() => {});
+  }, [timeRange]);
 
   return (
     <AdminLayout>
@@ -85,13 +106,13 @@ const AdminAnalytics: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 shadow-xl">
             <span className="text-[10px] font-mono text-gray-400 uppercase">Total Ingested Dockets</span>
-            <div className="text-3xl font-bold font-mono text-white mt-2">552</div>
-            <p className="text-[10px] text-emerald-400 mt-1">93.4% overall resolution rate</p>
+            <div className="text-3xl font-bold font-mono text-white mt-2">{totalDockets}</div>
+            <p className="text-[10px] text-emerald-400 mt-1">{resolutionRate} overall resolution rate</p>
           </div>
 
           <div className="bg-[#10131a] border border-[#2D3139] rounded-2xl p-5 shadow-xl">
             <span className="text-[10px] font-mono text-gray-400 uppercase">Mean Resolution Speed</span>
-            <div className="text-3xl font-bold font-mono text-amber-400 mt-2">18.6h</div>
+            <div className="text-3xl font-bold font-mono text-amber-400 mt-2">{avgResolutionTime}</div>
             <p className="text-[10px] text-gray-400 mt-1">Target: &lt;24 hours</p>
           </div>
 

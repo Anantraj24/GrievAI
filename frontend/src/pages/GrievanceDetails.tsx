@@ -22,9 +22,13 @@ const GrievanceDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'timeline' | 'messages' | 'ai_insights' | 'evidence'>('timeline');
 
-  const fetchGrievance = () => {
+  const fetchGrievance = async () => {
     if (!id) return;
-    const item = GrievanceService.getById(id);
+    setLoading(true);
+    let item = await GrievanceService.getByIdAsync(id);
+    if (!item) {
+      item = GrievanceService.getById(id);
+    }
     if (item) {
       setGrievance(item);
     } else {

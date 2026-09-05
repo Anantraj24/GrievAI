@@ -66,8 +66,8 @@ export class AdminService {
         const liveCats: Category[] = res.data.map((c: any) => ({
           id: c.id,
           name: c.name,
-          departmentId: c.id,
-          departmentName: c.name,
+          departmentId: c.department_id || undefined,
+          departmentName: c.department_name || undefined,
           defaultPriority: c.default_priority_policy || 'MEDIUM',
           subcategories: (c.subcategories || []).map((s: any) => s.name),
         }));
@@ -78,6 +78,101 @@ export class AdminService {
       console.warn('Could not load categories from live backend:', err);
     }
     return this.getCategories();
+  }
+
+  public static async createUserAsync(userData: { name: string; email: string; role_id: string; department_id?: string; password?: string }): Promise<User | null> {
+    try {
+      const res = await api.post('/admin/users', {
+        full_name: userData.name,
+        email: userData.email,
+        role_id: userData.role_id,
+        department_id: userData.department_id || null,
+        password: userData.password || 'password123',
+      });
+      if (res.data) {
+        const u = res.data;
+        const liveUser: User = {
+          id: u.id,
+          name: u.full_name,
+          email: u.email,
+          role: (u.role?.toLowerCase() as UserRole) || 'student',
+          department: u.department || 'General',
+          avatar: u.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${u.email}`,
+          status: u.is_active ? 'active' : 'suspended',
+          isActive: u.is_active,
+          joinedDate: u.created_at ? u.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
+        };
+        const current = this.getUsers();
+        storage.set('grievai_users', [liveUser, ...current.filter(x => x.id !== liveUser.id)]);
+        return liveUser;
+      }
+    } catch (err) {
+      console.error('Failed to create user on live backend:', err);
+    }
+    return null;
+  }
+
+  public static async createDepartmentAsync(data: { name: string; description?: string }): Promise<Department | null> {
+    try {
+      const res = await api.post('/admin/departments', {
+        name: data.name,
+        description: data.description || null,
+        is_active: true,
+      });
+      if (res.data) {
+        const d = res.data;
+        const liveDept: Department = {
+          id: d.id,
+          name: d.name,
+          code: d.name.slice(0, 3).toUpperCase(),
+          activeCaseload: 0,
+          targetResolutionHours: 24,
+          slaComplianceRate: 98,
+          status: d.is_active ? 'active' : 'inactive',
+        };
+        const current = this.getDepartments();
+        storage.set('grievai_departments', [liveDept, ...current.filter(x => x.id !== liveDept.id)]);
+        return liveDept;
+      }
+    } catch (err) {
+      console.error('Failed to create department on live backend:', err);
+    }
+    return null;
+  }
+
+  public static async createCategoryAsync(data: { name: string; default_priority_policy?: string }): Promise<Category | null> {
+    try {
+      const res = await api.post('/admin/categories', {
+        name: data.name,
+        default_priority_policy: data.default_priority_policy || 'MEDIUM',
+        is_active: true,
+      });
+      if (res.data) {
+        const c = res.data;
+        const liveCat: Category = {
+          id: c.id,
+          name: c.name,
+          defaultPriority: c.default_priority_policy || 'MEDIUM',
+          subcategories: (c.subcategories || []).map((s: any) => s.name),
+        };
+        const current = this.getCategories();
+        storage.set('grievai_categories', [liveCat, ...current.filter(x => x.id !== liveCat.id)]);
+        return liveCat;
+      }
+    } catch (err) {
+      console.error('Failed to create category on live backend:', err);
+    }
+    return null;
+  }
+
+  public static async updateSLARuleAsync(priority: string, hours: number): Promise<boolean> {
+    try {
+      await api.put(`/admin/sla-rules/${priority.toUpperCase()}`, { hours });
+      return true;
+    } catch (err) {
+      console.error('Failed to update SLA rule on live backend:', err);
+      return false;
+    }
   }
 
   public static async getInstitutionalIssuesAsync(): Promise<InstitutionalIssue[]> {

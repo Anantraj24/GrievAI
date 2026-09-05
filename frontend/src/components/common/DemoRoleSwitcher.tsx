@@ -3,14 +3,30 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types';
 import { useToast } from '../../context/ToastContext';
+import { api } from '../../api/api';
 
 export const DemoRoleSwitcher: React.FC = () => {
-  const { userRole, switchRole, user } = useAuth();
+  const { userRole, switchRole, user, login } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
-  const handleSwitch = (role: UserRole) => {
-    switchRole(role);
+  const handleSwitch = async (role: UserRole) => {
+    let email = 'student@example.com';
+    let pass = 'password123';
+    if (role === 'authority') email = 'authority@example.com';
+    if (role === 'admin') email = 'admin@example.com';
+
+    try {
+      const res = await api.post('/auth/login', { email, password: pass });
+      if (res.data && res.data.access_token) {
+        await login(res.data.access_token, role);
+      } else {
+        switchRole(role);
+      }
+    } catch {
+      switchRole(role);
+    }
+
     if (role === 'student') {
       toast.info('Switched active session to Student (AnantRaj)');
       navigate('/student/dashboard');

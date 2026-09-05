@@ -12,7 +12,9 @@ export class NotificationService {
   public static async getAllAsync(unreadOnly: boolean = false): Promise<SystemNotification[]> {
     try {
       const res = await api.get('/notifications', { params: { unread_only: unreadOnly } });
-      if (res.data && Array.isArray(res.data.items)) {
+      if (res.data?.items) {
+        const currentRole = storage.get<UserRole>('grievai_current_role', 'student');
+        const routePrefix = currentRole === 'authority' ? '/authority/workspace' : '/student/grievance';
         const liveNotifs: SystemNotification[] = res.data.items.map((item: any) => ({
           id: item.id,
           userId: item.user_id,
@@ -22,7 +24,7 @@ export class NotificationService {
           createdAt: item.created_at,
           read: item.is_read,
           grievanceId: item.grievance_id,
-          link: item.grievance_id ? `/student/grievance/${item.grievance_id}` : undefined,
+          link: item.grievance_id ? `${routePrefix}/${item.grievance_id}` : undefined,
         }));
         storage.set(STORAGE_KEY, liveNotifs);
         return liveNotifs;

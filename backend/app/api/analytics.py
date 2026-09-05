@@ -11,17 +11,16 @@ router = APIRouter()
 def get_dashboard_analytics(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(deps.require_role(["authority", "admin"])),
 ) -> Any:
     """
     Get analytics for Admin/Authority dashboard.
     """
-    if current_user.role.name == "Student":
-        raise HTTPException(status_code=403, detail="Authorities only")
+    role_name = current_user.role.name.lower() if current_user.role else "authority"
         
     # Base query for department filter if Authority
     base_query = db.query(models.Grievance)
-    if current_user.role.name == "Authority" and current_user.department_id:
+    if role_name == "authority" and current_user.department_id:
         base_query = base_query.filter(models.Grievance.assigned_department_id == current_user.department_id)
         
     # Status Breakdown
@@ -41,20 +40,27 @@ def get_dashboard_analytics(
     
     # Recent activity
     recent_grievances = base_query.order_by(models.Grievance.created_at.desc()).limit(5).all()
-    recent = [{"id": g.id, "title": g.title, "status": g.status, "priority": g.priority} for g in recent_grievances]
+    recent = [{
+        "id": str(g.id),
+        "grievance_code": g.grievance_code,
+        "title": g.title,
+        "status": g.status,
+        "priority": g.priority,
+        "created_at": g.created_at.isoformat() if g.created_at else None
+    } for g in recent_grievances]
     
     # Average Resolution Time (for CLOSED/RESOLVED grievances)
     resolved_query = base_query.filter(models.Grievance.status.in_(["RESOLVED", "CLOSED"])).all()
     avg_resolution_time = 0
     if resolved_query:
-        total_time = sum((g.updated_at - g.created_at).total_seconds() for g in resolved_query)
-        avg_resolution_time = total_time / len(resolved_query) / 3600 # in hours
+        total_time = sum((g.updated_at - g.created_at).total_seconds() for g in resolved_query if g.updated_at and g.created_at)
+        avg_resolution_time = (total_time / len(resolved_query) / 3600) if resolved_query else 0 # in hours
     
     return {
         "status_breakdown": status_breakdown,
         "priority_breakdown": priority_breakdown,
         "sla_breaches": sla_breaches,
         "recent_activity": recent,
-        "avg_resolution_time_hours": avg_resolution_time,
+        "avg_resolution_time_hours": round(avg_resolution_time, 1),
         "total": sum(status_breakdown.values())
     }
