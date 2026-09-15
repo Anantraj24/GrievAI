@@ -44,7 +44,7 @@ test.describe('Auth flows', () => {
   test('registers a new student account', async ({ page }) => {
     const email = uniqueEmail('qa_reg');
     await page.goto('/register');
-    await page.getByPlaceholder('e.g. Alice Student').fill('QA Registered Student');
+    await page.getByPlaceholder('e.g. ANANT RAJ').fill('QA Registered Student');
     await page.getByPlaceholder('student@example.com').fill(email);
     await page.getByPlaceholder('••••••••').fill('password123');
     await page.getByRole('button', { name: 'Create Account & Sign In' }).click();

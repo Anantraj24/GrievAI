@@ -28,7 +28,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       : null;
   });
   const [user, setUser] = useState<User | null>(() => {
-    return storage.get<User | null>('grievai_current_user', null);
+    const cached = storage.get<User | null>('grievai_current_user', null);
+    if (cached && (cached.role === 'student' || cached.email?.toLowerCase().includes('student'))) {
+      if (!cached.name || cached.name === 'Alice Student' || cached.name === 'AnantRaj' || cached.name === 'User') {
+        cached.name = 'ANANT RAJ';
+      }
+      cached.studentId = '241001020020';
+      cached.department = 'CSBS';
+      storage.set('grievai_current_user', cached);
+    }
+    return cached;
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,13 +49,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await api.get('/auth/me');
       const data = res.data;
       const mappedRole: UserRole = (data.role?.toLowerCase() as UserRole) || 'student';
+
+      let studentName = data.full_name;
+      if (!studentName || studentName === 'Alice Student' || studentName === 'User' || studentName === 'AnantRaj') {
+        studentName = mappedRole === 'student' ? 'ANANT RAJ' : (studentName || 'User');
+      }
+
       const fetchedUser: User = {
         id: data.id,
-        name: data.full_name || (mappedRole === 'student' ? 'ANANT RAJ' : 'User'),
+        name: studentName,
         email: data.email,
         role: mappedRole,
-        department: data.department || (mappedRole === 'student' ? 'CSBS' : undefined),
-        studentId: mappedRole === 'student' ? '241001020020' : undefined,
+        department: (mappedRole === 'student') ? 'CSBS' : (data.department || undefined),
+        studentId: (mappedRole === 'student') ? '241001020020' : undefined,
         avatar: data.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${data.email}`,
         status: data.is_active ? 'active' : 'suspended',
         isActive: data.is_active,

@@ -81,7 +81,7 @@ def clean_and_seed_db():
         student = User(
             email="student1@example.com",
             password_hash=get_password_hash("password123"),
-            full_name="Alice Student",
+            full_name="ANANT RAJ",
             role_id=student_role.id,
             is_active=True
         )

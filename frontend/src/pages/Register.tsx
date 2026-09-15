@@ -64,7 +64,7 @@ const Register: React.FC = () => {
               type="text"
               required
               disabled={isSubmitting}
-              placeholder="e.g. Alice Student"
+              placeholder="e.g. ANANT RAJ"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl p-3 focus:outline-none focus:border-blue-500"
@@ -76,7 +76,7 @@ const Register: React.FC = () => {
             <input
               type="text"
               disabled={isSubmitting}
-              placeholder="e.g. STU-2024-8841"
+              placeholder="e.g. 241001020020"
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
               className="bg-[#171717] border border-[#2D3139] text-white text-xs rounded-xl p-3 focus:outline-none focus:border-blue-500 font-mono"
