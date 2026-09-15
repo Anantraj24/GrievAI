@@ -42,10 +42,47 @@ class OllamaClient:
         self.embed_model = embed_model
         
     async def _generate(self, prompt: str, system: str = "") -> str:
-        """Helper to call Ollama generate API with timeout and error resilience"""
+        """Helper to call Groq Cloud AI or Ollama generate API with timeout and error resilience"""
         safe_prompt = sanitize_text_input(prompt)
+
+        # 1. Try Groq Cloud API if GROQ_API_KEY is configured
+        if settings.GROQ_API_KEY:
+            try:
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    messages = []
+                    if system:
+                        messages.append({"role": "system", "content": system})
+                    messages.append({"role": "user", "content": safe_prompt})
+                    
+                    groq_payload: Dict[str, Any] = {
+                        "model": settings.GROQ_MODEL,
+                        "messages": messages,
+                        "temperature": 0.1
+                    }
+                    if "json" in system.lower() or "json" in prompt.lower():
+                        groq_payload["response_format"] = {"type": "json_object"}
+
+                    response = await client.post(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {settings.GROQ_API_KEY.strip()}",
+                            "Content-Type": "application/json"
+                        },
+                        json=groq_payload
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                        if content:
+                            return content
+                    else:
+                        logger.warning(f"Groq API returned HTTP {response.status_code}: {response.text[:120]}")
+            except Exception as e:
+                logger.warning(f"Groq API request failed, falling back: {e}")
+
+        # 2. Fallback to local / remote Ollama instance
         try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
+            async with httpx.AsyncClient(timeout=settings.OLLAMA_TIMEOUT_SECONDS) as client:
                 response = await client.post(
                     f"{self.base_url}/api/generate",
                     json={

@@ -23,6 +23,8 @@ services:
         value: "*"
       - key: OLLAMA_BASE_URL
         value: http://localhost:11434
+      - key: GROQ_API_KEY
+        sync: false
 
   # React Frontend Static Site
   - type: web
