@@ -7,11 +7,11 @@ export const StudentProfile: React.FC = () => {
   const { user, updateCurrentUser } = useAuth();
   const toast = useToast();
 
-  const [name, setName] = useState(user?.name || 'AnantRaj');
+  const [name, setName] = useState(user?.name || 'ANANT RAJ');
   const [email, setEmail] = useState(user?.email || 'anantraj@institution.edu');
-  const [studentId, setStudentId] = useState(user?.studentId || 'STU-2024-8841');
+  const [studentId, setStudentId] = useState(user?.studentId || '241001020020');
   const [phone, setPhone] = useState(user?.phone || '+91 98765 43210');
-  const [department, setDepartment] = useState(user?.department || 'Computer Science & Engineering');
+  const [department, setDepartment] = useState(user?.department || 'CSBS');
 
   // Preferences toggles
   const [emailAlerts, setEmailAlerts] = useState(true);

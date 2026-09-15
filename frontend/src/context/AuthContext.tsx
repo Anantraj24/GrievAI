@@ -42,10 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const mappedRole: UserRole = (data.role?.toLowerCase() as UserRole) || 'student';
       const fetchedUser: User = {
         id: data.id,
-        name: data.full_name || 'User',
+        name: data.full_name || (mappedRole === 'student' ? 'ANANT RAJ' : 'User'),
         email: data.email,
         role: mappedRole,
-        department: data.department,
+        department: data.department || (mappedRole === 'student' ? 'CSBS' : undefined),
+        studentId: mappedRole === 'student' ? '241001020020' : undefined,
         avatar: data.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${data.email}`,
         status: data.is_active ? 'active' : 'suspended',
         isActive: data.is_active,

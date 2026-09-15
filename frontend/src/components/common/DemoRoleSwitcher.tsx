@@ -28,7 +28,7 @@ export const DemoRoleSwitcher: React.FC = () => {
     }
 
     if (role === 'student') {
-      toast.info('Switched active session to Student (AnantRaj)');
+      toast.info('Switched active session to Student (ANANT RAJ)');
       navigate('/student/dashboard');
     } else if (role === 'authority') {
       toast.info('Switched active session to Authority (Dr. Ramesh Sharma)');

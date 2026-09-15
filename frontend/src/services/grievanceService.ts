@@ -274,8 +274,8 @@ export class GrievanceService {
   public static getAll(): Grievance[] {
     const list = storage.get<Grievance[]>(STORAGE_KEY, INITIAL_GRIEVANCES);
     return list.map((g) => {
-      if (g.studentName === 'Anant Sharma') {
-        return { ...g, studentName: 'AnantRaj', studentEmail: 'student1@example.com' };
+      if (g.studentName === 'Anant Sharma' || g.studentName === 'AnantRaj') {
+        return { ...g, studentName: 'ANANT RAJ', studentEmail: 'anantraj@institution.edu' };
       }
       return g;
     });

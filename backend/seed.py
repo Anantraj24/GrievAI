@@ -52,6 +52,7 @@ def seed():
             {"name": "Academic Affairs & Examinations", "description": "Course registration, grading, timetables, and academic policies."},
             {"name": "Hostel Administration & Dining", "description": "Hostel room allocations, maintenance, and dining hall quality."},
             {"name": "Finance & Student Accounts", "description": "Tuition fees, scholarships, and refunds."},
+            {"name": "CSBS", "description": "Computer Science & Business Systems Academic Department."},
         ]
 
         dept_map = {}
@@ -72,10 +73,10 @@ def seed():
         users_data = [
             {
                 "email": "student@example.com",
-                "full_name": "Alice Student",
+                "full_name": "ANANT RAJ",
                 "password": "password123",
                 "role": "student",
-                "department": None,
+                "department": "CSBS",
             },
             {
                 "email": "authority@example.com",
@@ -93,10 +94,10 @@ def seed():
             },
             {
                 "email": "anantraj@institution.edu",
-                "full_name": "AnantRaj",
+                "full_name": "ANANT RAJ",
                 "password": "password123",
                 "role": "student",
-                "department": None,
+                "department": "CSBS",
             },
             {
                 "email": "ramesh.sharma@institution.edu",
@@ -132,6 +133,7 @@ def seed():
                 db.add(user)
                 user_count += 1
             else:
+                user.full_name = u_item["full_name"]
                 user.password_hash = get_password_hash(u_item["password"])
                 user.role_id = role.id
                 if dept:
