@@ -131,4 +131,5 @@ def mock_background_ai_tasks(monkeypatch):
     """Mocks background task to avoid real network timeouts during unit tests."""
     def noop_sync(grievance_id):
         pass
-    monkeypatch.setattr("app.api.grievances.process_grievance_ai_sync", noop_sync)
+    monkeypatch.setattr("app.api.grievances.process_grievance_ai_sync", noop_sync, raising=False)
+    monkeypatch.setattr("app.services.ai_tasks.process_grievance_ai_sync", noop_sync, raising=False)
