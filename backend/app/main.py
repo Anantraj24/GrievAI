@@ -30,20 +30,43 @@ async def add_security_headers(request: Request, call_next):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
+# Ensure evidence storage directory exists on startup
+import os
+os.makedirs(settings.EVIDENCE_STORAGE_DIR, exist_ok=True)
+
 # Set CORS enabled origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS or ["http://localhost:3000", "http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+_origins = settings.CORS_ORIGINS or ["http://localhost:3000", "http://localhost:5173"]
+if isinstance(_origins, list) and "*" in _origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=r".*",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 class HealthCheck(BaseModel):
     status: str
     message: str
     database: str
     environment: str
+
+@app.get("/", tags=["root"])
+def root_endpoint():
+    return {
+        "service": settings.PROJECT_NAME,
+        "status": "online",
+        "health": "/health",
+        "api_v1": settings.API_V1_STR
+    }
 
 @app.get("/health", response_model=HealthCheck, tags=["health"])
 @app.get(f"{settings.API_V1_STR}/health", response_model=HealthCheck, tags=["health"])

@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, desc
+from sqlalchemy.exc import IntegrityError
 
 from app.api import deps
 from app.models import (
@@ -192,24 +193,39 @@ def create_grievance(
         category_name=cat_name
     )
 
-    grievance = Grievance(
-        grievance_code=code,
-        student_id=current_user.id,
-        title=grievance_in.title,
-        description=grievance_in.description,
-        location=grievance_in.location,
-        incident_date=grievance_in.incident_date,
-        is_anonymous=grievance_in.is_anonymous,
-        status=GrievanceStatus.SUBMITTED.value,
-        priority=initial_priority.value,
-        priority_reasons=reasons,
-        category_id=grievance_in.category_id,
-        subcategory_id=grievance_in.subcategory_id,
-        assigned_department_id=dept_id,
-        sla_deadline=sla_deadline
-    )
-    db.add(grievance)
-    db.flush()
+    # Generate code + insert with retry: concurrent submissions may compute the
+    # same sequential code; the UNIQUE(grievance_code) constraint resolves it.
+    grievance = None
+    for _ in range(10):
+        code = generate_grievance_code(db)
+        grievance = Grievance(
+            grievance_code=code,
+            student_id=current_user.id,
+            title=grievance_in.title,
+            description=grievance_in.description,
+            location=grievance_in.location,
+            incident_date=grievance_in.incident_date,
+            is_anonymous=grievance_in.is_anonymous,
+            status=GrievanceStatus.SUBMITTED.value,
+            priority=initial_priority.value,
+            priority_reasons=reasons,
+            category_id=grievance_in.category_id,
+            subcategory_id=grievance_in.subcategory_id,
+            assigned_department_id=dept_id,
+            sla_deadline=sla_deadline
+        )
+        db.add(grievance)
+        try:
+            db.flush()
+            break
+        except IntegrityError:
+            db.rollback()
+            grievance = None
+    if grievance is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not allocate a unique grievance code. Please retry."
+        )
 
     # Initial status history entry
     history = StatusHistory(

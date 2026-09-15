@@ -6,7 +6,7 @@ from app.schemas.enums import GrievanceStatus, PriorityLevel, RelationType
 
 class GrievanceBase(BaseModel):
     title: Optional[str] = None
-    description: str = Field(..., description="The raw natural-language complaint")
+    description: str = Field(..., min_length=1, description="The raw natural-language complaint")
     location: Optional[str] = None
     incident_date: Optional[datetime] = None
     is_anonymous: bool = False

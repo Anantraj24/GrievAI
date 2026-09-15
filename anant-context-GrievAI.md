@@ -2,7 +2,7 @@
 
 > **AI RULE:** Read this context file first in every session. Use it as the primary project context. Only inspect files relevant to the current task. Do not scan the entire project unless this context is missing or outdated.
 
-_Last verified: 2026-09-08 on commit `6859e36` (branch `main`, working tree clean). Update this file when architecture, features, APIs, DB, deps, or workflows change._
+_Last verified: 2026-09-08 on commit `6859e36` (branch `main`, working tree clean except QA setup). Update this file when architecture, features, APIs, DB, deps, or workflows change._
 
 ## Project purpose & status
 GrievAI is an autonomous, "institutional-grade" AI-powered grievance resolution platform for universities/colleges/enterprise campuses. It combines a **local LLM layer (Ollama: Llama 3 + BGE-M3 embeddings)** with a **deterministic rules layer (finite state machine, SLA timers, safety-keyword routing)** to triage, route, escalate, and resolve student complaints with explainability. Full-stack, production-deployed (Render backend + Vercel frontend + Supabase Postgres/pgvector). Status: production-ready with CI/CD, tests, and docs; actively maintained.
@@ -102,6 +102,14 @@ npm run lint                                    # oxlint
 # Production: Render = alembic upgrade head && gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.main:app; Vercel = vite build with SPA rewrites
 ```
 CI (`.github/workflows/ci.yml`): backend pytest against pgvector Postgres + frontend `npm run build` + Docker image build validation.
+
+## Testing / QA setup
+- **Unified QA pipeline** (root): `npm run qa` = `qa:static` (lint + typecheck + build) → `qa:unit` (frontend Vitest + backend pytest) → `qa:e2e` (Playwright). Sub-commands: `qa:static`, `qa:unit`, `qa:e2e`, `lint`, `typecheck`, `build`, `test:frontend`, `test:backend`, `test:e2e`.
+- **Frontend unit tests**: Vitest 5 + jsdom, config `frontend/vitest.config.ts`, tests in `src/**/__tests__/*.test.ts`.
+- **E2E**: Playwright 1.63 (Chromium), config `frontend/playwright.config.ts`, specs in `frontend/e2e/` (smoke + axe a11y). Starts Vite dev on :5173 automatically. Install browser via `npm --prefix frontend run playwright:install`.
+- **Backend**: pytest (in-memory SQLite via `conftest.py`, 31 tests). Requires `DATABASE_URL` dep `psycopg` importable; backend/venv lacks pytest — run with system Python (`python -m pytest`) or install requirements into the venv.
+- **Skills**: Antigravity skills in `.agents/skills/` (playwright-automation, api-testing, unit-testing, accessibility-testing, security-testing, ai-bug-triage) + root `skills-lock.json`.
+- Note: `frontend/test-results`, `playwright-report/` are gitignored; `npm run lint` (oxlint) exits 0 with pre-existing warnings.
 
 ## Current Git branch & important changes
 - Branch `main`, tracks `origin/main`. Working tree **clean** at commit `6859e36` ("fix(all): resolve core backend crashes, api contracts, auth flows, and frontend integrations", anantraj24).

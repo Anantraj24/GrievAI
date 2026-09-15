@@ -5,6 +5,15 @@
   "scripts": {
     "dev": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",
-    "preview": "npm --prefix frontend run preview"
+    "preview": "npm --prefix frontend run preview",
+    "lint": "npm --prefix frontend run lint",
+    "typecheck": "npm --prefix frontend run typecheck",
+    "test:frontend": "npm --prefix frontend run test",
+    "test:backend": "cd backend && python -m pytest -q",
+    "test:e2e": "npm --prefix frontend run test:e2e",
+    "qa:static": "npm run lint && npm run typecheck && npm run build",
+    "qa:unit": "npm run test:frontend && npm run test:backend",
+    "qa:e2e": "npm run test:e2e",
+    "qa": "npm run qa:static && npm run qa:unit && npm run qa:e2e"
   }
 }

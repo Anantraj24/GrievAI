@@ -22,6 +22,11 @@ def upgrade() -> None:
     """Upgrade schema."""
     from app.models import Base
     bind = op.get_bind()
+    if bind.dialect.name == "postgresql":
+        try:
+            op.execute(sa.text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        except Exception:
+            pass
     Base.metadata.create_all(bind=bind)
 
 

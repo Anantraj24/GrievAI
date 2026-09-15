@@ -34,17 +34,23 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
         if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",") if i.strip()]
-        elif isinstance(v, (list, str)):
-            return v
+            origins = [i.strip().rstrip("/") for i in v.split(",") if i.strip()]
+            return origins if origins else ["*"]
+        elif isinstance(v, list):
+            return [i.strip().rstrip("/") if isinstance(i, str) else i for i in v]
         return ["*"]
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def assemble_db_connection(cls, v: str | None) -> str:
-        if v and v.startswith("postgresql://") and not v.startswith("postgresql+psycopg://"):
-            return v.replace("postgresql://", "postgresql+psycopg://", 1)
-        return v or "postgresql+psycopg://grievai_user:grievai_password@localhost:5432/grievai_db"
+        if v:
+            clean_v = v.strip().strip("'\"")
+            if clean_v.startswith("postgres://"):
+                return clean_v.replace("postgres://", "postgresql+psycopg://", 1)
+            elif clean_v.startswith("postgresql://") and not clean_v.startswith("postgresql+psycopg://"):
+                return clean_v.replace("postgresql://", "postgresql+psycopg://", 1)
+            return clean_v
+        return "postgresql+psycopg://grievai_user:grievai_password@localhost:5432/grievai_db"
 
     model_config = SettingsConfigDict(
         env_file=".env",
