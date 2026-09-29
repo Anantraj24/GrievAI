@@ -162,6 +162,18 @@ export class GrievanceService {
   }
 
   /**
+   * Upload and attach evidence to a grievance via live FastAPI backend.
+   */
+  public static async uploadEvidenceAsync(grievanceId: string, file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await api.post(`/grievances/${grievanceId}/evidence`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  }
+
+  /**
    * Update status via live FastAPI backend.
    */
   public static async updateStatusAsync(
@@ -571,8 +583,8 @@ export class GrievanceService {
 
     storage.set(STORAGE_KEY, all);
 
-    // Sync with backend
-    this.updateStatusAsync(id, 'PENDING_REVIEW', message).catch((e) => console.warn('Sync info request to backend failed:', e));
+    // Sync with backend using the proper NEEDS_INFORMATION state
+    this.updateStatusAsync(id, 'NEEDS_INFORMATION', message).catch((e) => console.warn('Sync info request to backend failed:', e));
 
     return grievance;
   }

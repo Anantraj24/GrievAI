@@ -83,15 +83,19 @@ def create_user(
     if existing:
         raise HTTPException(status_code=400, detail="User with this email already exists.")
 
-    role = db.query(Role).filter(Role.id == user_in.role_id).first()
+    role = None
+    if user_in.role_id:
+        role = db.query(Role).filter(Role.id == user_in.role_id).first()
+    elif user_in.role:
+        role = db.query(Role).filter(Role.name.ilike(user_in.role)).first()
     if not role:
-        raise HTTPException(status_code=404, detail="Role not found.")
+        raise HTTPException(status_code=404, detail="Specified role could not be resolved.")
 
     user = User(
         email=user_in.email,
         full_name=user_in.full_name,
         password_hash=security.get_password_hash(user_in.password),
-        role_id=user_in.role_id,
+        role_id=role.id,
         department_id=user_in.department_id,
         is_active=True
     )

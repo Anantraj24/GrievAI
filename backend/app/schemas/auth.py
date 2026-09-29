@@ -27,7 +27,8 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6)
     full_name: str = Field(..., min_length=2)
-    role_id: UUID
+    role_id: Optional[UUID] = None
+    role: Optional[str] = None
     department_id: Optional[UUID] = None
 
 class UserUpdate(BaseModel):

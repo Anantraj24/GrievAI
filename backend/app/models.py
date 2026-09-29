@@ -157,7 +157,7 @@ class Grievance(Base):
     status_history = relationship('StatusHistory', back_populates='grievance', cascade="all, delete-orphan", order_by="StatusHistory.created_at.asc()")
     comments = relationship('Comment', back_populates='grievance', cascade="all, delete-orphan", order_by="Comment.created_at.asc()")
     evidence = relationship('Evidence', back_populates='grievance', cascade="all, delete-orphan")
-    ai_analyses = relationship('AIAnalysis', back_populates='grievance', cascade="all, delete-orphan")
+    ai_analyses = relationship('AIAnalysis', back_populates='grievance', cascade="all, delete-orphan", order_by="AIAnalysis.created_at.asc()")
     embedding = relationship('GrievanceEmbedding', back_populates='grievance', uselist=False, cascade="all, delete-orphan")
     feedback = relationship('Feedback', back_populates='grievance', uselist=False, cascade="all, delete-orphan")
     escalations = relationship('Escalation', back_populates='grievance', cascade="all, delete-orphan")

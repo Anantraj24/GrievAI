@@ -62,5 +62,6 @@ def get_dashboard_analytics(
         "sla_breaches": sla_breaches,
         "recent_activity": recent,
         "avg_resolution_time_hours": round(avg_resolution_time, 1),
+        "avg_resolution_hours": round(avg_resolution_time, 1),
         "total": sum(status_breakdown.values())
     }

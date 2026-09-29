@@ -64,8 +64,9 @@ const AdminAnalytics: React.FC = () => {
         if (res.data) {
           const total = res.data.total_grievances || res.data.total;
           if (total !== undefined) setTotalDockets(total);
-          if (res.data.avg_resolution_hours) {
-            setAvgResolutionTime(`${res.data.avg_resolution_hours.toFixed(1)}h`);
+          const avgHours = res.data.avg_resolution_time_hours ?? res.data.avg_resolution_hours;
+          if (avgHours !== undefined && avgHours !== null) {
+            setAvgResolutionTime(`${Number(avgHours).toFixed(1)}h`);
           }
           if (res.data.resolution_rate !== undefined) {
             setResolutionRate(`${(res.data.resolution_rate * 100).toFixed(1)}%`);

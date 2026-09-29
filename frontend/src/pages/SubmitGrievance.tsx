@@ -18,6 +18,7 @@ const SubmitGrievance: React.FC = () => {
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState('');
   const [attachments, setAttachments] = useState<Array<{ name: string; size: string; type: string; url: string }>>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [liveAnalysis, setLiveAnalysis] = useState<AIAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -52,12 +53,14 @@ const SubmitGrievance: React.FC = () => {
           : 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=600&auto=format&fit=crop&q=80',
       };
       setAttachments((prev) => [...prev, newAtt]);
+      setUploadedFiles((prev) => [...prev, file]);
       toast.info(`Attached file: ${file.name}`);
     }
   };
 
   const removeAttachment = (index: number) => {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,6 +89,13 @@ const SubmitGrievance: React.FC = () => {
           studentEmail: user?.email || 'student@institution.edu',
           attachments,
         });
+      }
+
+      // Upload evidence files to backend after grievance creation
+      if (created?.id && uploadedFiles.length > 0) {
+        await Promise.allSettled(
+          uploadedFiles.map((f) => GrievanceService.uploadEvidenceAsync(created!.id, f))
+        );
       }
 
       toast.success(`Grievance #${created.trackingCode || created.id} submitted successfully!`);

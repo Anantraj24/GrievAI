@@ -22,11 +22,15 @@ ALLOWED_TRANSITIONS: Dict[str, List[str]] = {
         GrievanceStatus.IN_PROGRESS.value,
         GrievanceStatus.ESCALATED.value,
         GrievanceStatus.NEEDS_INFORMATION.value,
+        GrievanceStatus.CLOSED.value,
+        GrievanceStatus.REJECTED.value,
     ],
     GrievanceStatus.IN_PROGRESS.value: [
         GrievanceStatus.RESOLVED.value,
         GrievanceStatus.ESCALATED.value,
         GrievanceStatus.NEEDS_INFORMATION.value,
+        GrievanceStatus.CLOSED.value,
+        GrievanceStatus.REJECTED.value,
     ],
     GrievanceStatus.RESOLVED.value: [
         GrievanceStatus.CLOSED.value,

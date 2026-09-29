@@ -91,3 +91,56 @@ def test_idor_protection_on_evidence_download(client, db_session):
         headers=student2_headers
     )
     assert idor_upload.status_code == 403
+
+
+def test_bola_protection_cross_department_authority(client, db_session):
+    from app.models import Department, Category
+    from app.core.security import get_password_hash
+
+    # 1. Student creates grievance assigned to Estate & Campus Facilities
+    cat = db_session.query(Category).first()
+    student_token = get_auth_token(client, "student1@example.com")
+    headers = {"Authorization": f"Bearer {student_token}"}
+    g_res = client.post("/api/v1/grievances", json={
+        "title": "Broken pipe in block B",
+        "description": "Facilities issue with pipe leakage",
+        "category_id": str(cat.id)
+    }, headers=headers)
+    g_id = g_res.json()["id"]
+
+    # Attach evidence
+    upload_res = client.post(
+        f"/api/v1/grievances/{g_id}/evidence",
+        files={"file": ("report.pdf", b"%PDF-1.4 sample", "application/pdf")},
+        headers=headers
+    )
+    assert upload_res.status_code == 201
+    ev_id = upload_res.json()["id"]
+
+    # 2. Create another department (IT Services) and an authority belonging to IT Services
+    it_dept = Department(name="IT Services", is_active=True)
+    db_session.add(it_dept)
+    db_session.flush()
+
+    auth_role = db_session.query(Role).filter(Role.name == "authority").first()
+    it_officer = User(
+        email="it_officer@example.com",
+        password_hash=get_password_hash("password123"),
+        full_name="IT Officer",
+        role_id=auth_role.id,
+        department_id=it_dept.id,
+        is_active=True
+    )
+    db_session.add(it_officer)
+    db_session.commit()
+
+    # 3. IT Officer tries to download evidence of Facilities grievance -> MUST BE 403 FORBIDDEN
+    it_token = get_auth_token(client, "it_officer@example.com")
+    it_headers = {"Authorization": f"Bearer {it_token}"}
+
+    download_res = client.get(
+        f"/api/v1/grievances/{g_id}/evidence/{ev_id}",
+        headers=it_headers
+    )
+    assert download_res.status_code == 403
+    assert "Unauthorized: Grievance belongs to a different department" in download_res.json()["detail"]

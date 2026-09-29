@@ -152,3 +152,20 @@ async def test_institutional_cluster_service(client, db_session):
     target = next((i for i in issues if i["id"] == str(issue.id)), None)
     assert target is not None
     assert len(target["members"]) == 2
+
+
+def test_admin_create_user_with_role_string(client, db_session):
+    # Bug #8: Admin user creation accepts role string names
+    admin_token = get_auth_token(client, "admin1@example.com")
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    payload = {
+        "email": f"officer_{uuid.uuid4().hex[:6]}@inst.edu",
+        "full_name": "Test Authority Officer",
+        "password": "password123",
+        "role": "authority"
+    }
+    create_res = client.post("/api/v1/admin/users", json=payload, headers=admin_headers)
+    assert create_res.status_code == 201
+    data = create_res.json()
+    assert data["email"] == payload["email"]
+    assert data["role"].lower() == "authority"

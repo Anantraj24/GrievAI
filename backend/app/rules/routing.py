@@ -44,7 +44,7 @@ def resolve_department_routing(
         import re
         for dept in departments:
             dept_lower = dept.name.lower()
-            if any(term in dept_lower for term in ["facilities", "estate"]) and any(term in cat_lower for term in ["facilities", "estate", "plumbing", "electrical"]):
+            if any(term in dept_lower for term in ["facilities", "estate", "campus"]) and any(term in cat_lower for term in ["facility", "facilities", "campus", "estate", "maintenance", "electrical", "plumbing", "safety", "harassment", "security"]):
                 return dept.id
             if "academic" in dept_lower and "academic" in cat_lower:
                 return dept.id

@@ -31,6 +31,25 @@ def test_priority_duration_escalation():
     assert priority == PriorityLevel.HIGH
     assert any("persisted" in r.lower() for r in reasons)
 
+def test_priority_sensitive_category_not_demoted_by_duration():
+    # Bug #1: Harassment / safety category with duration_days >= 3 must remain CRITICAL
+    priority, reasons = calculate_priority(
+        "Hostel ragging incident",
+        category_name="Campus Safety & Harassment",
+        duration_days=4
+    )
+    assert priority == PriorityLevel.CRITICAL
+    assert any("critical" in r.lower() or "safety" in r.lower() or "harassment" in r.lower() for r in reasons)
+
+def test_routing_safety_fallback_keyword(db_session):
+    # Bug #2: Campus Safety & Harassment without category_id routes to Estate & Campus Facilities
+    from app.rules.routing import resolve_department_routing
+    from app.models import Department
+    dept = db_session.query(Department).filter(Department.name.ilike("%facilities%")).first()
+    assert dept is not None
+    routed_id = resolve_department_routing(db_session, category_id=None, category_name="Campus Safety & Harassment")
+    assert routed_id == dept.id
+
 def test_sla_hours_and_deadlines():
     assert get_sla_hours("CRITICAL") == 12
     assert get_sla_hours("HIGH") == 24

@@ -42,6 +42,13 @@ async def upload_evidence(
     role = current_user.role.name.lower() if current_user.role else "student"
     if role == RoleEnum.STUDENT.value and grievance.student_id != current_user.id:
         raise HTTPException(status_code=403, detail="Unauthorized to attach files to this grievance.")
+    if role == RoleEnum.AUTHORITY.value or role == "authority":
+        if grievance.assigned_department_id and current_user.department_id != grievance.assigned_department_id:
+            if grievance.assigned_authority_id != current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Unauthorized: Grievance belongs to a different department",
+                )
 
     # Validate MIME type
     content_type = file.content_type or "application/octet-stream"
@@ -133,6 +140,13 @@ def download_evidence(
     role = current_user.role.name.lower() if current_user.role else "student"
     if role == RoleEnum.STUDENT.value and grievance.student_id != current_user.id:
         raise HTTPException(status_code=403, detail="Unauthorized to download this evidence.")
+    if role == RoleEnum.AUTHORITY.value or role == "authority":
+        if grievance.assigned_department_id and current_user.department_id != grievance.assigned_department_id:
+            if grievance.assigned_authority_id != current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Unauthorized: Grievance belongs to a different department",
+                )
 
     file_path = os.path.join(settings.EVIDENCE_STORAGE_DIR, evidence.storage_key)
     if not os.path.exists(file_path):

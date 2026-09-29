@@ -63,7 +63,13 @@ const Workspace: React.FC = () => {
   const handleStatusChange = async (newStatus: GrievanceStatus) => {
     if (!grievance || !user) return;
     try {
-      await GrievanceService.updateStatusAsync(grievance.id, newStatus, user.name, 'authority');
+      await GrievanceService.updateStatusAsync(
+        grievance.id,
+        newStatus,
+        `Status updated to ${newStatus} by authority`,
+        user.name,
+        'authority'
+      );
     } catch {
       GrievanceService.updateStatus(grievance.id, newStatus, user.name, 'authority');
     }

@@ -39,3 +39,11 @@ def test_student_role_restrictions():
 def test_non_owner_student_rejected():
     with pytest.raises(ValueError, match="modify the status of their own grievances"):
         validate_transition("RESOLVED", "CLOSED", "student", is_owner=False)
+
+def test_authority_merge_duplicate_and_reject():
+    # Bug #5: Authority can merge duplicate (CLOSED) and reject from ASSIGNED or IN_PROGRESS
+    validate_transition("ASSIGNED", "CLOSED", "authority")
+    validate_transition("ASSIGNED", "REJECTED", "authority")
+    validate_transition("IN_PROGRESS", "CLOSED", "authority")
+    validate_transition("IN_PROGRESS", "REJECTED", "authority")
+    validate_transition("ASSIGNED", "NEEDS_INFORMATION", "authority")

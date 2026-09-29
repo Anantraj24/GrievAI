@@ -64,25 +64,30 @@ def calculate_priority(
     if is_high:
         return PriorityLevel.HIGH, reasons
 
-    # 3. Check Medium Keywords or Duration-based escalation
+    # 3. Category taxonomy policy check takes precedence
+    if category_name:
+        cat_lower = category_name.lower()
+        if any(k in cat_lower for k in ["harassment", "ragging", "safety"]):
+            reasons.append(f"Mandatory critical priority for {category_name} cases.")
+            return PriorityLevel.CRITICAL, reasons
+        if any(k in cat_lower for k in ["hostel", "mess", "sanitation", "academic"]):
+            reasons.append(f"High priority policy for {category_name} cases.")
+            return PriorityLevel.HIGH, reasons
+
+    # 4. Check Medium Keywords
     for kw in MEDIUM_KEYWORDS:
         if kw in text_lower:
             reasons.append(f"Standard maintenance infrastructure keyword matched: '{kw}'.")
             break
 
-    if duration_days >= 7:
-        reasons.append(f"Issue has persisted unresolved for {duration_days} days (escalated to HIGH).")
-        return PriorityLevel.HIGH, reasons
-    elif duration_days >= 3:
-        reasons.append(f"Issue ongoing for {duration_days} days.")
-        return PriorityLevel.MEDIUM, reasons
-
-    if category_name and "safety" in category_name.lower():
-        reasons.append("Campus safety taxonomy policy defaults to CRITICAL.")
-        return PriorityLevel.CRITICAL, reasons
-    elif category_name and "academic" in category_name.lower():
-        reasons.append("Academic affairs taxonomy policy defaults to HIGH.")
-        return PriorityLevel.HIGH, reasons
+    # 5. Escalate if issue has persisted (only escalates, never demotes)
+    if duration_days is not None:
+        if duration_days >= 7:
+            reasons.append(f"Issue has persisted for {duration_days} days without resolution.")
+            return PriorityLevel.HIGH, reasons
+        elif duration_days >= 3:
+            reasons.append(f"Issue ongoing for {duration_days} days.")
+            return PriorityLevel.MEDIUM, reasons
 
     if not reasons:
         reasons.append("Standard grievance policy triage.")
