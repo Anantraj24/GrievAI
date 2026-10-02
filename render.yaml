@@ -1,5 +1,5 @@
 services:
-  # FastAPI Backend Web Service
+  # ── FastAPI Backend Web Service ──────────────────────────────────────────────
   - type: web
     name: grievai-backend
     env: python
@@ -9,24 +9,40 @@ services:
     rootDir: backend
     healthCheckPath: /health
     buildCommand: pip install -r requirements.txt
-    startCommand: alembic upgrade head && gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT --timeout 120
+    # Run DB migrations then start with 2 workers tuned for the 512MB Render free tier
+    startCommand: >
+      alembic upgrade head &&
+      gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.main:app
+      --bind 0.0.0.0:$PORT
+      --timeout 120
+      --keep-alive 5
+      --log-level info
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.8
+        value: "3.11.8"
       - key: ENVIRONMENT
         value: production
+      # DATABASE_URL is provided by Render Postgres (set in Render dashboard)
       - key: DATABASE_URL
         sync: false
+      # Generate a secure random SECRET_KEY — do NOT commit a real key to git
       - key: SECRET_KEY
         generateValue: true
+      # Set this to your Vercel frontend URL, e.g. https://grievai.vercel.app
+      # Comma-separate multiple origins if needed
       - key: CORS_ORIGINS
-        value: "*"
-      - key: OLLAMA_BASE_URL
-        value: http://localhost:11434
+        sync: false
       - key: GROQ_API_KEY
         sync: false
+      # Connection pool — stay within Render free Postgres 25-connection limit
+      - key: DB_POOL_SIZE
+        value: "3"
+      - key: DB_MAX_OVERFLOW
+        value: "3"
+      - key: DB_POOL_RECYCLE
+        value: "1800"
 
-  # React Frontend Static Site
+  # ── React Frontend Static Site ───────────────────────────────────────────────
   - type: web
     name: grievai-frontend
     env: static
@@ -34,15 +50,15 @@ services:
     plan: free
     branch: main
     rootDir: frontend
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci && npm run build
     staticPublishPath: dist
     routes:
+      # SPA fallback — all routes serve index.html
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
+      # Set this to the Render backend URL, e.g. https://grievai-backend.onrender.com
+      # The /api/v1 prefix is appended in frontend/src/api/api.ts
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: grievai-backend
-          property: host
+        sync: false

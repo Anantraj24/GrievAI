@@ -34,24 +34,23 @@ async def add_security_headers(request: Request, call_next):
 import os
 os.makedirs(settings.EVIDENCE_STORAGE_DIR, exist_ok=True)
 
-# Set CORS enabled origins
+# CORS — use wildcard only in development; production must list explicit origins.
 _origins = settings.CORS_ORIGINS or ["http://localhost:3000", "http://localhost:5173"]
-if isinstance(_origins, list) and "*" in _origins:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origin_regex=r".*",
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+_is_wildcard = isinstance(_origins, list) and "*" in _origins
+
+if _is_wildcard and settings.ENVIRONMENT == "production":
+    logger.warning(
+        "CORS_ORIGINS is set to '*' in production! "
+        "Set CORS_ORIGINS to your frontend URL in the Render environment variables."
     )
-else:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"] if _is_wildcard else _origins,
+    allow_credentials=not _is_wildcard,  # credentials + wildcard origin is blocked by browsers
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class HealthCheck(BaseModel):
     status: str

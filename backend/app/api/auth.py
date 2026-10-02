@@ -1,7 +1,9 @@
+import logging
 from datetime import timedelta
 from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core import security
@@ -9,6 +11,8 @@ from app.core.config import settings
 from app.schemas.auth import Token, UserResponse, UserRegister, UserLogin
 from app.models import User, Role
 from app.api import deps
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -162,3 +166,25 @@ def logout() -> Any:
     Stateless JWT logout confirmation.
     """
     return {"message": "Successfully logged out."}
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+@router.post("/forgot-password", status_code=status.HTTP_202_ACCEPTED)
+def forgot_password(
+    body: ForgotPasswordRequest,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Initiate password reset. Always returns 202 to prevent user enumeration.
+    Email delivery should be wired up when an email service is configured.
+    """
+    user = db.query(User).filter(User.email == body.email.strip().lower()).first()
+    if user and user.is_active:
+        # TODO: generate a time-limited reset token, store it, and send an email.
+        # For now we log the intent so the endpoint is fully wired.
+        logger.info(f"Password reset requested for user: {user.id}")
+    # Always return the same response regardless of whether the user exists
+    return {"message": "If that account exists, a reset link has been sent."}

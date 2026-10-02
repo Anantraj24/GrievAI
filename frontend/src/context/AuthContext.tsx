@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { User, UserRole } from '../types';
 import { api } from '../api/api';
 import { storage } from '../services/storage';
@@ -9,7 +9,7 @@ interface AuthContextType {
   userRole: UserRole | null;
   user: User | null;
   isLoading: boolean;
-  login: (token: string, role?: UserRole, userObj?: User) => void;
+  login: (token: string, role?: UserRole, userObj?: User) => Promise<void>;
   logout: () => void;
   switchRole: (role: UserRole) => void;
   updateCurrentUser: (updates: Partial<User>) => void;
@@ -19,29 +19,21 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return !!localStorage.getItem('access_token');
-  });
-  const [userRole, setUserRole] = useState<UserRole | null>(() => {
-    return localStorage.getItem('access_token')
-      ? storage.get<UserRole>('grievai_current_role', 'student')
-      : null;
-  });
-  const [user, setUser] = useState<User | null>(() => {
-    const cached = storage.get<User | null>('grievai_current_user', null);
-    if (cached && (cached.role === 'student' || cached.email?.toLowerCase().includes('student'))) {
-      if (!cached.name || cached.name === 'Alice Student' || cached.name === 'AnantRaj' || cached.name === 'User') {
-        cached.name = 'ANANT RAJ';
-      }
-      cached.studentId = '241001020020';
-      cached.department = 'CSBS';
-      storage.set('grievai_current_user', cached);
-    }
-    return cached;
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchProfile = async (): Promise<User | null> => {
+  const clearSession = useCallback(() => {
+    localStorage.removeItem('access_token');
+    storage.remove('grievai_current_user');
+    storage.remove('grievai_current_role');
+    setIsAuthenticated(false);
+    setUser(null);
+    setUserRole(null);
+  }, []);
+
+  const fetchProfile = useCallback(async (): Promise<User | null> => {
     const token = localStorage.getItem('access_token');
     if (!token) return null;
 
@@ -50,18 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = res.data;
       const mappedRole: UserRole = (data.role?.toLowerCase() as UserRole) || 'student';
 
-      let studentName = data.full_name;
-      if (!studentName || studentName === 'Alice Student' || studentName === 'User' || studentName === 'AnantRaj') {
-        studentName = mappedRole === 'student' ? 'ANANT RAJ' : (studentName || 'User');
-      }
-
       const fetchedUser: User = {
         id: data.id,
-        name: studentName,
+        name: data.full_name || data.email?.split('@')[0] || 'User',
         email: data.email,
         role: mappedRole,
-        department: (mappedRole === 'student') ? 'CSBS' : (data.department || undefined),
-        studentId: (mappedRole === 'student') ? '241001020020' : undefined,
+        department: data.department || undefined,
+        studentId: data.student_id || undefined,
         avatar: data.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${data.email}`,
         status: data.is_active ? 'active' : 'suspended',
         isActive: data.is_active,
@@ -74,12 +61,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       storage.set('grievai_current_user', fetchedUser);
       storage.set('grievai_current_role', mappedRole);
       return fetchedUser;
-    } catch (err) {
-      console.warn('Could not fetch backend profile on init:', err);
-      // If 401, remove token
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        // Token is invalid/expired — clear the session
+        clearSession();
+      }
       return null;
     }
-  };
+  }, [clearSession]);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -87,18 +76,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token) {
         await fetchProfile();
       } else {
-        setIsAuthenticated(false);
-        setUser(null);
-        setUserRole(null);
+        clearSession();
       }
       setIsLoading(false);
     };
 
     initAuth();
-  }, []);
+  }, [fetchProfile, clearSession]);
 
-  const login = async (token: string, explicitRole?: UserRole, customUser?: User) => {
+  const login = useCallback(async (token: string, explicitRole?: UserRole, customUser?: User): Promise<void> => {
+    // Store the new token first (replacing any previous session)
     localStorage.setItem('access_token', token);
+    // Clear any cached user from a previous session to avoid stale data
+    storage.remove('grievai_current_user');
+    storage.remove('grievai_current_role');
+
     setIsAuthenticated(true);
 
     if (customUser) {
@@ -113,9 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         storage.set('grievai_current_role', explicitRole);
       }
     }
-  };
+  }, [fetchProfile]);
 
-  const switchRole = (role: UserRole) => {
+  const switchRole = useCallback((role: UserRole) => {
     setUserRole(role);
     storage.set('grievai_current_role', role);
     if (user) {
@@ -123,29 +115,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(updatedUser);
       storage.set('grievai_current_user', updatedUser);
     }
-  };
+  }, [user]);
 
-  const updateCurrentUser = (updates: Partial<User>) => {
+  const updateCurrentUser = useCallback((updates: Partial<User>) => {
     if (!user) return;
     const updated = { ...user, ...updates };
     setUser(updated);
     storage.set('grievai_current_user', updated);
-  };
+  }, [user]);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     await fetchProfile();
-  };
+  }, [fetchProfile]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     api.post('/auth/logout').catch(() => {});
-    localStorage.removeItem('access_token');
-    setIsAuthenticated(false);
-    setUserRole(null);
-    setUser(null);
-    storage.remove('grievai_current_user');
-    storage.remove('grievai_current_role');
+    clearSession();
     window.location.href = '/login';
-  };
+  }, [clearSession]);
 
   return (
     <AuthContext.Provider

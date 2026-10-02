@@ -3,31 +3,45 @@ from typing import List, Union, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 
+
 class Settings(BaseSettings):
     PROJECT_NAME: str = "GrievAI"
     API_V1_STR: str = "/api/v1"
-    
-    # Secret Key for JWT
-    SECRET_KEY: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 # 24 hours
-    
+
+    # JWT Secret — MUST be set via environment variable in production.
+    # Never use this fallback in production; it's only for local dev without .env.
+    SECRET_KEY: str = "CHANGE_ME_IN_PRODUCTION_USE_ENV_VAR_32chars_minimum"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+
     # Environment & Server
-    ENVIRONMENT: str = "production"
+    ENVIRONMENT: str = "development"
     PORT: int = 8000
 
-    # Database
+    # Database — Render provides postgres:// URL; we convert it to SQLAlchemy format
     DATABASE_URL: str = "postgresql+psycopg://grievai_user:grievai_password@localhost:5432/grievai_db"
+
+    # Connection pool — Render free Postgres has a 25-connection limit.
+    # Use a conservative pool to avoid "too many connections" errors.
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 5
+    DB_POOL_TIMEOUT: int = 30
+    DB_POOL_RECYCLE: int = 1800  # Recycle connections every 30 min
 
     # AI / Ollama & Groq Cloud
     GROQ_API_KEY: Optional[str] = None
-    GROQ_MODEL: str = "openai/gpt-oss-20b"
+    GROQ_MODEL: str = "llama3-8b-8192"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_LLM_MODEL: str = "llama3"
     OLLAMA_EMBED_MODEL: str = "bge-m3"
     OLLAMA_TIMEOUT_SECONDS: float = 15.0
 
-    # CORS
-    CORS_ORIGINS: Union[List[str], str] = ["http://localhost:3000", "http://localhost:5173", "http://localhost:80", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]
+    # CORS — comma-separated list of allowed origins in production
+    CORS_ORIGINS: Union[List[str], str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+    ]
 
     # Storage
     EVIDENCE_STORAGE_DIR: str = "storage/evidence"
@@ -47,6 +61,7 @@ class Settings(BaseSettings):
     def assemble_db_connection(cls, v: str | None) -> str:
         if v:
             clean_v = v.strip().strip("'\"")
+            # Render and Heroku return postgres:// or postgresql:// — convert both
             if clean_v.startswith("postgres://"):
                 return clean_v.replace("postgres://", "postgresql+psycopg://", 1)
             elif clean_v.startswith("postgresql://") and not clean_v.startswith("postgresql+psycopg://"):
@@ -58,7 +73,8 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
-        extra="ignore"
+        extra="ignore",
     )
+
 
 settings = Settings()

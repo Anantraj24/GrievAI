@@ -42,12 +42,25 @@ import { AdminCategories } from './pages/AdminCategories';
 import { AdminSLA } from './pages/AdminSLA';
 import { AdminAuditLogs, AdminSettings } from './pages/AdminAuditLogs';
 
+// Full-screen loading spinner shown while auth state is being resolved
+const AuthLoadingScreen: React.FC = () => (
+  <div className="flex items-center justify-center h-screen w-screen bg-[#0b0e14]" role="status" aria-label="Loading">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      <p className="text-gray-400 text-sm font-mono">Authenticating…</p>
+    </div>
+  </div>
+);
+
 // Protected Route Guard
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;
   allowedRoles?: Array<'student' | 'authority' | 'admin'>;
 }> = ({ children, allowedRoles }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  // Wait for auth check to complete before making any routing decision
+  if (isLoading) return <AuthLoadingScreen />;
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
@@ -62,7 +75,10 @@ const ProtectedRoute: React.FC<{
 
 // Root index redirect - lands on user dashboard if logged in, else login
 const RootRedirect: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  if (isLoading) return <AuthLoadingScreen />;
+
   if (isAuthenticated && user) {
     if (user.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
     if (user.role === 'authority') return <Navigate to="/authority/dashboard" replace />;
